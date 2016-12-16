@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Translator</string>
+    <string name="arabic">Арабские</string>
+    <string name="roman">Римские</string>
+    <string name="translate">Перевести</string>
+    <string name="result">результат</string>
+</resources>
