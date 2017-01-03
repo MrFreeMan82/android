@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">CriminalIntent</string>
-    <string name="criminal_title_hint">Enter a title for a crime</string>
-    <string name="crime_title_lable">Title</string>
-    <string name="crime_details_label">Details</string>
-    <string name="crime_solved_label">Solved?</string>
+    <string name="app_name">Криминал</string>
+    <string name="criminal_title_hint">Преступление</string>
+    <string name="crime_title_label">Заголовок</string>
+    <string name="crime_details_label">Детали</string>
+    <string name="crime_solved_label">Раскрыто?</string>
 </resources>
