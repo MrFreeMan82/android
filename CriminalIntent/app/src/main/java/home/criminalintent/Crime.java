@@ -33,7 +33,7 @@ public class Crime {
 
     public void setSolved(boolean mSolved) {this.mSolved = mSolved;}
 
+    public Crime() {this(UUID.randomUUID());}
 
-
-    public Crime(){mID = UUID.randomUUID(); mDate = new Date(); mTime = new Date();}
+    public Crime(UUID id){mID = id; mDate = new Date(); mTime = new Date();}
 }

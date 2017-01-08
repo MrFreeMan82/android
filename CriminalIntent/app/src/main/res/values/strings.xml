@@ -7,4 +7,14 @@
     <string name="date_picker_title">Дата преступления:</string>
     <string name="time_picker_title">Время преступления:</string>
     <string name="my_cancel">Отмена</string>
+    <string name="new_crime">Новое преступление</string>
+    <string name="show_subtitle">Показать подзагол.</string>
+    <string name="hide_subtitle">Спрятать подзагол.</string>
+    <string name="subtitle_format">%1$d crimes</string>
+    <string name="delete_crime">Удалить</string>
+    <plurals name="subtitle_plural">
+        <item quantity="one">%d преступление</item>
+        <item quantity="few">%d преступления</item>
+        <item quantity="other">%d преступлений</item>
+    </plurals>
 </resources>
