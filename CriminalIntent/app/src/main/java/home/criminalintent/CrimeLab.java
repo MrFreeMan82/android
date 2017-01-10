@@ -5,8 +5,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
 import android.util.Log;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -14,6 +16,7 @@ import java.util.UUID;
 
 import home.criminalintent.database.CrimeBaseHelper;
 import static home.criminalintent.database.CrimeDbShema.*;
+import static android.content.ContentValues.TAG;
 
 /**
  * Created by Дима on 02.01.2017.
@@ -26,8 +29,7 @@ public class CrimeLab {
 
     private class CrimeCursorWrapper extends CursorWrapper
     {
-        public CrimeCursorWrapper(Cursor cursor)
-        {super(cursor);}
+        public CrimeCursorWrapper(Cursor cursor) {super(cursor);}
 
         public Crime getCrime()
         {
@@ -35,11 +37,13 @@ public class CrimeLab {
             String title = getString(getColumnIndex(CrimeTable.Cols.TITLE));
             long date = getLong(getColumnIndex(CrimeTable.Cols.DATE));
             int isSolved = getInt(getColumnIndex(CrimeTable.Cols.SOLVED));
+            String suspect = getString(getColumnIndex(CrimeTable.Cols.SUSPECT));
 
             Crime crime = new Crime(UUID.fromString(uuidString));
             crime.setTitle(title);
             crime.setDate(new Date(date));
             crime.setSolved(isSolved != 0);
+            crime.setSuspect(suspect);
 
             return crime;
         }
@@ -53,7 +57,7 @@ public class CrimeLab {
     private CrimeLab(Context context)
     {
         mContext = context.getApplicationContext();
-        mDB = new CrimeBaseHelper(mContext).getWritableDatabase();
+        mDB = CrimeBaseHelper.get(mContext).getWritableDatabase();
     }
 
     public List<Crime> getCrimes()
@@ -116,7 +120,7 @@ public class CrimeLab {
 
     public void deleteCrime(Crime c)
     {
-        Log.d("TAG", "Deleting crime with id = " + c.getID().toString(), new Exception());
+       // Log.d(TAG, "Deleting crime with id = " + c.getID().toString(), new Exception());
 
         String qry = String.format(
           "DELETE FROM " + CrimeTable.NAME +
@@ -132,6 +136,7 @@ public class CrimeLab {
         values.put(CrimeTable.Cols.TITLE, crime.getTitle());
         values.put(CrimeTable.Cols.DATE, crime.getDate().getTime());
         values.put(CrimeTable.Cols.SOLVED, crime.isSolved()? 1:0);
+        values.put(CrimeTable.Cols.SUSPECT, crime.getSuspect());
         return values;
     }
 
@@ -140,6 +145,13 @@ public class CrimeLab {
         Cursor cursor = mDB.rawQuery(qry, null);
 
         return new CrimeCursorWrapper(cursor);
+    }
+
+    public File getPhotoFile(Crime crime)
+    {
+        File externalFileDir = mContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if(externalFileDir == null) return null;
+        return new File(externalFileDir, crime.getPhotoFileName());
     }
 
 }

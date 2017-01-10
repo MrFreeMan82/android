@@ -16,6 +16,7 @@ public class CrimeDbShema
             public static final String TITLE = "TITLE";
             public static final String DATE = "DATE";
             public static final String SOLVED = "SOLVED";
+            public static  final String SUSPECT = "SUSPECT";
         }
     }
 }

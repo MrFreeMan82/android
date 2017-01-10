@@ -195,6 +195,7 @@ public class CrimeListFragment extends Fragment
                     Intent intent = CrimePageActivity.newIntent(getActivity(), crime.getID());
                     startActivity(intent);
                     return true;
+
             case R.id.menu_item_delete_crime:
                 for (Crime c:selectedItems)
                 {

@@ -4,19 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/crime_title_label"
-        style="?android:listSeparatorTextViewStyle"/>
-    <EditText
-        android:hint="@string/criminal_title_hint"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="textPersonName"
-        android:text=""
-        android:ems="10"
-        android:id="@+id/crime_title" />
+    <include layout="@layout/view_camera_and_title"/>
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -44,4 +33,25 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:text="@string/crime_solved_label"/>
+   <Button
+       android:id="@+id/crime_suspect"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:layout_marginLeft="16dp"
+       android:layout_marginRight="16dp"
+       android:text="@string/crime_suspect_text"/>
+    <Button
+        android:id="@+id/crime_report"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:text="@string/crime_report_text"/>
+    <Button
+        android:id="@+id/crime_call"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:text="Позвонить"/>
 </LinearLayout>
