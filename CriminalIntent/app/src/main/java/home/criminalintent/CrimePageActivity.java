@@ -8,6 +8,8 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.widget.Toast;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,7 +18,7 @@ import java.util.UUID;
  * Created by Дима on 03.01.2017.
  */
 
-public class CrimePageActivity extends AppCompatActivity
+public class CrimePageActivity extends AppCompatActivity implements CrimeFragment.Callbacks
 {
     private static final String EXTRA_CRIME_ID = "home.criminalintent.crime_id";
     private ViewPager mViewPager;
@@ -59,4 +61,11 @@ public class CrimePageActivity extends AppCompatActivity
             }
         }
     }
+
+    @Override
+    public void onCrimeUpdated(Crime crime)
+    {
+        // Log.d("CrimePageActivity", "onCrimeUpdated", new Exception());
+    }
+
 }

@@ -1,11 +1,14 @@
 package home.criminalintent;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -30,8 +33,21 @@ public class CrimeListFragment extends Fragment
     private CrimeAdapter mAdapter;
     private static boolean mSubTitleVisible;
     private static final String SAVED_SUBTITLE_VISIBLE = "subtitle";
-    private enum Mode {NONE, DELETE}
+    public enum Mode {NONE, DELETE}
     private List<Crime> selectedItems;
+    private Callbacks mCallbacks;
+
+    public interface Callbacks
+    {
+        void onCrimeSelected(Crime crime);
+    }
+
+    @Override
+    public void onAttach(Context context)
+    {
+        super.onAttach(context);
+        mCallbacks = (Callbacks) context;
+    }
 
 
     private class CrimeHolder extends RecyclerView.ViewHolder implements View.OnClickListener
@@ -79,8 +95,7 @@ public class CrimeListFragment extends Fragment
                     .show();*/
 
             position = super.getAdapterPosition();
-            Intent intent = CrimePageActivity.newIntent(getActivity(), mCrime.getID());
-            startActivity(intent);
+            mCallbacks.onCrimeSelected(mCrime);
         }
     }
 
@@ -119,7 +134,7 @@ public class CrimeListFragment extends Fragment
         }
     }
 
-    private void updateUI(Mode mode)
+    public void updateUI(Mode mode)
     {
         CrimeLab crimeLab = CrimeLab.get(getActivity());
         List<Crime> crimes = crimeLab.getCrimes();
@@ -192,8 +207,8 @@ public class CrimeListFragment extends Fragment
             case R.id.menu_item_new_crime:
                     Crime crime = new Crime();
                     CrimeLab.get(getActivity()).addCrime(crime);
-                    Intent intent = CrimePageActivity.newIntent(getActivity(), crime.getID());
-                    startActivity(intent);
+                    updateUI(Mode.NONE);
+                    mCallbacks.onCrimeSelected(crime);
                     return true;
 
             case R.id.menu_item_delete_crime:
@@ -231,5 +246,12 @@ public class CrimeListFragment extends Fragment
     {
         super.onSaveInstanceState(outState);
         outState.putBoolean(SAVED_SUBTITLE_VISIBLE, mSubTitleVisible);
+    }
+
+    @Override
+    public void onDetach()
+    {
+        super.onDetach();
+        mCallbacks = null;
     }
 }
