@@ -39,32 +39,42 @@ class Tetramino
 
         makeMino(x, topPos);
     }
+
+    Tetramino(Tetramino tetramino, int x, int y)
+    {
+        mType = tetramino.getType();
+        mColor = tetramino.getColor();
+        mRotation = tetramino.getRotation();
+        rects = new Rect[4];
+
+        makeMino(x, y);
+    }
 // leftPos, topPos левая верхняя точка воображаемого прямоугольника описывающего тетрамино.
     private void makeMino(int leftPos, int topPos)
     {
         leftPos = (leftPos > SQ_SIZE)? (leftPos / SQ_SIZE) * SQ_SIZE: 0;
         switch(mType)
         {
-            case tLine: makeLine(leftPos, topPos); break;
-            case tSquare: makeSquare(leftPos, topPos); break;
+            case tLine: makeLine(this, leftPos, topPos); break;
+            case tSquare: makeSquare(this, leftPos, topPos); break;
             case tL:
                 reverse = false;
-                makeL(leftPos, topPos);
+                makeL(this, leftPos, topPos);
                 break;
             case tLReverse:
                 reverse = true;
-                makeL(leftPos, topPos);
+                makeL(this, leftPos, topPos);
                 break;
             case tZ:
                 reverse = false;
-                makeZ(leftPos, topPos);
+                makeZ(this, leftPos, topPos);
                 break;
             case tZReverse:
                 reverse = true;
-                makeZ(leftPos, topPos);
+                makeZ(this, leftPos, topPos);
                 break;
             case tT:
-                makeT(leftPos, topPos);
+                makeT(this, leftPos, topPos);
         }
     }
 
@@ -93,9 +103,10 @@ class Tetramino
         }
     }
 
-    private void makeLine(int leftPos, int topPos)
+    private static void makeLine(Tetramino mino, int leftPos, int topPos)
     {
-        if(mRotation == 1)  // make line horizontal
+        Rect[] rects = mino.rects;
+        if(mino.mRotation == 1)  // make line horizontal
         {
             for(int i = 0; i < rects.length; i++)
             {
@@ -116,11 +127,9 @@ class Tetramino
                 if(i == 0) {
                     rects[i].left = leftPos;
                     rects[i].top = topPos;
-                 //   mMargins[i] = new Margins(rects[i], INTERVAL, INTERVAL, INTERVAL, 0);
                 } else {
                     rects[i].left = rects[i - 1].left;
                     rects[i].top = rects[i - 1].bottom;
-                  //  mMargins[i] = new Margins(rects[i], INTERVAL, 0, INTERVAL, 0);
                 }
                 rects[i].right = rects[i].left + SQ_SIZE ;
                 rects[i].bottom = rects[i].top + SQ_SIZE ;
@@ -128,8 +137,9 @@ class Tetramino
         }
     }
 
-    private void makeSquare(int leftPos, int topPos)
+    private static void makeSquare(Tetramino mino, int leftPos, int topPos)
     {
+        Rect[] rects = mino.rects;
         for(int i = 0; i < rects.length; i++)
         {
             rects[i] = new Rect();
@@ -156,17 +166,18 @@ class Tetramino
         }
     }
 
-    private void makeL(int leftPos, int topPos)
+    private static void makeL(Tetramino mino, int leftPos, int topPos)
     {
+        Rect[] rects = mino.rects;
         for(int i = 0; i < rects.length; i ++)
         {
             rects[i] = new Rect();
 
-            switch (mRotation){
+            switch (mino.mRotation){
                 case 1:                                 // Draw like  |_ or _|
                     switch (i){
                         case 0:
-                            rects[i].left = reverse ? leftPos + SQ_SIZE: leftPos;
+                            rects[i].left = mino.reverse ? leftPos + SQ_SIZE: leftPos;
                             rects[i].top = topPos;
                             break;
                         case 1:
@@ -178,7 +189,7 @@ class Tetramino
                             rects[i].top = rects[i - 1].bottom;
                             break;
                         case 3:
-                            rects[i].left = reverse ? leftPos: rects[i - 1].right;
+                            rects[i].left = mino.reverse ? leftPos: rects[i - 1].right;
                             rects[i].top = rects[i - 1].top;
                     } break;
                 case 2:                                    // Draw like |̅̅̅̅ or |___
@@ -188,16 +199,16 @@ class Tetramino
                             rects[i].top = topPos;
                             break;
                         case 1:
-                            rects[i].left = reverse ? leftPos: rects[i - 1].right;
-                            rects[i].top = reverse ? rects[i - 1].bottom: rects[i - 1].top;
+                            rects[i].left = mino.reverse ? leftPos: rects[i - 1].right;
+                            rects[i].top = mino.reverse ? rects[i - 1].bottom: rects[i - 1].top;
                             break;
                         case 2:
                             rects[i].left = rects[i - 1].right;
                             rects[i].top = rects[i - 1].top;
                             break;
                         case 3:
-                            rects[i].left = reverse ? rects[i - 1].right: leftPos;
-                            rects[i].top =  reverse ? rects[i - 1].top: rects[i - 1].bottom;
+                            rects[i].left = mino.reverse ? rects[i - 1].right: leftPos;
+                            rects[i].top =  mino.reverse ? rects[i - 1].top: rects[i - 1].bottom;
                     } break;
                 case 3:                                 // Draw like ̅|  or  |̅
                     switch (i){                         //            |      |
@@ -210,7 +221,7 @@ class Tetramino
                             rects[i].top = topPos;
                             break;
                         case 2:
-                            rects[i].left = reverse ? leftPos: rects[i - 1].left;
+                            rects[i].left = mino.reverse ? leftPos: rects[i - 1].left;
                             rects[i].top = rects[i - 1].bottom;
                             break;
                         case 3:
@@ -221,7 +232,7 @@ class Tetramino
                     switch (i){
                         case 0:
                             rects[i].left = leftPos;
-                            rects[i].top = reverse ? topPos: topPos + SQ_SIZE;
+                            rects[i].top = mino.reverse ? topPos: topPos + SQ_SIZE;
                             break;
                         case 1:
                             rects[i].left = rects[i - 1].right;
@@ -233,7 +244,7 @@ class Tetramino
                             break;
                         case 3:
                             rects[i].left = rects[i - 1].left;
-                            rects[i].top = reverse ? rects[i - 1].bottom: topPos;
+                            rects[i].top = mino.reverse ? rects[i - 1].bottom: topPos;
                     }
             }
             rects[i].right = rects[i].left + SQ_SIZE;
@@ -241,17 +252,18 @@ class Tetramino
         }
     }
 
-    private void makeZ(int leftPos, int topPos)
+    private static void makeZ(Tetramino mino, int leftPos, int topPos)
     {
+        Rect[] rects = mino.rects;
         for(int i = 0; i < rects.length; i++)
         {
             rects[i] = new Rect();
 
-            if (mRotation == 1){            //Draw like  Z or reverse Z
+            if (mino.mRotation == 1){            //Draw like  Z or reverse Z
                     switch (i){
                         case 0:
                             rects[i].left = leftPos;
-                            rects[i].top = reverse ? topPos + SQ_SIZE: topPos;
+                            rects[i].top = mino.reverse ? topPos + SQ_SIZE: topPos;
                             break;
                         case 1:
                             rects[i].left = rects[i - 1].right;
@@ -259,7 +271,7 @@ class Tetramino
                             break;
                         case 2:
                             rects[i].left = rects[i - 1].left;
-                            rects[i].top = reverse ? topPos: rects[i - 1].bottom;
+                            rects[i].top = mino.reverse ? topPos: rects[i - 1].bottom;
                             break;
                         case 3:
                             rects[i].left = rects[i - 1].right;
@@ -268,7 +280,7 @@ class Tetramino
             } else {                    // Draw line N  or И
                 switch (i) {
                     case 0:
-                        rects[i].left = reverse ? leftPos: leftPos + SQ_SIZE;
+                        rects[i].left = mino.reverse ? leftPos: leftPos + SQ_SIZE;
                         rects[i].top = topPos;
                         break;
                     case 1:
@@ -276,7 +288,7 @@ class Tetramino
                         rects[i].top = rects[i - 1].bottom;
                         break;
                     case 2:
-                        rects[i].left = reverse ? rects[i - 1].right: leftPos;
+                        rects[i].left = mino.reverse ? rects[i - 1].right: leftPos;
                         rects[i].top = rects[i - 1].top;
                         break;
                     case 3:
@@ -289,12 +301,13 @@ class Tetramino
         }
     }
 
-    private void makeT(int leftPos, int topPos)
+    private static void makeT(Tetramino mino, int leftPos, int topPos)
     {
+        Rect[] rects = mino.rects;
         for(int i = 0; i < rects.length; i++)
         {
             rects[i] = new Rect();
-            switch (mRotation){
+            switch (mino.mRotation){
                 case 1:                             // Draw like _|_
                     switch (i){
                         case 0:

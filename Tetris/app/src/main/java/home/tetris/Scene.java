@@ -239,6 +239,19 @@ class Scene
         }
     }
 
+    void moveCurrentDown(int y)
+    {
+        if(y <= currentMino.getMinTop()) return;
+        
+        Tetramino mino = new Tetramino(currentMino, currentMino.getMinLeft(), y);
+        if(!collisionBottom(mino))
+        {
+            sceneList.remove(currentMino);
+            sceneList.add(mino);
+            currentMino = mino;
+        }
+    }
+
     void moveCurrentDown()
     {
         if (collisionBottom(currentMino))

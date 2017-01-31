@@ -10,6 +10,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
+import static home.tetris.Display.SQ_SIZE;
+import static java.lang.Math.abs;
 import static java.lang.Math.round;
 
 /**
@@ -22,8 +24,8 @@ public class Renderer extends View
     private Scene scene = null;
     private MyTimer timer;
     private boolean running = false;
-    private int x = 0, oldX = 0;
-    private boolean enableMove = false;
+    private int x = 0, oldX = 0, y =0, oldY = 0;
+    private boolean enableMoveLeft = false, enableMoveRight = false, enableMoveDown = false;
     private boolean enableRotate = false;
     private int oldScore = 0;
     private Callback callback;
@@ -69,8 +71,12 @@ public class Renderer extends View
                 scene.rotateCurrent();
                 enableRotate = false;
             }
-            if(enableMove && x < oldX) scene.moveCurrentLeft(x);
-            else if(enableMove && x > oldX) scene.moveCurrentRight(x);
+
+            if(enableMoveLeft) scene.moveCurrentLeft(x);
+            else if(enableMoveRight) scene.moveCurrentRight(x);
+            if(enableMoveDown) scene.moveCurrentDown(y);
+
+
             scene.moveCurrentDown();
             invalidate();
         }
@@ -84,19 +90,35 @@ public class Renderer extends View
             @Override
             public boolean onTouch(View v, MotionEvent event)
             {
-                oldX = x;
                 x = round(event.getX());
+                y = round(event.getY());
 
                 switch (event.getAction())
                 {
+                    case MotionEvent.ACTION_DOWN:
+                        oldX = x;         // При касании запоминаем старые значения х, у
+                        oldY = y;
+                        break;
+
                     case MotionEvent.ACTION_MOVE:
                         enableRotate = false;
-                        enableMove = true;
+                        // Для того чтоб отделить движение от касания нужно проверить расстояние между
+                        // старыми значениями х,у и новыми. Если расстояние больше одного квадрата, то это движение
+                        // иначе будем тетрамино поворачивать
+                        enableMoveLeft = oldX - x > SQ_SIZE;
+                        enableMoveRight = x - oldX > SQ_SIZE;
+                        enableMoveDown = y - oldY > SQ_SIZE;
+
+                        // Сбрасываем старые значения для того например, если будем водить вправо влево
+                        // и х = oldx то будет задержка.
+                        if(enableMoveLeft || enableMoveRight) oldX = -SQ_SIZE;
                         break;
 
                     case MotionEvent.ACTION_UP:
-                        enableRotate = !enableMove;
-                        enableMove = false;
+                        enableRotate = !(enableMoveRight || enableMoveLeft || enableMoveDown);
+                        enableMoveLeft = false;
+                        enableMoveRight = false;
+                        enableMoveDown = false;
                 }
 
                 return true;
