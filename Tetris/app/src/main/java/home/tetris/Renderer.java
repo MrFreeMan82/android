@@ -1,8 +1,11 @@
 package home.tetris;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.os.CountDownTimer;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
@@ -22,10 +25,16 @@ public class Renderer extends View
     private int x = 0, oldX = 0;
     private boolean enableMove = false;
     private boolean enableRotate = false;
+    private int oldScore = 0;
+    private Callback callback;
+
+    interface Callback
+    {
+        void onScoreChange(int score);
+    }
 
     private class MyTimer extends CountDownTimer
     {
-        private Renderer mRenderer;
         MyTimer(long millisInFuture, long countDownInterval)
         {
             super(millisInFuture, countDownInterval);
@@ -38,12 +47,21 @@ public class Renderer extends View
         @Override
         public void onTick(long millisUntilFinished)
         {
+            if(!running) return;
+
             if(scene.getGameOver())
             {
                 Toast.makeText(mContext, "Game Over", Toast.LENGTH_SHORT).show();
                 running = false;
                 cancel();
                 return;
+            }
+
+            int score = scene.getScore();
+            if(oldScore != score)
+            {
+                oldScore = score;
+                callback.onScoreChange(score);
             }
 
             if(enableRotate)
@@ -54,15 +72,14 @@ public class Renderer extends View
             if(enableMove && x < oldX) scene.moveCurrentLeft(x);
             else if(enableMove && x > oldX) scene.moveCurrentRight(x);
             scene.moveCurrentDown();
-            mRenderer.invalidate();
+            invalidate();
         }
     }
 
     public Renderer(Context context) {
         super(context);
         mContext = context;
-        timer = new MyTimer(Long.MAX_VALUE, 20);
-        timer.mRenderer = this;
+        callback = (Callback) context;
         setOnTouchListener(new OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event)
@@ -90,9 +107,27 @@ public class Renderer extends View
     void start()
     {
         if(running) return;
+        timer = new MyTimer(Long.MAX_VALUE, 20);
         scene = Scene.get();
+        callback.onScoreChange(scene.getScore());
         timer.start();
         running = true;
+    }
+
+    void pause()
+    {
+        if(!running) return;
+        running = false;
+        timer.cancel();
+    }
+
+    void stop()
+    {
+        running = false;
+        scene.clear();
+        timer.cancel();
+        callback.onScoreChange(scene.getScore());
+        invalidate();
     }
 
     @Override

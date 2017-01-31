@@ -30,6 +30,7 @@ class Scene
     private static Scene scene;
     private Random random;
     private boolean gameOver = false;
+    private int score = 0;
 
     private Scene()
     {
@@ -230,6 +231,7 @@ class Scene
             {
                deleteLine(line);
                fallSquares(line - 1);
+               score++;
             }
 
             bottom = top;
@@ -349,4 +351,14 @@ class Scene
     }
 
     boolean getGameOver(){return gameOver;}
+
+    int getScore(){return score;}
+
+    void clear()
+    {
+        sceneList.clear();
+        gameOver = false;
+        score = 0;
+        newMino();
+    }
 }
