@@ -9,14 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static home.tetris.Display.SQ_SIZE;
-import static home.tetris.Tetramino.Type.tL;
-import static home.tetris.Tetramino.Type.tLReverse;
-import static home.tetris.Tetramino.Type.tLine;
-import static home.tetris.Tetramino.Type.tSquare;
-import static home.tetris.Tetramino.Type.tT;
-import static home.tetris.Tetramino.Type.tZ;
-import static home.tetris.Tetramino.Type.tZReverse;
+import static home.tetris.Globals.SQ_SIZE;
 
 /**
  * Created by Дима on 23.01.2017.
@@ -57,71 +50,61 @@ class Scene
         return Color.argb(random.nextInt(k), random.nextInt(k), random.nextInt(k), random.nextInt(k));
     }
 
-    private Tetramino.Type intToType(int n)
-    {
-        //tLine, tSquare, tL, tLReverse, tZ, tZReverse, tT
-        switch (n){
-            case 0: return tLine;
-            case 1: return tSquare;
-            case 2: return tL;
-            case 3: return tLReverse;
-            case 4: return tZ;
-            case 5: return tZReverse;
-            default: return tT;
-        }
-    }
-
     private void newMino()
     {
-        Tetramino.Type type = intToType(random.nextInt(7));
-        int rotation = random.nextInt(4);
+        Tetramino.Type type = Tetramino.intToType(random.nextInt(7));
+        int rotation = 1;
         int leftPos = 0;
         int topPos = 0;
         int color = getColor();
         switch (type)
         {
             case tLine:
+                rotation = random.nextInt(2);
                 if(rotation == 1) {
                     topPos = -SQ_SIZE;
-                    leftPos = random.nextInt(Display.Width - (4 * SQ_SIZE));
+                    leftPos = random.nextInt(Globals.WIDTH - (4 * SQ_SIZE));
                 } else {
                     topPos = -(4 * SQ_SIZE);
-                    leftPos = random.nextInt(Display.Width - SQ_SIZE);
+                    leftPos = random.nextInt(Globals.WIDTH - SQ_SIZE);
                 }
 
                 break;
             case tSquare:
                     topPos = -(2 * SQ_SIZE);
-                    leftPos = random.nextInt(Display.Width - (2 * SQ_SIZE));
+                    leftPos = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
                 break;
             case tL:
             case tLReverse:
+                rotation = random.nextInt(4);
                 if((rotation == 1) || (rotation == 3))
                 {
                     topPos = -(3 * SQ_SIZE);
-                    leftPos = random.nextInt(Display.Width - (2 * SQ_SIZE));
+                    leftPos = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
                 }else {
                     topPos = -(2 * SQ_SIZE);
-                    leftPos = random.nextInt(Display.Width - (3 * SQ_SIZE));
+                    leftPos = random.nextInt(Globals.WIDTH - (3 * SQ_SIZE));
                 }
                 break;
             case tZ:
             case tZReverse:
+                rotation = random.nextInt(2);
                 if(rotation == 1) {
                     topPos = -(2 * SQ_SIZE);
-                    leftPos = random.nextInt(Display.Width - (3 * SQ_SIZE));
+                    leftPos = random.nextInt(Globals.WIDTH - (3 * SQ_SIZE));
                 } else {
                     topPos = -(3 * SQ_SIZE);
-                    leftPos = random.nextInt(Display.Width - (2 * SQ_SIZE));
+                    leftPos = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
                 }
                 break;
             case tT:
+                rotation = random.nextInt(4);
                 if((rotation == 1) || (rotation == 3)) {
                     topPos = -(2 * SQ_SIZE);
-                    leftPos = random.nextInt(Display.Width - (3 * SQ_SIZE));
+                    leftPos = random.nextInt(Globals.WIDTH - (3 * SQ_SIZE));
                 } else {
                     topPos = -(3 * SQ_SIZE);
-                    leftPos = random.nextInt(Display.Width - (2 * SQ_SIZE));
+                    leftPos = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
                 }
         }
         sceneList.add(new Tetramino(type, rotation, leftPos, topPos, color));
@@ -136,8 +119,8 @@ class Scene
         {
             paint.setColor(tetramino.getColor());
 
-            for(Rect rect:tetramino.getRects())
-                if(rect != null) canvas.drawRect(rect, paint);
+            for(Rect block:tetramino.getBlocks())
+                if(block != null) canvas.drawRect(block, paint);
         }
     }
 
@@ -172,12 +155,12 @@ class Scene
         int w = 0;
         for(Tetramino current: sceneList)
         {
-            for(Rect rect: current.getRects())
+            for(Rect block: current.getBlocks())
             {
-                if(rect != null && rect.bottom / SQ_SIZE == line) w += SQ_SIZE;
+                if(block != null && block.bottom / SQ_SIZE == line) w += SQ_SIZE;
             }
         }
-        return (Display.Width - w) < SQ_SIZE;
+        return (Globals.WIDTH - w) < SQ_SIZE;
     }
 
     private void deleteLine(int line)
@@ -188,15 +171,15 @@ class Scene
         {
             Tetramino tetramino = sceneList.get(i);
             int counter = 0;
-            for(Rect rect: tetramino.getRects())
+            for(Rect block: tetramino.getBlocks())
             {
-                if(rect == null) {
+                if(block == null) {
                     counter++;
                     continue;
                 }
 
-                if (rect.bottom / SQ_SIZE == line) {
-                        tetramino.replaceRect(null, rect);
+                if (block.bottom / SQ_SIZE == line) {
+                        tetramino.replaceBlock(null, block);
                 }
             }
             if(counter >= 4) sceneList.remove(tetramino); else i++;
@@ -208,12 +191,12 @@ class Scene
     {
         for(Tetramino tetramino: sceneList)
         {
-            for (Rect rect: tetramino.getRects())
+            for (Rect block: tetramino.getBlocks())
             {
-                if(rect != null && rect.bottom / SQ_SIZE <= line)
+                if(block != null && block.bottom / SQ_SIZE <= line)
                 {
-                    rect.top = rect.bottom;
-                    rect.bottom += SQ_SIZE;
+                    block.top = block.bottom;
+                    block.bottom += SQ_SIZE;
                 }
             }
         }
@@ -221,7 +204,7 @@ class Scene
 
     private void deleteFullLines()
     {
-        int bottom = Display.Height;
+        int bottom = Globals.HEIGHT;
         int top = bottom - SQ_SIZE;
 
         while(top >= 0 && bottom >= top)
@@ -242,8 +225,9 @@ class Scene
     void moveCurrentDown(int y)
     {
         if(y <= currentMino.getMinTop()) return;
-        
+
         Tetramino mino = new Tetramino(currentMino, currentMino.getMinLeft(), y);
+
         if(!collisionBottom(mino))
         {
             sceneList.remove(currentMino);
@@ -292,24 +276,24 @@ class Scene
 
     private boolean collisionUp(Tetramino mino)
     {
-        for(Rect current: mino.getRects())
+        for(Rect current: mino.getBlocks())
             if(current.top < 0) return true;
         return false;
     }
 
     private boolean collisionBottom(Tetramino mino)
     {
-        for(Rect current: mino.getRects())
+        for(Rect current: mino.getBlocks())
         {
             if(current == null) continue;
             int bottom = current.bottom;
-            if(bottom >= Display.Height) return true;
+            if(bottom >= Globals.HEIGHT) return true;
 
             for(Tetramino tetramino: sceneList)
             {
                 if(tetramino == mino) continue;
 
-                for(Rect prev: tetramino.getRects())
+                for(Rect prev: tetramino.getBlocks())
                 {
                     if(prev == null) continue;
                     if(bottom >= prev.top && current.top <= prev.bottom &&
@@ -324,33 +308,33 @@ class Scene
 
     private boolean collisionLeftRight(Tetramino newMino, Tetramino current)
     {
-        for(Rect newRect: newMino.getRects())
+        for(Rect newBlock: newMino.getBlocks())
         {
-            if(newRect == null) continue;
-            if((newRect.right > Display.Width) || (newRect.left < 0) || (newRect.bottom > Display.Height)) return true;
-            for(Rect currentRect: current.getRects())
+            if(newBlock == null) continue;
+            if((newBlock.right > Globals.WIDTH) || (newBlock.left < 0) || (newBlock.bottom > Globals.HEIGHT)) return true;
+            for(Rect currentRect: current.getBlocks())
             {
                 if(currentRect == null) continue;
                 for (Tetramino tetramino : sceneList)
                 {
                     if(tetramino == current) continue;
 
-                    for (Rect prev : tetramino.getRects())
+                    for (Rect prev : tetramino.getBlocks())
                     {
                         if(prev == null) continue;
-                        if((newRect.top >= prev.top && newRect.top <= prev.bottom) ||
-                                (newRect.bottom >= prev.top && newRect.bottom <= prev.bottom))
+                        if((newBlock.top >= prev.top && newBlock.top <= prev.bottom) ||
+                                (newBlock.bottom >= prev.top && newBlock.bottom <= prev.bottom))
                         {
                             if (
                                 (
-                                  (newRect.left >= prev.left && newRect.left <= prev.right &&
-                                     newRect.right>= prev.left && newRect.right <= prev.right) ||
-                                       (newRect.right >= prev.left && newRect.right <= prev.right &&
-                                          newRect.left >= prev.left && newRect.left <= prev.right)
+                                  (newBlock.left >= prev.left && newBlock.left <= prev.right &&
+                                          newBlock.right>= prev.left && newBlock.right <= prev.right) ||
+                                       (newBlock.right >= prev.left && newBlock.right <= prev.right &&
+                                               newBlock.left >= prev.left && newBlock.left <= prev.right)
                                 ) ||
                                 (
-                                  (prev.left > newRect.right && prev.right < currentRect.left) ||
-                                       (prev.left > currentRect.right && prev.right < newRect.left)
+                                  (prev.left > newBlock.right && prev.right < currentRect.left) ||
+                                       (prev.left > currentRect.right && prev.right < newBlock.left)
                                 )
                                ) {
                                 return true;

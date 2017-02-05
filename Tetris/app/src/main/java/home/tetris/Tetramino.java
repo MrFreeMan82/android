@@ -2,7 +2,14 @@ package home.tetris;
 
 import android.graphics.Rect;
 
-import static home.tetris.Display.SQ_SIZE;
+import static home.tetris.Globals.SQ_SIZE;
+import static home.tetris.Tetramino.Type.tL;
+import static home.tetris.Tetramino.Type.tLReverse;
+import static home.tetris.Tetramino.Type.tLine;
+import static home.tetris.Tetramino.Type.tSquare;
+import static home.tetris.Tetramino.Type.tT;
+import static home.tetris.Tetramino.Type.tZ;
+import static home.tetris.Tetramino.Type.tZReverse;
 
 
 /**
@@ -12,7 +19,7 @@ import static home.tetris.Display.SQ_SIZE;
 class Tetramino
 {
     enum Type{tLine, tSquare, tL, tLReverse, tZ, tZReverse, tT}
-    private Rect[] rects;
+    private Rect[] blocks;
     private int mColor;
     private int mRotation;
     private Type mType;
@@ -23,7 +30,7 @@ class Tetramino
         mType = type;
         mColor = color;
         mRotation = rotation;
-        rects = new Rect[4];
+        blocks = new Rect[Globals.MAX_BLOCK_CNT];
 
         makeMino(leftPos, topPos);
     }
@@ -33,7 +40,7 @@ class Tetramino
         mType = tetramino.getType();
         mColor = tetramino.getColor();
         mRotation = tetramino.getRotation();
-        rects = new Rect[4];
+        blocks = new Rect[Globals.MAX_BLOCK_CNT];
 
         int topPos = tetramino.getMinTop();
 
@@ -45,11 +52,26 @@ class Tetramino
         mType = tetramino.getType();
         mColor = tetramino.getColor();
         mRotation = tetramino.getRotation();
-        rects = new Rect[4];
+        blocks = new Rect[Globals.MAX_BLOCK_CNT];
 
         makeMino(x, y);
     }
-// leftPos, topPos левая верхняя точка воображаемого прямоугольника описывающего тетрамино.
+
+    static Type intToType(int n)
+    {
+        //tLine, tSquare, tL, tLReverse, tZ, tZReverse, tT
+        switch (n){
+            case 0: return tLine;
+            case 1: return tSquare;
+            case 2: return tL;
+            case 3: return tLReverse;
+            case 4: return tZ;
+            case 5: return tZReverse;
+            default: return tT;
+        }
+    }
+
+    // leftPos, topPos левая верхняя точка воображаемого прямоугольника описывающего тетрамино.
     private void makeMino(int leftPos, int topPos)
     {
         leftPos = (leftPos > SQ_SIZE)? (leftPos / SQ_SIZE) * SQ_SIZE: 0;
@@ -80,7 +102,7 @@ class Tetramino
 
     int getMinLeft() {
         int r = Integer.MAX_VALUE;
-        for(Rect rect: rects)
+        for(Rect rect: blocks)
             if(rect.left < r) r = rect.left;
 
         return r;
@@ -88,7 +110,7 @@ class Tetramino
 
     int getMinTop(){
         int r = Integer.MAX_VALUE;
-        for(Rect rect: rects)
+        for(Rect rect: blocks)
             if(rect.top < r) r = rect.top;
 
         return r;
@@ -96,7 +118,7 @@ class Tetramino
 
     void moveDown()
     {
-        for(Rect rect: rects)
+        for(Rect rect: blocks)
         {
             rect.top += 1;
             rect.bottom = rect.top + SQ_SIZE;
@@ -105,283 +127,283 @@ class Tetramino
 
     private static void makeLine(Tetramino mino, int leftPos, int topPos)
     {
-        Rect[] rects = mino.rects;
+        Rect[] blocks = mino.blocks;
         if(mino.mRotation == 1)  // make line horizontal
         {
-            for(int i = 0; i < rects.length; i++)
+            for(int i = 0; i < blocks.length; i++)
             {
-                rects[i] = new Rect();
+                blocks[i] = new Rect();
                 if(i == 0)
-                    rects[i].left = leftPos;
+                    blocks[i].left = leftPos;
                 else
-                    rects[i].left = rects[i - 1].right;
-                rects[i].top = topPos;
-                rects[i].right = rects[i].left + SQ_SIZE ;
-                rects[i].bottom = rects[i].top + SQ_SIZE;
+                    blocks[i].left = blocks[i - 1].right;
+                blocks[i].top = topPos;
+                blocks[i].right = blocks[i].left + SQ_SIZE ;
+                blocks[i].bottom = blocks[i].top + SQ_SIZE;
                 leftPos++;
             }
         }else{
-            for(int i = 0; i < rects.length; i++)
+            for(int i = 0; i < blocks.length; i++)
             {
-                rects[i] = new Rect();
+                blocks[i] = new Rect();
                 if(i == 0) {
-                    rects[i].left = leftPos;
-                    rects[i].top = topPos;
+                    blocks[i].left = leftPos;
+                    blocks[i].top = topPos;
                 } else {
-                    rects[i].left = rects[i - 1].left;
-                    rects[i].top = rects[i - 1].bottom;
+                    blocks[i].left = blocks[i - 1].left;
+                    blocks[i].top = blocks[i - 1].bottom;
                 }
-                rects[i].right = rects[i].left + SQ_SIZE ;
-                rects[i].bottom = rects[i].top + SQ_SIZE ;
+                blocks[i].right = blocks[i].left + SQ_SIZE ;
+                blocks[i].bottom = blocks[i].top + SQ_SIZE ;
             }
         }
     }
 
     private static void makeSquare(Tetramino mino, int leftPos, int topPos)
     {
-        Rect[] rects = mino.rects;
-        for(int i = 0; i < rects.length; i++)
+        Rect[] blocks = mino.blocks;
+        for(int i = 0; i < blocks.length; i++)
         {
-            rects[i] = new Rect();
+            blocks[i] = new Rect();
             switch (i)
             {
                 case 0:
-                    rects[i].left = leftPos;
-                    rects[i].top = topPos;
+                    blocks[i].left = leftPos;
+                    blocks[i].top = topPos;
                     break;
                 case 1:
-                    rects[i].left = rects[i - 1].right;
-                    rects[i].top = rects[i - 1].top;
+                    blocks[i].left = blocks[i - 1].right;
+                    blocks[i].top = blocks[i - 1].top;
                     break;
                 case 2:
-                    rects[i].left = rects[0].left;
-                    rects[i].top = rects[0].bottom;
+                    blocks[i].left = blocks[0].left;
+                    blocks[i].top = blocks[0].bottom;
                     break;
                 case 3:
-                    rects[i].left = rects[i - 1].right;
-                    rects[i].top = rects[i - 1].top;
+                    blocks[i].left = blocks[i - 1].right;
+                    blocks[i].top = blocks[i - 1].top;
             }
-            rects[i].right = rects[i].left + SQ_SIZE;
-            rects[i].bottom = rects[i].top + SQ_SIZE;
+            blocks[i].right = blocks[i].left + SQ_SIZE;
+            blocks[i].bottom = blocks[i].top + SQ_SIZE;
         }
     }
 
     private static void makeL(Tetramino mino, int leftPos, int topPos)
     {
-        Rect[] rects = mino.rects;
-        for(int i = 0; i < rects.length; i ++)
+        Rect[] blocks = mino.blocks;
+        for(int i = 0; i < blocks.length; i ++)
         {
-            rects[i] = new Rect();
+            blocks[i] = new Rect();
 
             switch (mino.mRotation){
                 case 1:                                 // Draw like  |_ or _|
                     switch (i){
                         case 0:
-                            rects[i].left = mino.reverse ? leftPos + SQ_SIZE: leftPos;
-                            rects[i].top = topPos;
+                            blocks[i].left = mino.reverse ? leftPos + SQ_SIZE: leftPos;
+                            blocks[i].top = topPos;
                             break;
                         case 1:
-                            rects[i].left = rects[i - 1].left;
-                            rects[i].top = rects[i - 1].bottom;
+                            blocks[i].left = blocks[i - 1].left;
+                            blocks[i].top = blocks[i - 1].bottom;
                             break;
                         case 2:
-                            rects[i].left = rects[i - 1].left;
-                            rects[i].top = rects[i - 1].bottom;
+                            blocks[i].left = blocks[i - 1].left;
+                            blocks[i].top = blocks[i - 1].bottom;
                             break;
                         case 3:
-                            rects[i].left = mino.reverse ? leftPos: rects[i - 1].right;
-                            rects[i].top = rects[i - 1].top;
+                            blocks[i].left = mino.reverse ? leftPos: blocks[i - 1].right;
+                            blocks[i].top = blocks[i - 1].top;
                     } break;
                 case 2:                                    // Draw like |̅̅̅̅ or |___
                     switch (i){
                         case 0:
-                            rects[i].left = leftPos;
-                            rects[i].top = topPos;
+                            blocks[i].left = leftPos;
+                            blocks[i].top = topPos;
                             break;
                         case 1:
-                            rects[i].left = mino.reverse ? leftPos: rects[i - 1].right;
-                            rects[i].top = mino.reverse ? rects[i - 1].bottom: rects[i - 1].top;
+                            blocks[i].left = mino.reverse ? leftPos: blocks[i - 1].right;
+                            blocks[i].top = mino.reverse ? blocks[i - 1].bottom: blocks[i - 1].top;
                             break;
                         case 2:
-                            rects[i].left = rects[i - 1].right;
-                            rects[i].top = rects[i - 1].top;
+                            blocks[i].left = blocks[i - 1].right;
+                            blocks[i].top = blocks[i - 1].top;
                             break;
                         case 3:
-                            rects[i].left = mino.reverse ? rects[i - 1].right: leftPos;
-                            rects[i].top =  mino.reverse ? rects[i - 1].top: rects[i - 1].bottom;
+                            blocks[i].left = mino.reverse ? blocks[i - 1].right: leftPos;
+                            blocks[i].top =  mino.reverse ? blocks[i - 1].top: blocks[i - 1].bottom;
                     } break;
                 case 3:                                 // Draw like ̅|  or  |̅
                     switch (i){                         //            |      |
                         case 0:
-                            rects[i].left = leftPos;
-                            rects[i].top = topPos;
+                            blocks[i].left = leftPos;
+                            blocks[i].top = topPos;
                             break;
                         case 1:
-                            rects[i].left = rects[i - 1].right;
-                            rects[i].top = topPos;
+                            blocks[i].left = blocks[i - 1].right;
+                            blocks[i].top = topPos;
                             break;
                         case 2:
-                            rects[i].left = mino.reverse ? leftPos: rects[i - 1].left;
-                            rects[i].top = rects[i - 1].bottom;
+                            blocks[i].left = mino.reverse ? leftPos: blocks[i - 1].left;
+                            blocks[i].top = blocks[i - 1].bottom;
                             break;
                         case 3:
-                            rects[i].left = rects[i - 1].left;
-                            rects[i].top = rects[i - 1].bottom;
+                            blocks[i].left = blocks[i - 1].left;
+                            blocks[i].top = blocks[i - 1].bottom;
                     } break;
                 default:                                 // Draw like ___|  or ̅̅̅|
                     switch (i){
                         case 0:
-                            rects[i].left = leftPos;
-                            rects[i].top = mino.reverse ? topPos: topPos + SQ_SIZE;
+                            blocks[i].left = leftPos;
+                            blocks[i].top = mino.reverse ? topPos: topPos + SQ_SIZE;
                             break;
                         case 1:
-                            rects[i].left = rects[i - 1].right;
-                            rects[i].top = rects[i - 1].top;
+                            blocks[i].left = blocks[i - 1].right;
+                            blocks[i].top = blocks[i - 1].top;
                             break;
                         case 2:
-                            rects[i].left = rects[i - 1].right;
-                            rects[i].top = rects[i - 1].top;
+                            blocks[i].left = blocks[i - 1].right;
+                            blocks[i].top = blocks[i - 1].top;
                             break;
                         case 3:
-                            rects[i].left = rects[i - 1].left;
-                            rects[i].top = mino.reverse ? rects[i - 1].bottom: topPos;
+                            blocks[i].left = blocks[i - 1].left;
+                            blocks[i].top = mino.reverse ? blocks[i - 1].bottom: topPos;
                     }
             }
-            rects[i].right = rects[i].left + SQ_SIZE;
-            rects[i].bottom = rects[i].top + SQ_SIZE;
+            blocks[i].right = blocks[i].left + SQ_SIZE;
+            blocks[i].bottom = blocks[i].top + SQ_SIZE;
         }
     }
 
     private static void makeZ(Tetramino mino, int leftPos, int topPos)
     {
-        Rect[] rects = mino.rects;
-        for(int i = 0; i < rects.length; i++)
+        Rect[] blocks = mino.blocks;
+        for(int i = 0; i < blocks.length; i++)
         {
-            rects[i] = new Rect();
+            blocks[i] = new Rect();
 
             if (mino.mRotation == 1){            //Draw like  Z or reverse Z
                     switch (i){
                         case 0:
-                            rects[i].left = leftPos;
-                            rects[i].top = mino.reverse ? topPos + SQ_SIZE: topPos;
+                            blocks[i].left = leftPos;
+                            blocks[i].top = mino.reverse ? topPos + SQ_SIZE: topPos;
                             break;
                         case 1:
-                            rects[i].left = rects[i - 1].right;
-                            rects[i].top = rects[i - 1].top;
+                            blocks[i].left = blocks[i - 1].right;
+                            blocks[i].top = blocks[i - 1].top;
                             break;
                         case 2:
-                            rects[i].left = rects[i - 1].left;
-                            rects[i].top = mino.reverse ? topPos: rects[i - 1].bottom;
+                            blocks[i].left = blocks[i - 1].left;
+                            blocks[i].top = mino.reverse ? topPos: blocks[i - 1].bottom;
                             break;
                         case 3:
-                            rects[i].left = rects[i - 1].right;
-                            rects[i].top = rects[i - 1].top;
+                            blocks[i].left = blocks[i - 1].right;
+                            blocks[i].top = blocks[i - 1].top;
                     }
             } else {                    // Draw line N  or И
                 switch (i) {
                     case 0:
-                        rects[i].left = mino.reverse ? leftPos: leftPos + SQ_SIZE;
-                        rects[i].top = topPos;
+                        blocks[i].left = mino.reverse ? leftPos: leftPos + SQ_SIZE;
+                        blocks[i].top = topPos;
                         break;
                     case 1:
-                        rects[i].left = rects[i - 1].left;
-                        rects[i].top = rects[i - 1].bottom;
+                        blocks[i].left = blocks[i - 1].left;
+                        blocks[i].top = blocks[i - 1].bottom;
                         break;
                     case 2:
-                        rects[i].left = mino.reverse ? rects[i - 1].right: leftPos;
-                        rects[i].top = rects[i - 1].top;
+                        blocks[i].left = mino.reverse ? blocks[i - 1].right: leftPos;
+                        blocks[i].top = blocks[i - 1].top;
                         break;
                     case 3:
-                        rects[i].left = rects[i - 1].left;
-                        rects[i].top = rects[i - 1].bottom;
+                        blocks[i].left = blocks[i - 1].left;
+                        blocks[i].top = blocks[i - 1].bottom;
                 }
             }
-            rects[i].right = rects[i].left + SQ_SIZE;
-            rects[i].bottom = rects[i].top + SQ_SIZE;
+            blocks[i].right = blocks[i].left + SQ_SIZE;
+            blocks[i].bottom = blocks[i].top + SQ_SIZE;
         }
     }
 
     private static void makeT(Tetramino mino, int leftPos, int topPos)
     {
-        Rect[] rects = mino.rects;
-        for(int i = 0; i < rects.length; i++)
+        Rect[] blocks = mino.blocks;
+        for(int i = 0; i < blocks.length; i++)
         {
-            rects[i] = new Rect();
+            blocks[i] = new Rect();
             switch (mino.mRotation){
                 case 1:                             // Draw like _|_
                     switch (i){
                         case 0:
-                            rects[i].left = leftPos + SQ_SIZE;
-                            rects[i].top = topPos;
+                            blocks[i].left = leftPos + SQ_SIZE;
+                            blocks[i].top = topPos;
                             break;
                         case 1:
-                            rects[i].left = leftPos;
-                            rects[i].top = rects[i - 1].bottom;
+                            blocks[i].left = leftPos;
+                            blocks[i].top = blocks[i - 1].bottom;
                             break;
                         case 2:
                         case 3:
-                            rects[i].left = rects[i - 1].right;
-                            rects[i].top = rects[i - 1].top;
+                            blocks[i].left = blocks[i - 1].right;
+                            blocks[i].top = blocks[i - 1].top;
                     }break;
                 case 2:                                 // Draw like    |_
                     switch (i){                         //              |
                         case 0:
-                            rects[i].left = leftPos;
-                            rects[i].top = topPos;
+                            blocks[i].left = leftPos;
+                            blocks[i].top = topPos;
                             break;
                         case 1:
                         case 2:
-                            rects[i].left = rects[i - 1].left;
-                            rects[i].top = rects[i - 1].bottom;
+                            blocks[i].left = blocks[i - 1].left;
+                            blocks[i].top = blocks[i - 1].bottom;
                             break;
                         case 3:
-                            rects[i].left = rects[i - 1].right;
-                            rects[i].top = rects[i - 1].top - SQ_SIZE;
+                            blocks[i].left = blocks[i - 1].right;
+                            blocks[i].top = blocks[i - 1].top - SQ_SIZE;
                     } break;
                 case 3:                         // Draw like T
                     switch (i){
                         case 0:
-                            rects[i].left = leftPos;
-                            rects[i].top = topPos;
+                            blocks[i].left = leftPos;
+                            blocks[i].top = topPos;
                             break;
                         case 1:
                         case 2:
-                            rects[i].left = rects[i - 1].right;
-                            rects[i].top = rects[i - 1].top;
+                            blocks[i].left = blocks[i - 1].right;
+                            blocks[i].top = blocks[i - 1].top;
                             break;
                         case 3:
-                            rects[i].left = rects[i - 1].left - SQ_SIZE;
-                            rects[i].top = rects[i - 1].bottom;
+                            blocks[i].left = blocks[i - 1].left - SQ_SIZE;
+                            blocks[i].top = blocks[i - 1].bottom;
                     } break;
                 default:                 //                 Draw like _|
                     switch (i) {         //                            |
                         case 0:
-                            rects[i].left = leftPos;
-                            rects[i].top = topPos + SQ_SIZE;
+                            blocks[i].left = leftPos;
+                            blocks[i].top = topPos + SQ_SIZE;
                             break;
                         case 1:
-                            rects[i].left = rects[i - 1].right;
-                            rects[i].top = topPos;
+                            blocks[i].left = blocks[i - 1].right;
+                            blocks[i].top = topPos;
                             break;
                         case 2:
                         case 3:
-                            rects[i].left = rects[i - 1].left;
-                            rects[i].top = rects[i - 1].bottom;
+                            blocks[i].left = blocks[i - 1].left;
+                            blocks[i].top = blocks[i - 1].bottom;
                     }
             }
-            rects[i].right = rects[i].left + SQ_SIZE;
-            rects[i].bottom = rects[i].top + SQ_SIZE;
+            blocks[i].right = blocks[i].left + SQ_SIZE;
+            blocks[i].bottom = blocks[i].top + SQ_SIZE;
         }
     }
 
     int getColor(){return mColor;}
 
-    Rect[] getRects(){return rects;}
+    Rect[] getBlocks(){return blocks;}
 
-    void replaceRect(Rect newRect, Rect oldRect)
+    void replaceBlock(Rect newBlock, Rect oldBlock)
     {
-        for (int i = 0; i < rects.length; i++)
-            if(rects[i] != null && rects[i].equals(oldRect)) rects[i] = newRect;
+        for (int i = 0; i < blocks.length; i++)
+            if(blocks[i] != null && blocks[i].equals(oldBlock)) blocks[i] = newBlock;
     }
 
     Type getType(){return mType;}

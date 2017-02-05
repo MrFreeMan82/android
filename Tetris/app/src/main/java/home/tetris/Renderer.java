@@ -1,17 +1,14 @@
 package home.tetris;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.drawable.Drawable;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
-import static home.tetris.Display.SQ_SIZE;
-import static java.lang.Math.abs;
+import static home.tetris.Globals.SQ_SIZE;
 import static java.lang.Math.round;
 
 /**
@@ -76,7 +73,6 @@ public class Renderer extends View
             else if(enableMoveRight) scene.moveCurrentRight(x);
             if(enableMoveDown) scene.moveCurrentDown(y);
 
-
             scene.moveCurrentDown();
             invalidate();
         }
@@ -129,7 +125,7 @@ public class Renderer extends View
     void start()
     {
         if(running) return;
-        timer = new MyTimer(Long.MAX_VALUE, 20);
+        timer = new MyTimer(Long.MAX_VALUE, 15);
         scene = Scene.get();
         callback.onScoreChange(scene.getScore());
         timer.start();
