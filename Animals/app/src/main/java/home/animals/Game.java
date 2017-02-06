@@ -14,14 +14,15 @@ class Game {
     private boolean waitForReplyMyQuestion = false;
     private boolean waitForDifference = false;
     private boolean waitForContinue = false;
-    private Context context;
+    private boolean firstStart = true;
     private TreeElement First, Next, Current;
     private ArrayList<String> buf;
     private Callback callback;
+    private static Game game;
 
     interface Callback {
-        void onBufChange();
-        void onYield();
+        void onQuestionChange();
+        void onConcede();
         void onContinue();
         void onEndGame();
     }
@@ -39,31 +40,45 @@ class Game {
         TreeElement(){}
     }
 
-    Game(Context aContext)
+    private Game(Context context)
     {
-        context = aContext;
-        callback = (Callback) context;
-        Current = new TreeElement(context.getString(R.string.first_question),
-                                    context.getString(R.string.first_answear));
+        //callback = (Callback) context;
+        Current = new TreeElement(context.getString(R.string.first_question), context.getString(R.string.first_answear));
         First = Current;
         Next = null;
         buf = new ArrayList<>();
     }
 
-    void start(){myQuestion();}
+    static Game get(Context context){
+        if(game == null) {
+            game = new Game(context);
+        }
+        game.callback = (Callback) context;
+
+        return game;
+    }
+
+    void start(){
+        if(firstStart) {
+            myQuestion();
+            firstStart = false;
+        } else {
+            callback.onQuestionChange();
+        }
+    }
 
     private void myQuestion()
     {
         waitForReplyMyQuestion = true;
         buf.add(Current.question + '?');
-        callback.onBufChange();
+        callback.onQuestionChange();
     }
 
     private void myAnswear()
     {
         waitForReplyMyAnswear = true;
         buf.add("Это - " + Current.answear + '?');
-        callback.onBufChange();
+        callback.onQuestionChange();
     }
 
     private void setNext(TreeElement aNext, boolean ifTrue)
@@ -75,8 +90,8 @@ class Game {
             Next = new TreeElement();
             if(ifTrue) Current.TrueElement = Next; else Current.FalseElement = Next;
             buf.add("Хорошо, я здаюсь. Кто это?");
-            callback.onBufChange();
-            callback.onYield();
+            callback.onQuestionChange();
+            callback.onConcede();
         } else {
             Current = Next;
             myQuestion();
@@ -100,7 +115,7 @@ class Game {
         if(waitForReplyMyAnswear)
         {
             buf.add("Ура я выграла!!!! Еще разок?");
-            callback.onBufChange();
+            callback.onQuestionChange();
             waitForContinue = true;
             callback.onContinue();
             return;
@@ -132,14 +147,14 @@ class Game {
             Current = First;
             waitForContinue = true;
             buf.add("Продолжим?");
-            callback.onBufChange();
+            callback.onQuestionChange();
             callback.onContinue();
             return;
         }
 
         waitForDifference = true;
         buf.add("Какая разница между " + Current.answear + " и " + Next.answear + '?');
-        callback.onBufChange();
+        callback.onQuestionChange();
     }
 
     String getQuestion() {return buf.get(buf.size() - 1);}
