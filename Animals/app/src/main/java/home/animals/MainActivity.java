@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements Game.Callback{
                 elseText.setVisibility(View.VISIBLE);
             }
         }
+
         game = Game.get(this);
         game.start();
     }
@@ -111,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements Game.Callback{
         falseButton.setEnabled(false);
         elseButton.setEnabled(true);
         elseText.setVisibility(View.VISIBLE);
-        toggleKeyboard();
+        if(!keyboardVisible) toggleKeyboard();
     }
 
     @Override

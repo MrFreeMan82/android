@@ -2,7 +2,7 @@
     <string name="app_name">Animals</string>
     <string name="trueCaption">Да</string>
     <string name="falseCaption">Нет</string>
-    <string name="first_question">Оно ловит мышей</string>
-    <string name="first_answear">Кот</string>
+    <string name="first_question">Это хищник</string>
+    <string name="first_answear">лев</string>
     <string name="elseCaption">Ответ</string>
 </resources>

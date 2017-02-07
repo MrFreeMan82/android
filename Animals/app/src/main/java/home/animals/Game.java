@@ -1,23 +1,33 @@
 package home.animals;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.CursorWrapper;
+import android.database.sqlite.SQLiteDatabase;
+import home.animals.database.DBShema.NodeTable;
+import home.animals.database.DBHelper;
+
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 /**
  * Created by Дима on 05.02.2017.
  */
 
 class Game {
-    private boolean waitForReplyMyAnswear = false;
-    private boolean waitForAnswear = false;
-    private boolean waitForReplyMyQuestion = false;
-    private boolean waitForDifference = false;
-    private boolean waitForContinue = false;
+    private enum Status {NONE, WAIT_REPLY_QUESTION,
+        WAIT_REPLY_ANSWEAR, WAIT_TRUE_ANSWEAR, WAIT_DIFFERENCE, WAIT_CONTINUE}
+
+    private static final int FIRST_QUESTION = 1;
+    private boolean trueOption = false;
     private boolean firstStart = true;
-    private TreeElement First, Next, Current;
+    private Status status;
+    private Node First, Next, Current;
     private ArrayList<String> buf;
     private Callback callback;
+    private SQLiteDatabase db;
     private static Game game;
 
     interface Callback {
@@ -27,39 +37,70 @@ class Game {
         void onEndGame();
     }
 
-    private class TreeElement {
+    private class Node {
+        int id;
         String question, answear;
-        TreeElement TrueElement, FalseElement;
+        int yesId, noId;
+    }
 
-        TreeElement (String aQuestion, String aAnswear)
-        {
-            question = aQuestion;
-            answear = aAnswear;
+    private class NodeCursorWrapper extends CursorWrapper{
+        NodeCursorWrapper(Cursor cursor) {super(cursor);}
+
+        Node getNode(){
+            Node node = new Node();
+            node.id = getInt(getColumnIndex(NodeTable.Cols.NODE_ID));
+            node.question = getString(getColumnIndex(NodeTable.Cols.QUESTION));
+            node.answear = getString(getColumnIndex(NodeTable.Cols.ANSWEAR));
+            node.yesId = getInt(getColumnIndex(NodeTable.Cols.YES_NODE_ID));
+            node.noId = getInt(getColumnIndex(NodeTable.Cols.NO_NODE_ID));
+
+            return node;
         }
-
-        TreeElement(){}
     }
 
-    private Game(Context context)
+    private Node getNext(int nextId) {
+        String qry = String.format(Locale.US,
+                "SELECT * FROM %s WHERE %s= %d",
+                NodeTable.NAME, NodeTable.Cols.NODE_ID, nextId);
+
+        Node node = null;
+        Cursor cursor = db.rawQuery(qry, null);
+        NodeCursorWrapper cw = new NodeCursorWrapper(cursor);
+        try {
+            cw.moveToFirst();
+            node = cw.getNode();
+        }
+        finally {
+            cursor.close();
+        }
+        return node;
+    }
+
+    private ContentValues getContentValues(Node node)
     {
-        //callback = (Callback) context;
-        Current = new TreeElement(context.getString(R.string.first_question), context.getString(R.string.first_answear));
-        First = Current;
-        Next = null;
-        buf = new ArrayList<>();
+        ContentValues values = new ContentValues();
+        values.put(NodeTable.Cols.NODE_ID, node.id);
+        values.put(NodeTable.Cols.QUESTION, node.question);
+        values.put(NodeTable.Cols.ANSWEAR, node.answear);
+        values.put(NodeTable.Cols.YES_NODE_ID, node.yesId);
+        values.put(NodeTable.Cols.NO_NODE_ID, node.noId);
+        return values;
     }
 
-    static Game get(Context context){
+    static Game get(Context context) {
         if(game == null) {
-            game = new Game(context);
+            game = new Game();
+            game.buf = new ArrayList<>();
+            game.db = DBHelper.get(context.getApplicationContext()).getWritableDatabase();
         }
         game.callback = (Callback) context;
-
         return game;
     }
 
     void start(){
         if(firstStart) {
+            First = getNext(FIRST_QUESTION);
+            Current = First;
             myQuestion();
             firstStart = false;
         } else {
@@ -69,92 +110,93 @@ class Game {
 
     private void myQuestion()
     {
-        waitForReplyMyQuestion = true;
+        status = Status.WAIT_REPLY_QUESTION;
         buf.add(Current.question + '?');
         callback.onQuestionChange();
     }
 
     private void myAnswear()
     {
-        waitForReplyMyAnswear = true;
+        status = Status.WAIT_REPLY_ANSWEAR;
         buf.add("Это - " + Current.answear + '?');
         callback.onQuestionChange();
     }
 
-    private void setNext(TreeElement aNext, boolean ifTrue)
+    private void setNext(int nextId)
     {
-        Next = aNext;
-        if(Next == null)
+        if(nextId == 0)
         {
-            waitForAnswear = true;
-            Next = new TreeElement();
-            if(ifTrue) Current.TrueElement = Next; else Current.FalseElement = Next;
+            Next = new Node();
+            Next.id = DBHelper.getNextId(NodeTable.NAME);
+            status = Status.WAIT_TRUE_ANSWEAR;
             buf.add("Хорошо, я здаюсь. Кто это?");
             callback.onQuestionChange();
             callback.onConcede();
         } else {
-            Current = Next;
+            Current = getNext(nextId);
             myQuestion();
         }
     }
 
     void ifTrue()
     {
-        if(waitForContinue) {
-            waitForContinue = false;
-            myQuestion();
-            return;
+        switch (status){
+            case WAIT_CONTINUE:
+                status = Status.NONE;
+                myQuestion();
+                return;
+            case WAIT_REPLY_QUESTION:
+                status = Status.NONE;
+                myAnswear();
+                return;
+            case WAIT_REPLY_ANSWEAR:
+                status = Status.WAIT_CONTINUE;
+                buf.add("Ура я выиграла!!!! Еще разок?");
+                callback.onQuestionChange();
+                callback.onContinue();
+                return;
+            default:
+                trueOption = true;
+                setNext(Current.yesId);
         }
-
-        if(waitForReplyMyQuestion) {
-            waitForReplyMyQuestion = false;
-            myAnswear();
-            return;
-        }
-
-        if(waitForReplyMyAnswear)
-        {
-            buf.add("Ура я выграла!!!! Еще разок?");
-            callback.onQuestionChange();
-            waitForContinue = true;
-            callback.onContinue();
-            return;
-        }
-
-        setNext(Current.TrueElement, true);
     }
 
     void ifFalse()
     {
-       if(waitForContinue) {
-           waitForContinue = false;
-           callback.onEndGame();
-           return;
+       switch (status) {
+           case WAIT_CONTINUE:
+               callback.onEndGame();
+               return;
+           default:
+               trueOption = false;
+               setNext(Current.noId);
        }
-       setNext(Current.FalseElement, false);
     }
 
     void ifElse(String elseText)
     {
-        if(waitForAnswear) {
-            Next.answear = elseText;
-            waitForAnswear = false;
+        switch (status) {
+            case WAIT_TRUE_ANSWEAR:
+                Next.answear = elseText.toLowerCase();
+                status = Status.WAIT_DIFFERENCE;
+                buf.add("Какая разница между '" + Current.answear + "' и '" + Next.answear + "'?");
+                callback.onQuestionChange();
+                return;
+            case WAIT_DIFFERENCE:
+                Next.question = elseText.toLowerCase();
+                ContentValues values = getContentValues(Next);
+                db.insert(NodeTable.NAME, null, values);
+                if(trueOption) Current.yesId = Next.id; else Current.noId = Next.id;
+                values = getContentValues(Current);
+                db.update(NodeTable.NAME, values,
+                        NodeTable.Cols.NODE_ID + "=?",
+                        new String[]{Integer.toString(Current.id)});
+                Current = First;
+                status = Status.WAIT_CONTINUE;
+                buf.add("Продолжим?");
+                callback.onQuestionChange();
+                callback.onContinue();
         }
-
-        if(waitForDifference) {
-            Next.question = elseText;
-            waitForDifference = false;
-            Current = First;
-            waitForContinue = true;
-            buf.add("Продолжим?");
-            callback.onQuestionChange();
-            callback.onContinue();
-            return;
-        }
-
-        waitForDifference = true;
-        buf.add("Какая разница между " + Current.answear + " и " + Next.answear + '?');
-        callback.onQuestionChange();
     }
 
     String getQuestion() {return buf.get(buf.size() - 1);}

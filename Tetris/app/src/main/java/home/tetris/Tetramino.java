@@ -74,7 +74,7 @@ class Tetramino
     // leftPos, topPos левая верхняя точка воображаемого прямоугольника описывающего тетрамино.
     private void makeMino(int leftPos, int topPos)
     {
-        leftPos = (leftPos > SQ_SIZE)? (leftPos / SQ_SIZE) * SQ_SIZE: 0;
+        leftPos = (leftPos >= SQ_SIZE)? (leftPos / SQ_SIZE) * SQ_SIZE: 0;
         switch(mType)
         {
             case tLine: makeLine(this, leftPos, topPos); break;
