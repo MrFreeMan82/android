@@ -17,8 +17,8 @@ import java.util.Locale;
  */
 
 class Game {
-    private enum Status {NONE, WAIT_REPLY_QUESTION,
-        WAIT_REPLY_ANSWEAR, WAIT_TRUE_ANSWEAR, WAIT_DIFFERENCE, WAIT_CONTINUE}
+    private enum Status {WAIT_REPLY_QUESTION, WAIT_REPLY_ANSWEAR,
+                        WAIT_TRUE_ANSWEAR, WAIT_DIFFERENCE, WAIT_CONTINUE}
 
     private static final int FIRST_QUESTION = 1;
     private boolean trueOption = false;
@@ -58,7 +58,7 @@ class Game {
         }
     }
 
-    private Node getNext(int nextId) {
+    private Node getNextFromDB(int nextId) {
         String qry = String.format(Locale.US,
                 "SELECT * FROM %s WHERE %s= %d",
                 NodeTable.NAME, NodeTable.Cols.NODE_ID, nextId);
@@ -99,7 +99,7 @@ class Game {
 
     void start(){
         if(firstStart) {
-            First = getNext(FIRST_QUESTION);
+            First = getNextFromDB(FIRST_QUESTION);
             Current = First;
             myQuestion();
             firstStart = false;
@@ -122,7 +122,7 @@ class Game {
         callback.onQuestionChange();
     }
 
-    private void setNext(int nextId)
+    private void getNext(int nextId)
     {
         if(nextId == 0)
         {
@@ -133,7 +133,7 @@ class Game {
             callback.onQuestionChange();
             callback.onConcede();
         } else {
-            Current = getNext(nextId);
+            Current = getNextFromDB(nextId);
             myQuestion();
         }
     }
@@ -142,11 +142,10 @@ class Game {
     {
         switch (status){
             case WAIT_CONTINUE:
-                status = Status.NONE;
                 myQuestion();
                 return;
             case WAIT_REPLY_QUESTION:
-                status = Status.NONE;
+                trueOption = true;
                 myAnswear();
                 return;
             case WAIT_REPLY_ANSWEAR:
@@ -154,10 +153,6 @@ class Game {
                 buf.add("Ура я выиграла!!!! Еще разок?");
                 callback.onQuestionChange();
                 callback.onContinue();
-                return;
-            default:
-                trueOption = true;
-                setNext(Current.yesId);
         }
     }
 
@@ -167,10 +162,10 @@ class Game {
            case WAIT_CONTINUE:
                callback.onEndGame();
                return;
-           default:
+           case WAIT_REPLY_QUESTION:
                trueOption = false;
-               setNext(Current.noId);
        }
+       if(trueOption) getNext(Current.yesId); else getNext(Current.noId);
     }
 
     void ifElse(String elseText)
@@ -179,7 +174,7 @@ class Game {
             case WAIT_TRUE_ANSWEAR:
                 Next.answear = elseText.toLowerCase();
                 status = Status.WAIT_DIFFERENCE;
-                buf.add("Какая разница между '" + Current.answear + "' и '" + Next.answear + "'?");
+                buf.add("Чем " + Next.answear + " отличается от " + Current.answear + "?");
                 callback.onQuestionChange();
                 return;
             case WAIT_DIFFERENCE:
