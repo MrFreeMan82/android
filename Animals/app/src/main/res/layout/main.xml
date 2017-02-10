@@ -50,4 +50,16 @@
             android:text="@string/elseCaption"
             android:enabled="false"/>
     </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="#80000000"/>
+
+    <TextView
+        android:id="@+id/historyText"
+        android:text="@string/historyText"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbarAlwaysDrawHorizontalTrack="true"/>
 </LinearLayout>

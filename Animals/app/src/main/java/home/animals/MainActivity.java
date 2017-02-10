@@ -9,6 +9,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity implements Game.Callback{
 
     private static final String VIEW_STATE = "VIEW_STATE";
@@ -17,9 +19,11 @@ public class MainActivity extends AppCompatActivity implements Game.Callback{
     private Button elseButton;
     private EditText elseText;
     private TextView questionText;
+    private TextView historyText;
     private InputMethodManager imm;
     private boolean keyboardVisible = false;
     private Game game;
+    private static ArrayList<String> gameHistory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,18 +32,24 @@ public class MainActivity extends AppCompatActivity implements Game.Callback{
 
         imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
 
+        if(gameHistory == null) gameHistory = new ArrayList<>();
+
         trueButton = (Button) findViewById(R.id.trueButton);
         trueButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                game.ifTrue();
+                gameHistory.add(questionText.getText().toString() + " Yes.");
+                refreshHistory();
+                game.ifYes();
             }
         });
         falseButton = (Button) findViewById(R.id.falseButton);
         falseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                game.ifFalse();
+                gameHistory.add(questionText.getText().toString() + " No.");
+                refreshHistory();
+                game.ifNo();
             }
         });
         elseButton = (Button) findViewById(R.id.elseButton);
@@ -47,7 +57,8 @@ public class MainActivity extends AppCompatActivity implements Game.Callback{
             @Override
             public void onClick(View v) {
                 if(elseText.getText().toString().isEmpty()) return;
-
+                gameHistory.add(questionText.getText().toString() + " " + elseText.getText().toString());
+                refreshHistory();
                 game.ifElse(elseText.getText().toString());
                 elseText.setText("");
             }
@@ -64,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements Game.Callback{
             }
         });
         questionText = (TextView) findViewById(R.id.questionText);
+        historyText = (TextView) findViewById(R.id.historyText);
 
         if(savedInstanceState != null){
             int state = savedInstanceState.getInt(VIEW_STATE);
@@ -81,12 +93,21 @@ public class MainActivity extends AppCompatActivity implements Game.Callback{
 
         game = Game.get(this);
         game.start();
+        refreshHistory();
     }
 
     private void toggleKeyboard()
     {
         keyboardVisible = !keyboardVisible;
         imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+    }
+
+    private void refreshHistory(){
+        StringBuilder s = new StringBuilder();
+        for(String line: gameHistory){
+            s.append(line).append('\n');
+        }
+        historyText.setText(s);
     }
 
     @Override

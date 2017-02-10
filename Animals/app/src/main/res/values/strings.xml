@@ -5,4 +5,5 @@
     <string name="first_question">Это хищник</string>
     <string name="first_answear">лев</string>
     <string name="elseCaption">Ответ</string>
+    <string name="historyText">История</string>
 </resources>
