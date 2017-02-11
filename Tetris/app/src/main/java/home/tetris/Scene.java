@@ -1,15 +1,18 @@
 package home.tetris;
 
+import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.provider.Settings;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import static home.tetris.Globals.SQ_SIZE;
+import static java.lang.Math.abs;
 
 /**
  * Created by Дима on 23.01.2017.
@@ -22,8 +25,10 @@ class Scene
     private Paint paint;
     private static Scene scene;
     private Random random;
+    private Sound sound;
     private boolean gameOver = false;
     private int score = 0;
+    private int level = 1;
 
     private Scene()
     {
@@ -34,14 +39,11 @@ class Scene
         newMino();
     }
 
-    static Scene get()
+    static Scene get(Context context)
     {
-        if(scene == null){
-            scene = new Scene();
-            return scene;
-        } else {
-            return scene;
-        }
+        if(scene == null)scene = new Scene();
+        scene.sound = new Sound(context);
+        return scene;
     }
 
     private int getColor()
@@ -126,6 +128,7 @@ class Scene
 
     void rotateCurrent()
     {
+        sound.play(Globals.ROTATE);
         int rotation = currentMino.getRotation();
         switch(currentMino.getType())
         {
@@ -215,6 +218,8 @@ class Scene
                deleteLine(line);
                fallSquares(line - 1);
                score++;
+
+               level = ((score % 25) == 0)? ++level:level;
             }
 
             bottom = top;
@@ -238,17 +243,19 @@ class Scene
 
     void moveCurrentDown()
     {
-        if (collisionBottom(currentMino))
-        {
-            if(collisionUp(currentMino))
-            {
-                gameOver = true;
-                return;
+        for (int k = level + 2; k > 0; k--) {
+            if (collisionBottom(currentMino)) {
+                sound.play(Globals.IMPACT);
+                if (collisionUp(currentMino)) {
+                    gameOver = true;
+                    return;
+                }
+                deleteFullLines();
+                newMino();
             }
-            deleteFullLines();
-            newMino();
+
+            currentMino.moveDown();
         }
-        currentMino.moveDown();
     }
 
     void moveCurrentLeft(int x)
@@ -257,6 +264,7 @@ class Scene
 
       if(!collisionLeftRight(mino, currentMino))
       {
+          sound.play(Globals.MOVE_LEFT_RIGHT);
           sceneList.remove(currentMino);
           sceneList.add(mino);
           currentMino = mino;
@@ -268,6 +276,7 @@ class Scene
        Tetramino mino = new Tetramino(currentMino, x);
        if(!collisionLeftRight(mino, currentMino))
        {
+           sound.play(Globals.MOVE_LEFT_RIGHT);
            sceneList.remove(currentMino);
            sceneList.add(mino);
            currentMino = mino;
@@ -287,7 +296,9 @@ class Scene
         {
             if(current == null) continue;
             int bottom = current.bottom;
-            if(bottom >= Globals.HEIGHT) return true;
+            if(bottom >= Globals.HEIGHT) {
+                return true;
+            }
 
             for(Tetramino tetramino: sceneList)
             {
@@ -299,7 +310,9 @@ class Scene
                     if(bottom >= prev.top && current.top <= prev.bottom &&
                                current.left < prev.right && current.right > prev.left
                     )
-                    { return true;}
+                    {
+                        return true;
+                    }
                 }
             }
         }
@@ -351,11 +364,14 @@ class Scene
 
     int getScore(){return score;}
 
+    int getLevel(){return level;}
+
     void clear()
     {
         sceneList.clear();
         gameOver = false;
         score = 0;
+        level = 1;
         newMino();
     }
 }

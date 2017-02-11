@@ -10,4 +10,8 @@ public class Globals
     static final int MAX_BLOCK_CNT = 4;
     static int WIDTH, HEIGHT;
     static int SQ_SIZE;
+
+    static final int IMPACT = 1;
+    static final int MOVE_LEFT_RIGHT = 2;
+    static final int ROTATE = 3;
 }

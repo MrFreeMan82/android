@@ -17,6 +17,7 @@ import static java.lang.Math.round;
 
 public class Renderer extends View
 {
+    private static final int TIMER_INTERVAL = 30;
     private Context mContext;
     private Scene scene = null;
     private MyTimer timer;
@@ -25,6 +26,7 @@ public class Renderer extends View
     private boolean enableMoveLeft = false, enableMoveRight = false, enableMoveDown = false;
     private boolean enableRotate = false;
     private int oldScore = 0;
+    private int oldLevel = 1;
     private Callback callback;
 
     interface Callback
@@ -46,13 +48,13 @@ public class Renderer extends View
         @Override
         public void onTick(long millisUntilFinished)
         {
-            if(!running) return;
+           if(!running) return;
 
             if(scene.getGameOver())
             {
                 Toast.makeText(mContext, "Game Over", Toast.LENGTH_SHORT).show();
                 running = false;
-                cancel();
+                this.cancel();
                 return;
             }
 
@@ -61,6 +63,11 @@ public class Renderer extends View
             {
                 oldScore = score;
                 callback.onScoreChange(score);
+                int level = scene.getLevel();
+                if(level > oldLevel) {
+                   oldLevel = level;
+                   Toast.makeText(mContext, "Level up to " + level, Toast.LENGTH_SHORT).show();
+                }
             }
 
             if(enableRotate)
@@ -125,8 +132,8 @@ public class Renderer extends View
     void start()
     {
         if(running) return;
-        timer = new MyTimer(Long.MAX_VALUE, 15);
-        scene = Scene.get();
+        timer = new MyTimer(Long.MAX_VALUE, TIMER_INTERVAL);
+        scene = Scene.get(mContext);
         callback.onScoreChange(scene.getScore());
         timer.start();
         running = true;
