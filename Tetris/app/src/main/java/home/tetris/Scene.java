@@ -5,17 +5,18 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.provider.Settings;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import static home.tetris.Globals.SQ_SIZE;
-import static java.lang.Math.abs;
 
 /**
  * Created by Дима on 23.01.2017.
+ * Класс сингетный. Служит для описания игрового поля (положение всех тетрамино на поле)
+ * Описывает их движение и повороты.
+ * Удаляет заполненые линии ведет учет текущих уровеня и очков.
  */
 
 class Scene
@@ -29,9 +30,11 @@ class Scene
     private boolean gameOver = false;
     private int score = 0;
     private int level = 1;
+    private int oldLeft = -1;
 
-    private Scene()
+    private Scene(Context context)
     {
+        sound = new Sound(context);
         sceneList = new ArrayList<>();
         random = new Random();
         paint = new Paint();
@@ -41,8 +44,7 @@ class Scene
 
     static Scene get(Context context)
     {
-        if(scene == null)scene = new Scene();
-        scene.sound = new Sound(context);
+        if(scene == null)scene = new Scene(context);
         return scene;
     }
 
@@ -51,7 +53,7 @@ class Scene
         int k = Integer.MAX_VALUE;
         return Color.argb(random.nextInt(k), random.nextInt(k), random.nextInt(k), random.nextInt(k));
     }
-
+// Создает новое тетрамино за пределами экрана, все параметры выбираются случайно
     private void newMino()
     {
         Tetramino.Type type = Tetramino.intToType(random.nextInt(7));
@@ -65,12 +67,11 @@ class Scene
                 rotation = random.nextInt(2);
                 if(rotation == 1) {
                     topPos = -SQ_SIZE;
-                    leftPos = random.nextInt(Globals.WIDTH - (4 * SQ_SIZE));
+                    leftPos = random.nextInt(Globals.WIDTH - (Globals.MAX_BLOCK_CNT * SQ_SIZE));
                 } else {
-                    topPos = -(4 * SQ_SIZE);
+                    topPos = -(Globals.MAX_BLOCK_CNT * SQ_SIZE);
                     leftPos = random.nextInt(Globals.WIDTH - SQ_SIZE);
                 }
-
                 break;
             case tSquare:
                     topPos = -(2 * SQ_SIZE);
@@ -185,7 +186,9 @@ class Scene
                         tetramino.replaceBlock(null, block);
                 }
             }
-            if(counter >= 4) sceneList.remove(tetramino); else i++;
+            if(counter == Globals.MAX_BLOCK_CNT) {
+                sceneList.remove(tetramino);
+            } else i++;
         }
 
     }
@@ -209,6 +212,7 @@ class Scene
     {
         int bottom = Globals.HEIGHT;
         int top = bottom - SQ_SIZE;
+        boolean eneblePlay = true;
 
         while(top >= 0 && bottom >= top)
         {
@@ -216,12 +220,18 @@ class Scene
             while(lineIsFull(line))
             {
                deleteLine(line);
+               if(eneblePlay){
+                   sound.play(Globals.DELETE_LINE);
+                   eneblePlay = false;
+               }
                fallSquares(line - 1);
                score++;
 
-               level = ((score % 25) == 0)? ++level:level;
+               if((score % Globals.SCORE_PER_LEVEL) == 0){
+                    level++;
+                    sound.play(Globals.LEVEL_UP);
+               }
             }
-
             bottom = top;
             top -= SQ_SIZE;
         }
@@ -235,6 +245,7 @@ class Scene
 
         if(!collisionBottom(mino))
         {
+            sound.play(Globals.MOVE_MINO);
             sceneList.remove(currentMino);
             sceneList.add(mino);
             currentMino = mino;
@@ -245,11 +256,11 @@ class Scene
     {
         for (int k = level + 2; k > 0; k--) {
             if (collisionBottom(currentMino)) {
-                sound.play(Globals.IMPACT);
                 if (collisionUp(currentMino)) {
                     gameOver = true;
                     return;
                 }
+                sound.play(Globals.IMPACT);
                 deleteFullLines();
                 newMino();
             }
@@ -264,7 +275,10 @@ class Scene
 
       if(!collisionLeftRight(mino, currentMino))
       {
-          sound.play(Globals.MOVE_LEFT_RIGHT);
+          if(oldLeft != mino.getMinLeft()) {
+              oldLeft = mino.getMinLeft();
+              sound.play(Globals.MOVE_MINO);
+          }
           sceneList.remove(currentMino);
           sceneList.add(mino);
           currentMino = mino;
@@ -276,7 +290,10 @@ class Scene
        Tetramino mino = new Tetramino(currentMino, x);
        if(!collisionLeftRight(mino, currentMino))
        {
-           sound.play(Globals.MOVE_LEFT_RIGHT);
+           if(oldLeft != mino.getMinLeft()) {
+               oldLeft = mino.getMinLeft();
+               sound.play(Globals.MOVE_MINO);
+           }
            sceneList.remove(currentMino);
            sceneList.add(mino);
            currentMino = mino;

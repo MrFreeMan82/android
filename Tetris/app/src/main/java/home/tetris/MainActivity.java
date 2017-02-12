@@ -2,12 +2,10 @@ package home.tetris;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewTreeObserver;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import java.util.Locale;
 
@@ -44,7 +42,6 @@ public class MainActivity extends AppCompatActivity
         Globals.HEIGHT = canvasLayout.getHeight();
         Globals.SQ_SIZE = Globals.WIDTH / Globals.BLOCKS_PER_WIDTH;
         if(!pause) mRenderer.start();
-        Log.d("Activity", "onGlobalLayout");
     }
 
     @Override
@@ -85,6 +82,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onScoreChange(int score)
     {
-        getSupportActionBar().setSubtitle(String.format(Locale.US, "%04d", score));
+        if(getSupportActionBar() != null)
+            getSupportActionBar().setSubtitle(String.format(Locale.US, "%04d", score));
     }
 }

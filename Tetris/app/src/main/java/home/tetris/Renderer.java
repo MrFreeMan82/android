@@ -3,7 +3,6 @@ package home.tetris;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.os.CountDownTimer;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
@@ -13,6 +12,7 @@ import static java.lang.Math.round;
 
 /**
  * Created by Дима on 23.01.2017.
+ * Класс используется для отрисовки игрового поля и управления блоком тетрамино.
  */
 
 public class Renderer extends View

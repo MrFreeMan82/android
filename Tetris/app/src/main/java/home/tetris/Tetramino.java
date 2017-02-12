@@ -14,6 +14,7 @@ import static home.tetris.Tetramino.Type.tZReverse;
 
 /**
  * Created by Дима on 23.01.2017.
+ * Класс служит для описания возможных видов Тетрамино
  */
 
 class Tetramino
@@ -123,21 +124,6 @@ class Tetramino
             rect.top += 1;
             rect.bottom = rect.top + SQ_SIZE;
         }
-    }
-
-    Rect getRect(){
-        Rect rect = new Rect();
-        rect.left = Integer.MAX_VALUE;
-        rect.top = Integer.MAX_VALUE;
-        rect.bottom = 0;
-        rect.right = 0;
-        for (Rect block: blocks){
-            if(block.left < rect.left) rect.left = block.left;
-            if(block.top < rect.top) rect.top = block.top;
-            if(block.right > rect.right) rect.right = block.right;
-            if(block.bottom > rect.bottom) rect.bottom = block.bottom;
-        }
-        return rect;
     }
 
     private static void makeLine(Tetramino mino, int leftPos, int topPos)

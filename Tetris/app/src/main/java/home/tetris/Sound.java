@@ -5,21 +5,19 @@ import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.media.AudioManager;
 import android.media.SoundPool;
-import android.os.Build;
 import android.util.Log;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
  * Created by Дима on 11.02.2017.
+ * Класс менеджер звуков игры
  */
 
 class Sound {
     private static final String SOUND_FOLDER = "tetris_sounds";
-    private static final int MAX_SOUNDS = 1;
+    private static final int MAX_SOUNDS = 2;
 
     private AssetManager assetManager;
     private SoundPool soundPool;
@@ -32,7 +30,6 @@ class Sound {
     }
 
     private void loadSounds(){
-
         try{
             String[] files = assetManager.list(SOUND_FOLDER);
             Arrays.sort(files);
@@ -42,7 +39,6 @@ class Sound {
                 AssetFileDescriptor afd = assetManager.openFd(assetPath + filename);
                 soundPool.load(afd, 1);
             }
-
         } catch (IOException ioe) {
             Log.e("Sound", "Could not list assets", ioe);
         }
