@@ -50,7 +50,7 @@ class Tetramino
     int getMinLeft() {
         int r = Integer.MAX_VALUE;
         for(Rect block: blocks)
-            if(block.left < r) r = block.left;
+            if(block != null && block.left < r) r = block.left;
 
         return r;
     }
@@ -58,7 +58,7 @@ class Tetramino
     int getMinTop(){
         int r = Integer.MAX_VALUE;
         for(Rect block: blocks)
-            if(block.top < r) r = block.top;
+            if(block != null && block.top < r) r = block.top;
 
         return r;
     }

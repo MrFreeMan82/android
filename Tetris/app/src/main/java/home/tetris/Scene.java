@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.CountDownTimer;
-import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -20,10 +19,11 @@ import static home.tetris.Globals.SQ_SIZE;
  * Служит для описания игрового поля (положение всех тетрамино на поле)
  * Описывает их движение и повороты.
  * Удаляет заполненые линии ведет учет текущих уровеня и очков.
+ * Также выполняет отрисовку сцены.
  *
  */
 
-class Scene extends View
+class Scene extends View implements DeleteLineAnimation.Callback
 {
     private static final int TIMER_INTERVAL = 30;
 
@@ -34,7 +34,6 @@ class Scene extends View
     private Sound sound;
     private boolean gameOver = false;
     private boolean running = false;
-    private boolean waitUntilFall = false;
     private int score = 0;
     private int level = 1;
     private Callback callback;
@@ -76,7 +75,6 @@ class Scene extends View
 
             @Override
             public void onTick(long millisUntilFinished){
-                if(waitUntilFall) return;
 
                 if(running) {
                     moveCurrentDown(0);
@@ -204,44 +202,16 @@ class Scene extends View
                 if(block.bottom == bottom){
                     counter++;
                     if(counter == Globals.BLOCKS_PER_WIDTH){
-                        Log.d("Scene", "block count " + counter);
                         return true;
                     }
                 }
             }
         }
-        Log.d("Scene", "block count " + counter);
         return false;
-    }
-
-    private void deleteLine(int bottom)
-    {
-        if(bottom == 0) return;
-        int i = 0;
-        while(i <= sceneList.size() - 1)
-        {
-            Tetramino tetramino = sceneList.get(i);
-            int counter = 0;
-            for(Rect block: tetramino.getBlocks())
-            {
-                if(block == null) {
-                    counter++;
-                    continue;
-                }
-
-                if (block.bottom == bottom) {
-                        tetramino.replaceBlock(null, block);
-                }
-            }
-            if(counter == Globals.MAX_BLOCK_CNT) {
-                sceneList.remove(tetramino);
-            } else i++;
-        }
     }
 
     private void fallSquares(int bottom)
     {
-        waitUntilFall = true;
         for(Tetramino tetramino: sceneList)
         {
             for (Rect block: tetramino.getBlocks())
@@ -254,7 +224,6 @@ class Scene extends View
                 }
             }
         }
-        waitUntilFall = false;
     }
 
     private boolean lineIsEmpty(int bottom)
@@ -268,6 +237,23 @@ class Scene extends View
         return true;
     }
 
+    @Override
+    public void onDeleteBlock(Tetramino tetramino){
+
+        int counter = 0;
+        for(Rect block: tetramino.getBlocks()){
+            if(block == null) counter++;
+        }
+
+        if(counter == Globals.MAX_BLOCK_CNT) sceneList.remove(tetramino);
+        invalidate();
+    }
+
+    @Override
+    public void onDeleteComplete(int line){
+        fallSquares(line);
+    }
+
     private void deleteFullLines()
     {
         int bottom = Globals.HEIGHT;
@@ -277,14 +263,16 @@ class Scene extends View
         {
             if(lineIsEmpty(bottom)) return;
 
-            while(lineIsFull(bottom))
+            if(lineIsFull(bottom))
             {
                if(enablePlay){
                    sound.play(Globals.DELETE_LINE);
                    enablePlay = false;
                }
-               deleteLine(bottom);
-               fallSquares(bottom);
+
+               new DeleteLineAnimation(sceneList, this, bottom);
+              // deleteLine(bottom);
+              // fallSquares(bottom);
                score++;
                callback.onScoreChange(score);
 
@@ -301,20 +289,19 @@ class Scene extends View
     void moveCurrentDown(int speedInc)
     {
         if(gameOver) return;
+        if(speedInc != 0) sound.play(Globals.MOVE_MINO);
         for (int k = level + 2 + speedInc; k > 0; k--) {
-            if(!waitUntilFall) {
-                if (collisionBottom(currentMino)) {
-                    if (collisionUp(currentMino)) {
-                        gameOver = true;
-                        callback.onGameOver();
-                        return;
-                    }
-                    sound.play(Globals.IMPACT);
-                    deleteFullLines();
-                    newMino();
-                }
-            }
 
+            if (collisionBottom(currentMino)) {
+                if (collisionUp(currentMino)) {
+                    gameOver = true;
+                    callback.onGameOver();
+                    return;
+                }
+                sound.play(Globals.IMPACT);
+                deleteFullLines();
+                newMino();
+            }
             currentMino.moveDown();
         }
     }
