@@ -13,6 +13,8 @@ import java.util.List;
  *
  */
 
+//To-Do Добавить синхронизацию когда удаляется несколько линий
+
 class DeleteLineAnimation {
 
     private ArrayList<Tetramino> tetraminosAtLine;
@@ -23,6 +25,7 @@ class DeleteLineAnimation {
     interface Callback{
         void onDeleteBlock(Tetramino tetramino);
         void onDeleteComplete(int line);
+        void onBeginDelete();
     }
 
     private void findAtLine(List<Tetramino> sceneList, int line){
@@ -77,6 +80,7 @@ class DeleteLineAnimation {
                     for(Rect block: tetramino.getBlocks()) {
 
                         if(block != null && block.bottom == line) {
+                            if(doneCounter == 0) callback.onBeginDelete();
                             tetramino.replaceBlock(null, block);
                             callback.onDeleteBlock(tetramino);
                             doneCounter++;

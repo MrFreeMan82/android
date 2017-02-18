@@ -2,7 +2,6 @@ package home.tetris;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.CountDownTimer;
@@ -10,7 +9,6 @@ import android.view.View;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import static home.tetris.Globals.SQ_SIZE;
 
@@ -30,10 +28,10 @@ class Scene extends View implements DeleteLineAnimation.Callback
     private List<Tetramino> sceneList;
     private Tetramino currentMino;
     private Paint paint;
-    private Random random;
     private Sound sound;
     private boolean gameOver = false;
     private boolean running = false;
+    private boolean enableDeleteLine = true;
     private int score = 0;
     private int level = 1;
     private Callback callback;
@@ -66,7 +64,6 @@ class Scene extends View implements DeleteLineAnimation.Callback
         callback = (Callback) context;
         sound = new Sound(context);
         sceneList = new ArrayList<>();
-        random = new Random();
         paint = new Paint();
         paint.setStrokeWidth(1);
         new CountDownTimer(Long.MAX_VALUE, TIMER_INTERVAL){
@@ -84,58 +81,33 @@ class Scene extends View implements DeleteLineAnimation.Callback
         }.start();
     }
 
-    private int getColor()
-    {
-        int k = Integer.MAX_VALUE;
-        return Color.argb(random.nextInt(k), random.nextInt(k), random.nextInt(k), random.nextInt(k));
-    }
 // Создает новое тетрамино за пределами экрана, все параметры выбираются случайно
     private void newMino()
     {
-        Type type = Tetramino.intToType(random.nextInt(19));
-        int leftPos = 0;
-        int topPos = 0;
-        int color = getColor();
+        int type = (int) (Math.random() * 19);
+
         switch (type)
         {
-            case tLineHorizontal:
-                    topPos = -SQ_SIZE;
-                    leftPos = random.nextInt(Globals.WIDTH - (Globals.MAX_BLOCK_CNT * SQ_SIZE));
-                    break;
-            case tLineVertical:
-                    topPos = -(Globals.MAX_BLOCK_CNT * SQ_SIZE);
-                    leftPos = random.nextInt(Globals.WIDTH - SQ_SIZE);
-                    break;
-            case tSquare:
-                    topPos = -(2 * SQ_SIZE);
-                    leftPos = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
-                break;
-            case tL0:  case tL180: case tLR0: case tLR180:
-                    topPos = -(3 * SQ_SIZE);
-                    leftPos = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
-                break;
-            case tL90: case tL270: case tLR90: case tLR270:
-                    topPos = -(2 * SQ_SIZE);
-                    leftPos = random.nextInt(Globals.WIDTH - (3 * SQ_SIZE));
-                break;
-            case tT0: case tT180:
-                    topPos = -(2 * SQ_SIZE);
-                    leftPos = random.nextInt(Globals.WIDTH - (3 * SQ_SIZE));
-                break;
-            case tT90: case tT270:
-                    topPos = -(3 * SQ_SIZE);
-                    leftPos = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
-                break;
-            case tZ0: case tRZ0:
-                    topPos = -(3 * SQ_SIZE);
-                    leftPos = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
-                break;
-            case tZ180: case tRZ180:
-                    topPos = -(2 * SQ_SIZE);
-                    leftPos = random.nextInt(Globals.WIDTH - (3 * SQ_SIZE));
+            case 0: sceneList.add(new LineHorizontal()); break;
+            case 1: sceneList.add(new LineVertical()); break;
+            case 2: sceneList.add(new Square()); break;
+            case 3: sceneList.add(new L0());   break;
+            case 4: sceneList.add(new L90());  break;
+            case 5: sceneList.add(new L180()); break;
+            case 6: sceneList.add(new L270()); break;
+            case 7: sceneList.add(new LR0()); break;
+            case 8: sceneList.add(new LR90()); break;
+            case 9: sceneList.add(new LR180()); break;
+            case 10: sceneList.add(new LR270()); break;
+            case 11: sceneList.add(new T0()); break;
+            case 12: sceneList.add(new T90()); break;
+            case 13: sceneList.add(new T180()); break;
+            case 14: sceneList.add(new T270()); break;
+            case 15: sceneList.add(new Z0()); break;
+            case 16: sceneList.add(new Z180()); break;
+            case 17: sceneList.add(new RZ0()); break;
+            case 18: sceneList.add(new RZ180());
         }
-        leftPos = (leftPos >= SQ_SIZE)? (leftPos / SQ_SIZE) * SQ_SIZE: 0;
-        sceneList.add(new Tetramino(type, leftPos, topPos, color));
         currentMino = sceneList.get(sceneList.size() - 1);
     }
 
@@ -156,38 +128,15 @@ class Scene extends View implements DeleteLineAnimation.Callback
     void rotateCurrent()
     {
         if(gameOver) return;
-        Type type = currentMino.getType();
-        switch(type)
-        {
-            case tLineHorizontal: type = Type.tLineVertical; break;
-            case tLineVertical: type = Type.tLineHorizontal; break;
-            case tSquare: return;
-            case tL0: type = Type.tL90; break;
-            case tL90: type = Type.tL180; break;
-            case tL180: type = Type.tL270; break;
-            case tL270: type = Type.tL0; break;
-            case tLR0: type = Type.tLR90; break;
-            case tLR90: type = Type.tLR180; break;
-            case tLR180: type = Type.tLR270; break;
-            case tLR270: type = Type.tLR0; break;
-            case tT0: type = Type.tT90; break;
-            case tT90: type = Type.tT180; break;
-            case tT180: type = Type.tT270; break;
-            case tT270: type = Type.tT0; break;
-            case tZ0: type = Type.tZ180; break;
-            case tZ180: type = Type.tZ0; break;
-            case tRZ0: type = Type.tRZ180;break;
-            case tRZ180: type = Type.tRZ0;
-        }
 
-        sound.play(Globals.ROTATE);
-        Tetramino mino = new Tetramino(type, currentMino.getMinLeft(), currentMino.getMinTop(), currentMino.getColor());
+        Tetramino tetramino = currentMino.rotate();
+        if(tetramino == null) return;
 
-        if(!collisionRotate(mino, currentMino))
-        {
+        if(!collisionRotate(tetramino, currentMino)){
+            sound.play(Globals.ROTATE);
             sceneList.remove(currentMino);
-            sceneList.add(mino);
-            currentMino = mino;
+            sceneList.add(tetramino);
+            currentMino = tetramino;
         }
     }
 
@@ -252,6 +201,12 @@ class Scene extends View implements DeleteLineAnimation.Callback
     @Override
     public void onDeleteComplete(int line){
         fallSquares(line);
+        enableDeleteLine = true;
+    }
+
+    @Override
+    public void onBeginDelete(){
+        enableDeleteLine = false;
     }
 
     private void deleteFullLines()
@@ -270,9 +225,8 @@ class Scene extends View implements DeleteLineAnimation.Callback
                    enablePlay = false;
                }
 
+
                new DeleteLineAnimation(sceneList, this, bottom);
-              // deleteLine(bottom);
-              // fallSquares(bottom);
                score++;
                callback.onScoreChange(score);
 
