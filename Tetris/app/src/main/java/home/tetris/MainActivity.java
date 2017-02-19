@@ -12,7 +12,6 @@ import android.widget.Toast;
 
 import java.util.Locale;
 
-import static home.tetris.Globals.SQ_SIZE;
 import static java.lang.Math.round;
 
 
@@ -60,19 +59,19 @@ public class MainActivity extends AppCompatActivity
                 break;
 
             case MotionEvent.ACTION_MOVE:
-                if(x - oldX < -SQ_SIZE){
+                if(x - oldX < -Tetramino.SQ_SIZE){
                     moving = true;
                     oldX = x; oldY = y;
                     scene.moveCurrentLeft();
                     return true;
                 }
-                else if(x - oldX > SQ_SIZE){
+                else if(x - oldX > Tetramino.SQ_SIZE){
                     moving = true;
                     oldX = x; oldY = y;
                     scene.moveCurrentRight();
                     return true;
                 }
-                else if(y - oldY > SQ_SIZE){
+                else if(y - oldY > Tetramino.SQ_SIZE){
                     moving = true;
                     oldX = x; oldY = y;
                     scene.moveCurrentDown(SPEED_INCREMENT);
@@ -92,9 +91,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onGlobalLayout()
     {
-        Globals.WIDTH = canvasLayout.getWidth();
-        Globals.HEIGHT = canvasLayout.getHeight();
-        Globals.SQ_SIZE = Globals.WIDTH / Globals.BLOCKS_PER_WIDTH;
+        Scene.WIDTH = canvasLayout.getWidth();
+        Scene.HEIGHT = canvasLayout.getHeight();
+        Tetramino.SQ_SIZE = Scene.WIDTH / Scene.BLOCKS_PER_WIDTH;
         if(!pause) scene.start();
     }
 

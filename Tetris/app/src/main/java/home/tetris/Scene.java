@@ -10,8 +10,6 @@ import android.view.View;
 import java.util.ArrayList;
 import java.util.List;
 
-import static home.tetris.Globals.SQ_SIZE;
-
 /**
  * Created by Дима on 23.01.2017.
  * Служит для описания игрового поля (положение всех тетрамино на поле)
@@ -21,17 +19,23 @@ import static home.tetris.Globals.SQ_SIZE;
  *
  */
 
-class Scene extends View implements DeleteLineAnimation.Callback
+class Scene extends View implements TetrisAnimator.Callback
 {
+    public static final int BLOCKS_PER_WIDTH = 12;
+    public static int WIDTH;
+    public static int HEIGHT;
+
+    private static final int SCORE_PER_LEVEL = 25;
     private static final int TIMER_INTERVAL = 30;
+    private static final int TETRAMINO_TOTAL = 19;
 
     private List<Tetramino> sceneList;
+    private TetrisAnimator tetrisAnimator;
     private Tetramino currentMino;
     private Paint paint;
     private Sound sound;
     private boolean gameOver = false;
     private boolean running = false;
-    private boolean enableDeleteLine = true;
     private int score = 0;
     private int level = 1;
     private Callback callback;
@@ -55,6 +59,7 @@ class Scene extends View implements DeleteLineAnimation.Callback
     void stop(){
         running = false;
         clear();
+        tetrisAnimator.clear();
         invalidate();
     }
 
@@ -64,6 +69,7 @@ class Scene extends View implements DeleteLineAnimation.Callback
         callback = (Callback) context;
         sound = new Sound(context);
         sceneList = new ArrayList<>();
+        tetrisAnimator = new TetrisAnimator(this);
         paint = new Paint();
         paint.setStrokeWidth(1);
         new CountDownTimer(Long.MAX_VALUE, TIMER_INTERVAL){
@@ -84,9 +90,7 @@ class Scene extends View implements DeleteLineAnimation.Callback
 // Создает новое тетрамино за пределами экрана, все параметры выбираются случайно
     private void newMino()
     {
-        int type = (int) (Math.random() * 19);
-
-        switch (type)
+        switch ((int) (Math.random() * TETRAMINO_TOTAL))
         {
             case 0: sceneList.add(new LineHorizontal()); break;
             case 1: sceneList.add(new LineVertical()); break;
@@ -133,30 +137,31 @@ class Scene extends View implements DeleteLineAnimation.Callback
         if(tetramino == null) return;
 
         if(!collisionRotate(tetramino, currentMino)){
-            sound.play(Globals.ROTATE);
+            sound.play(Sound.ROTATE);
             sceneList.remove(currentMino);
             sceneList.add(tetramino);
             currentMino = tetramino;
         }
     }
 
-    private boolean lineIsFull(int bottom)
+    private Tetramino[] getNextFullLine(int bottom)
     {
         int counter = 0;
+        Tetramino[] result = new Tetramino[BLOCKS_PER_WIDTH];
         for(Tetramino current: sceneList)
         {
             for(Rect block: current.getBlocks())
             {
                 if(block == null) continue;
-                if(block.bottom == bottom){
+                if(block.bottom == bottom)
+                {
+                    result[counter] = current;
                     counter++;
-                    if(counter == Globals.BLOCKS_PER_WIDTH){
-                        return true;
-                    }
+                    if(counter == BLOCKS_PER_WIDTH) return result;
                 }
             }
         }
-        return false;
+        return null;
     }
 
     private void fallSquares(int bottom)
@@ -169,7 +174,7 @@ class Scene extends View implements DeleteLineAnimation.Callback
                 if(block.bottom < bottom)
                 {
                     block.top = block.bottom;
-                    block.bottom += SQ_SIZE;
+                    block.bottom += Tetramino.SQ_SIZE;
                 }
             }
         }
@@ -187,63 +192,57 @@ class Scene extends View implements DeleteLineAnimation.Callback
     }
 
     @Override
-    public void onDeleteBlock(Tetramino tetramino){
+    public void onDeleteBlock(Tetramino tetramino, int column){
 
         int counter = 0;
         for(Rect block: tetramino.getBlocks()){
             if(block == null) counter++;
         }
 
-        if(counter == Globals.MAX_BLOCK_CNT) sceneList.remove(tetramino);
+        if(counter == Tetramino.MAX_BLOCK_CNT) sceneList.remove(tetramino);
         invalidate();
     }
 
     @Override
-    public void onDeleteComplete(int line){
-        fallSquares(line);
-        enableDeleteLine = true;
-    }
-
-    @Override
-    public void onBeginDelete(){
-        enableDeleteLine = false;
+    public void onDeleteComplete(){
+      //  fallSquares(line);
     }
 
     private void deleteFullLines()
     {
-        int bottom = Globals.HEIGHT;
+        int bottom = HEIGHT;
         boolean enablePlay = true;
 
         while(bottom > 0)
         {
             if(lineIsEmpty(bottom)) return;
 
-            if(lineIsFull(bottom))
+            Tetramino[] line = getNextFullLine(bottom);
+            if(line != null)
             {
                if(enablePlay){
-                   sound.play(Globals.DELETE_LINE);
+                   sound.play(Sound.DELETE_LINE);
                    enablePlay = false;
                }
 
-
-               new DeleteLineAnimation(sceneList, this, bottom);
+               tetrisAnimator.addDeleteLineAnimation(line, bottom);
                score++;
                callback.onScoreChange(score);
 
-               if((score % Globals.SCORE_PER_LEVEL) == 0){
+               if((score % SCORE_PER_LEVEL) == 0){
                    level++;
-                   sound.play(Globals.LEVEL_UP);
+                   sound.play(Sound.LEVEL_UP);
                    callback.onLevelUp(level);
                }
             }
-            bottom -= SQ_SIZE;
+            bottom -= Tetramino.SQ_SIZE;
         }
     }
 
     void moveCurrentDown(int speedInc)
     {
         if(gameOver) return;
-        if(speedInc != 0) sound.play(Globals.MOVE_MINO);
+        if(speedInc != 0) sound.play(Sound.MOVE_MINO);
         for (int k = level + 2 + speedInc; k > 0; k--) {
 
             if (collisionBottom(currentMino)) {
@@ -252,7 +251,7 @@ class Scene extends View implements DeleteLineAnimation.Callback
                     callback.onGameOver();
                     return;
                 }
-                sound.play(Globals.IMPACT);
+                sound.play(Sound.IMPACT);
                 deleteFullLines();
                 newMino();
             }
@@ -264,7 +263,7 @@ class Scene extends View implements DeleteLineAnimation.Callback
     {
         if(gameOver) return;
         if(collisionLeft(currentMino)) return;
-        sound.play(Globals.MOVE_MINO);
+        sound.play(Sound.MOVE_MINO);
         currentMino.moveLeft();
     }
 
@@ -272,7 +271,7 @@ class Scene extends View implements DeleteLineAnimation.Callback
     {
         if(gameOver) return;
         if(collisionRight(currentMino)) return;
-        sound.play(Globals.MOVE_MINO);
+        sound.play(Sound.MOVE_MINO);
         currentMino.moveRight();
     }
 
@@ -289,7 +288,7 @@ class Scene extends View implements DeleteLineAnimation.Callback
         for(Rect block: current.getBlocks())
         {
             if(block == null) continue;
-            if(block.bottom == Globals.HEIGHT) return true;
+            if(block.bottom == HEIGHT) return true;
             for(Tetramino tetramino: sceneList)
             {
                 if(tetramino == current) continue;
@@ -330,7 +329,7 @@ class Scene extends View implements DeleteLineAnimation.Callback
         for(Rect block: current.getBlocks())
         {
             if(block == null) continue;
-            if(block.right >= Globals.WIDTH) return true;
+            if(block.right >= WIDTH) return true;
 
             for(Tetramino tetramino: sceneList)
             {
@@ -352,8 +351,8 @@ class Scene extends View implements DeleteLineAnimation.Callback
         for(Rect newBlock: newMino.getBlocks())
         {
             if((newBlock.left < 0) ||
-                    (newBlock.right > Globals.WIDTH) ||
-                        (newBlock.bottom > Globals.HEIGHT)) return true;
+                    (newBlock.right > WIDTH) ||
+                        (newBlock.bottom > HEIGHT)) return true;
 
             for(Tetramino tetramino: sceneList)
             {

@@ -3,9 +3,7 @@ package home.tetris;
 import android.graphics.Color;
 import android.graphics.Rect;
 
-import java.util.Random;
-
-import static home.tetris.Globals.SQ_SIZE;
+import java.util.Comparator;
 
 /**
  * Created by Дима on 23.01.2017.
@@ -13,7 +11,11 @@ import static home.tetris.Globals.SQ_SIZE;
  * Цифры в именах классов обозначают угол поворота
  */
 
-abstract class Tetramino {
+abstract class Tetramino{
+
+    static final int MAX_BLOCK_CNT = 4;
+    static int SQ_SIZE;
+
     Rect[] blocks;
     int mColor;
 
@@ -105,17 +107,16 @@ class LineHorizontal extends Tetramino{
 
     LineHorizontal(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     LineHorizontal(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -SQ_SIZE;
-        int left = random.nextInt(Globals.WIDTH - (Globals.MAX_BLOCK_CNT * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (MAX_BLOCK_CNT * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -127,17 +128,16 @@ class LineVertical extends Tetramino{
 
     LineVertical(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     LineVertical(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
-        int top = -(Globals.MAX_BLOCK_CNT * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - SQ_SIZE);
+        int top = -(MAX_BLOCK_CNT * SQ_SIZE);
+        int left = (int) (Math.random() * (Scene.WIDTH - SQ_SIZE));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -148,12 +148,11 @@ class Square extends Tetramino{
     private static final byte[][] template = {{1,1,0,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}};
 
     Square(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(2 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -165,17 +164,16 @@ class L0 extends Tetramino{
 
     L0(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     L0(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(3 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -187,17 +185,16 @@ class L90 extends Tetramino{
 
     L90(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     L90(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(2 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (3 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -209,17 +206,16 @@ class L180 extends Tetramino{
 
     L180(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     L180(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(3 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -231,17 +227,16 @@ class L270 extends Tetramino{
 
     L270(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     L270(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(2 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (3 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -253,17 +248,16 @@ class LR0 extends Tetramino{
 
     LR0(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     LR0(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(2 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (3 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -275,17 +269,16 @@ class LR90 extends Tetramino{
 
     LR90(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     LR90(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(2 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (3 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -297,17 +290,16 @@ class LR180 extends Tetramino{
 
     LR180(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     LR180(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(3 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -319,17 +311,16 @@ class LR270 extends Tetramino{
 
     LR270(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     LR270(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(2 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (3 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -341,17 +332,16 @@ class T0 extends Tetramino{
 
     T0(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     T0(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(2 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (3 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -363,17 +353,16 @@ class T90 extends Tetramino{
 
     T90(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     T90(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(3 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -385,17 +374,16 @@ class T180 extends Tetramino{
 
     T180(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     T180(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(2 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (3 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -407,17 +395,16 @@ class T270 extends Tetramino{
 
     T270(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     T270(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(3 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -429,17 +416,16 @@ class Z0 extends Tetramino{
 
     Z0(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     Z0(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(3 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -451,17 +437,16 @@ class Z180 extends Tetramino{
 
     Z180(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     Z180(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(2 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (3 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -473,17 +458,16 @@ class RZ0 extends Tetramino{
 
     RZ0(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     RZ0(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(3 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (2 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 
@@ -495,17 +479,16 @@ class RZ180 extends Tetramino{
 
     RZ180(int left, int top, int color){
         mColor = color;
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
         Tetramino.loadTemplate(this, template, left, top);
     }
 
     RZ180(){
-        Random random = new Random();
         mColor = randomColor();
-        blocks = new Rect[Globals.MAX_BLOCK_CNT];
+        blocks = new Rect[MAX_BLOCK_CNT];
 
         int top = -(2 * SQ_SIZE);
-        int left = random.nextInt(Globals.WIDTH - (3 * SQ_SIZE));
+        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
     }
 

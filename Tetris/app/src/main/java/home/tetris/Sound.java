@@ -16,6 +16,12 @@ import java.util.Arrays;
  */
 
 class Sound {
+    static final int IMPACT = 1;
+    static final int LEVEL_UP = 2;
+    static final int MOVE_MINO = 3;
+    static final int ROTATE = 4;
+    static final int DELETE_LINE = 5;
+
     private static final String SOUND_FOLDER = "tetris_sounds";
     private static final int MAX_SOUNDS = 2;
 
