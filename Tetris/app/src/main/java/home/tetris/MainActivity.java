@@ -46,6 +46,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
+        scene.free();
+    }
+
+    @Override
     public boolean onTouch(View v, MotionEvent event)
     {
         if(pause) return true;

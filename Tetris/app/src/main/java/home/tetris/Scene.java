@@ -5,6 +5,8 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -19,21 +21,22 @@ import java.util.List;
  *
  */
 
-class Scene extends View implements TetrisAnimator.Callback
+class Scene extends View
 {
     public static final int BLOCKS_PER_WIDTH = 12;
     public static int WIDTH;
     public static int HEIGHT;
 
+    private static final String TAG = "Scene";
     private static final int SCORE_PER_LEVEL = 25;
     private static final int TIMER_INTERVAL = 30;
     private static final int TETRAMINO_TOTAL = 19;
 
     private List<Tetramino> sceneList;
-    private TetrisAnimator tetrisAnimator;
     private Tetramino currentMino;
     private Paint paint;
     private Sound sound;
+    private DeletingAnimation deletingAnimation;
     private boolean gameOver = false;
     private boolean running = false;
     private int score = 0;
@@ -59,7 +62,6 @@ class Scene extends View implements TetrisAnimator.Callback
     void stop(){
         running = false;
         clear();
-        tetrisAnimator.clear();
         invalidate();
     }
 
@@ -69,8 +71,31 @@ class Scene extends View implements TetrisAnimator.Callback
         callback = (Callback) context;
         sound = new Sound(context);
         sceneList = new ArrayList<>();
-        tetrisAnimator = new TetrisAnimator(this);
         paint = new Paint();
+        Handler responseHandler = new Handler();
+        deletingAnimation = new DeletingAnimation(responseHandler, sceneList, sound);
+        deletingAnimation.setBarDeleteListener(new DeletingAnimation.BarDeleteListener()
+        {
+            @Override
+            public void onDeleteComplete(int totalLines) {
+                Log.d(TAG, "delete complete");
+                score += totalLines;
+                callback.onScoreChange(score);
+
+                if ((score % SCORE_PER_LEVEL) == 0) {
+                    level++;
+                    sound.play(Sound.LEVEL_UP);
+                    callback.onLevelUp(level);
+                }
+            }
+
+            @Override
+            public void onDeleteBlock(){invalidate();}
+        });
+        deletingAnimation.start();
+        deletingAnimation.getLooper();
+        Log.d(TAG, "deletingAnimation start here.");
+
         paint.setStrokeWidth(1);
         new CountDownTimer(Long.MAX_VALUE, TIMER_INTERVAL){
             @Override
@@ -90,28 +115,8 @@ class Scene extends View implements TetrisAnimator.Callback
 // Создает новое тетрамино за пределами экрана, все параметры выбираются случайно
     private void newMino()
     {
-        switch ((int) (Math.random() * TETRAMINO_TOTAL))
-        {
-            case 0: sceneList.add(new LineHorizontal()); break;
-            case 1: sceneList.add(new LineVertical()); break;
-            case 2: sceneList.add(new Square()); break;
-            case 3: sceneList.add(new L0());   break;
-            case 4: sceneList.add(new L90());  break;
-            case 5: sceneList.add(new L180()); break;
-            case 6: sceneList.add(new L270()); break;
-            case 7: sceneList.add(new LR0()); break;
-            case 8: sceneList.add(new LR90()); break;
-            case 9: sceneList.add(new LR180()); break;
-            case 10: sceneList.add(new LR270()); break;
-            case 11: sceneList.add(new T0()); break;
-            case 12: sceneList.add(new T90()); break;
-            case 13: sceneList.add(new T180()); break;
-            case 14: sceneList.add(new T270()); break;
-            case 15: sceneList.add(new Z0()); break;
-            case 16: sceneList.add(new Z180()); break;
-            case 17: sceneList.add(new RZ0()); break;
-            case 18: sceneList.add(new RZ180());
-        }
+        int type = 2;//(int) (Math.random() * TETRAMINO_TOTAL);
+        sceneList.add(Tetramino.intToTetramino(type));
         currentMino = sceneList.get(sceneList.size() - 1);
     }
 
@@ -124,8 +129,8 @@ class Scene extends View implements TetrisAnimator.Callback
         {
             paint.setColor(tetramino.getColor());
 
-            for(Rect block:tetramino.getBlocks())
-                if(block != null) canvas.drawRect(block, paint);
+            for(Block block: tetramino.getBlocks())
+                if(block.active) canvas.drawRect(block.rect, paint);
         }
     }
 
@@ -144,98 +149,14 @@ class Scene extends View implements TetrisAnimator.Callback
         }
     }
 
-    private Tetramino[] getNextFullLine(int bottom)
+    private void clearEmptyTetraminos()
     {
-        int counter = 0;
-        Tetramino[] result = new Tetramino[BLOCKS_PER_WIDTH];
-        for(Tetramino current: sceneList)
+        for(Tetramino next: sceneList)
         {
-            for(Rect block: current.getBlocks())
-            {
-                if(block == null) continue;
-                if(block.bottom == bottom)
-                {
-                    result[counter] = current;
-                    counter++;
-                    if(counter == BLOCKS_PER_WIDTH) return result;
-                }
-            }
-        }
-        return null;
-    }
+            int counter = 0;
+            for(Block block: next.getBlocks()) if(!block.active) counter++;
 
-    private void fallSquares(int bottom)
-    {
-        for(Tetramino tetramino: sceneList)
-        {
-            for (Rect block: tetramino.getBlocks())
-            {
-                if(block == null) continue;
-                if(block.bottom < bottom)
-                {
-                    block.top = block.bottom;
-                    block.bottom += Tetramino.SQ_SIZE;
-                }
-            }
-        }
-    }
-
-    private boolean lineIsEmpty(int bottom)
-    {
-        for(Tetramino tetramino: sceneList){
-            for(Rect block: tetramino.getBlocks()){
-                if(block == null)continue;
-                if(block.bottom == bottom) return false;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public void onDeleteBlock(Tetramino tetramino, int column){
-
-        int counter = 0;
-        for(Rect block: tetramino.getBlocks()){
-            if(block == null) counter++;
-        }
-
-        if(counter == Tetramino.MAX_BLOCK_CNT) sceneList.remove(tetramino);
-        invalidate();
-    }
-
-    @Override
-    public void onDeleteComplete(){
-      //  fallSquares(line);
-    }
-
-    private void deleteFullLines()
-    {
-        int bottom = HEIGHT;
-        boolean enablePlay = true;
-
-        while(bottom > 0)
-        {
-            if(lineIsEmpty(bottom)) return;
-
-            Tetramino[] line = getNextFullLine(bottom);
-            if(line != null)
-            {
-               if(enablePlay){
-                   sound.play(Sound.DELETE_LINE);
-                   enablePlay = false;
-               }
-
-               tetrisAnimator.addDeleteLineAnimation(line, bottom);
-               score++;
-               callback.onScoreChange(score);
-
-               if((score % SCORE_PER_LEVEL) == 0){
-                   level++;
-                   sound.play(Sound.LEVEL_UP);
-                   callback.onLevelUp(level);
-               }
-            }
-            bottom -= Tetramino.SQ_SIZE;
+            if(counter == Tetramino.MAX_BLOCK_CNT) sceneList.remove(next);
         }
     }
 
@@ -243,16 +164,19 @@ class Scene extends View implements TetrisAnimator.Callback
     {
         if(gameOver) return;
         if(speedInc != 0) sound.play(Sound.MOVE_MINO);
-        for (int k = level + 2 + speedInc; k > 0; k--) {
-
-            if (collisionBottom(currentMino)) {
-                if (collisionUp(currentMino)) {
+        for (int k = level + 2 + speedInc; k > 0; k--)
+        {
+            if (collisionBottom(currentMino))
+            {
+                if (collisionUp(currentMino))
+                {
                     gameOver = true;
                     callback.onGameOver();
                     return;
                 }
                 sound.play(Sound.IMPACT);
-                deleteFullLines();
+                clearEmptyTetraminos();
+                deletingAnimation.deleteFullLines();
                 newMino();
             }
             currentMino.moveDown();
@@ -277,25 +201,25 @@ class Scene extends View implements TetrisAnimator.Callback
 
     private boolean collisionUp(Tetramino mino)
     {
-        for(Rect current: mino.getBlocks()) {
-            if(current == null) continue;
-            if (current.top < 0) return true;
-        }
+        for(Block current: mino.getBlocks())
+            if (current.active && current.rect.top < 0) return true;
+
         return false;
     }
 
     private boolean collisionBottom(Tetramino current){
-        for(Rect block: current.getBlocks())
+        for(Block block: current.getBlocks())
         {
-            if(block == null) continue;
-            if(block.bottom == HEIGHT) return true;
+            if(block.active && block.rect.bottom == HEIGHT) return true;
+
             for(Tetramino tetramino: sceneList)
             {
                 if(tetramino == current) continue;
-                for(Rect prev: tetramino.getBlocks())
+                for(Block prev: tetramino.getBlocks())
                 {
-                    if(prev == null) continue;
-                    if(block.bottom == prev.top && block.left == prev.left) return true;
+                    if(prev.active &&
+                            block.rect.bottom == prev.rect.top &&
+                                block.rect.left == prev.rect.left) return true;
                 }
             }
         }
@@ -303,21 +227,20 @@ class Scene extends View implements TetrisAnimator.Callback
     }
 
     private boolean collisionLeft(Tetramino current){
-       for(Rect block: current.getBlocks())
+       for(Block block: current.getBlocks())
        {
-           if(block == null) continue;
-           if(block.left <= 0) return true;
+           if(block.active && block.rect.left <= 0) return true;
 
            for(Tetramino tetramino: sceneList)
            {
                if(tetramino == current) continue;
 
-               for(Rect prev: tetramino.getBlocks())
+               for(Block prev: tetramino.getBlocks())
                {
-                   if(prev == null) continue;
-                   if(block.left == prev.right &&
-                           block.bottom >= prev.top &&
-                                block.bottom <= prev.bottom) return true;
+                   if(prev.active &&
+                           block.rect.left == prev.rect.right &&
+                                block.rect.bottom >= prev.rect.top &&
+                                    block.rect.bottom <= prev.rect.bottom) return true;
                }
            }
        }
@@ -326,20 +249,19 @@ class Scene extends View implements TetrisAnimator.Callback
 
     private boolean collisionRight(Tetramino current)
     {
-        for(Rect block: current.getBlocks())
+        for(Block block: current.getBlocks())
         {
-            if(block == null) continue;
-            if(block.right >= WIDTH) return true;
+            if(block.active && block.rect.right >= WIDTH) return true;
 
             for(Tetramino tetramino: sceneList)
             {
                 if(tetramino == current) continue;
-                for(Rect prev: tetramino.getBlocks())
+                for(Block prev: tetramino.getBlocks())
                 {
-                    if(prev == null) continue;
-                    if(block.right == prev.left &&
-                            block.bottom >= prev.top &&
-                                block.bottom <= prev.bottom) return true;
+                    if(prev.active &&
+                            block.rect.right == prev.rect.left &&
+                                block.rect.bottom >= prev.rect.top &&
+                                    block.rect.bottom <= prev.rect.bottom) return true;
                 }
             }
         }
@@ -348,23 +270,28 @@ class Scene extends View implements TetrisAnimator.Callback
 
     private boolean collisionRotate(Tetramino newMino, Tetramino current){
 
-        for(Rect newBlock: newMino.getBlocks())
+        for(Block newBlock: newMino.getBlocks())
         {
-            if((newBlock.left < 0) ||
-                    (newBlock.right > WIDTH) ||
-                        (newBlock.bottom > HEIGHT)) return true;
+            if((newBlock.rect.left < 0) ||
+                    (newBlock.rect.right > WIDTH) ||
+                        (newBlock.rect.bottom > HEIGHT)) return true;
 
             for(Tetramino tetramino: sceneList)
             {
                 if(tetramino == current) continue;
 
-                for(Rect prev: tetramino.getBlocks())
+                for(Block prev: tetramino.getBlocks())
                 {
-                    if(prev == null) continue;
-                    if((newBlock.top >= prev.top && newBlock.top <= prev.bottom) ||
-                            (newBlock.bottom >= prev.top && newBlock.bottom <= prev.bottom))
+                    if(prev.active)
                     {
-                        if ((newBlock.left == prev.left) || (newBlock.right == prev.right)) return true;
+                        if ((newBlock.rect.top >= prev.rect.top &&
+                                    newBlock.rect.top <= prev.rect.bottom) ||
+                                (newBlock.rect.bottom >= prev.rect.top &&
+                                        newBlock.rect.bottom <= prev.rect.bottom))
+                        {
+                            if ((newBlock.rect.left == prev.rect.left) ||
+                                    (newBlock.rect.right == prev.rect.right)) return true;
+                        }
                     }
                 }
             }
@@ -380,5 +307,11 @@ class Scene extends View implements TetrisAnimator.Callback
         callback.onScoreChange(score);
         level = 1;
         currentMino = null;
+    }
+
+    void free()
+    {
+        deletingAnimation.quit();
+        Log.d(TAG, "deleteAnimation free here");
     }
 }
