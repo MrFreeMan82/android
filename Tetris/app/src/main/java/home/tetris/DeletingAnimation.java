@@ -1,15 +1,11 @@
 package home.tetris;
 
-import android.graphics.Rect;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
 import android.util.Log;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * Created by Дима on 20.02.2017.
@@ -21,9 +17,7 @@ class DeletingAnimation extends HandlerThread
     private static final String TAG = "DeleteAnimation";
     private static final int DELETE_BAR = 1;
 
-    private Sound sound;
-    private List<Tetramino> sceneList;
-
+    private static Scene scene;
     private Handler requestHandler;
     private static Handler responseHandler;
     private static BarDeleteListener barDeleteListener;
@@ -31,40 +25,126 @@ class DeletingAnimation extends HandlerThread
 
     interface BarDeleteListener
     {
-        void onDeleteBlock();
-        void onDeleteComplete(int totalLines);
+        void onRepaint();
+        void onBarDelete();
+        void onDeleteComplete();
     }
 
             //В этом классе код выполняется отдельным потоком
     private static class RequestHandler extends Handler
     {
-        private void deleteBar(final Block[][] bar)
+        Runnable complete = new Runnable() {
+            @Override
+            public void run() {barDeleteListener.onDeleteComplete();}
+        };
+
+        Runnable repaint = new Runnable() {
+            @Override
+            public void run() {barDeleteListener.onRepaint();}
+        };
+
+        Runnable delete = new Runnable() {
+            @Override
+            public void run() {
+                barDeleteListener.onBarDelete();
+            }
+        };
+
+        private void deleteBars()
         {
-            for(int i = 0; i < bar.length; i++)
+            boolean playOnes = true;
+            int bottom = Scene.HEIGHT;
+            int deleted = 0;
+
+            while (bottom > 0)
             {
-                for (Block block : bar[i])
+                int blockCount = countBlock(bottom);
+                if(blockCount == Scene.BLOCKS_PER_WIDTH)
                 {
-                    block.active = false;
-                    responseHandler.post(new Runnable()
+                    int index = 0;
+                    Block[] bar = new Block[Scene.BLOCKS_PER_WIDTH];
+
+                    for(Tetramino tetramino : scene.getSceneList())
                     {
-                        @Override
-                        public void run() {
-                            barDeleteListener.onDeleteBlock();
+                        for(Block block : tetramino.getBlocks())
+                        {
+                            if(block.active && block.rect.bottom == bottom)
+                            {
+                                bar[index] = block;
+                                index++;
+                            }
                         }
-                    });
-                    try {
-                        Thread.sleep(20);
-                    } catch (InterruptedException ie) {
-                        Log.e("DeleteLineAnimation", ie.getMessage());
                     }
+                    if(playOnes) {
+                        scene.getSound().play(Sound.DELETE_LINE);
+                        playOnes = false;
+                    }
+                    deleted++;
+                    deleting(bar);
+                    responseHandler.post(delete);
+                }
+                else if(blockCount == 0) break;
+
+                bottom -= Tetramino.SQ_SIZE;
+            }
+            falling(bottom, deleted);
+            responseHandler.post(complete);
+        }
+
+        private void deleting(Block[] bar)
+        {
+            Arrays.sort(bar, new CustomComparator());
+
+            while (bar[0].rect.bottom != bar[0].rect.top)
+            {
+                int k = 1;
+                for (Block block : bar)
+                {
+                    block.rect.bottom -= 1;
+                    block.updateSubRect();
+                    if(block.rect.bottom == block.rect.top) block.active = false;
+                    if ((k == Scene.BLOCKS_PER_WIDTH) && (block.rect.bottom % 2 == 0))
+                    {
+                        responseHandler.post(repaint);
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException ie) {
+                            Log.e("DeleteLineAnimation", ie.getMessage());
+                        }
+                    }
+                    k++;
                 }
             }
-            responseHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    barDeleteListener.onDeleteComplete(bar.length);
+        }
+
+        private void falling(int top, int totalDeleted)
+        {
+            int bottom = Scene.HEIGHT;
+            int moved = 0;
+            int size = scene.getSceneList().size();
+            if((size == 0) || (size == 1)) return;
+
+            while (bottom > top)
+            {
+                while (countBlock(bottom) == 0 && totalDeleted != moved)
+                {
+                    for (Tetramino tetramino : scene.getSceneList())
+                    {
+                        if(tetramino == scene.getCurrentMino()) continue;
+                        for (Block block : tetramino.getBlocks())
+                        {
+                            if (block.active && block.rect.bottom < bottom)
+                            {
+                                block.rect.top += Tetramino.SQ_SIZE;
+                                block.rect.bottom = block.rect.top + Tetramino.SQ_SIZE;
+                                block.updateSubRect();
+                            }
+                        }
+                    }
+                    moved++;
                 }
-            });
+                bottom -= Tetramino.SQ_SIZE;
+            }
         }
 
         @Override
@@ -72,19 +152,18 @@ class DeletingAnimation extends HandlerThread
         {
             if(msg.what == DELETE_BAR)
             {
-                Block[][] bar = (Block[][]) msg.obj;
-                deleteBar(bar);
+               // Block[][] bar = (Block[][]) msg.obj;
+                deleteBars();
             }
         }
     }
 
     void setBarDeleteListener(BarDeleteListener listener){barDeleteListener = listener;}
 
-    DeletingAnimation(Handler aResponseHandler, List<Tetramino> aSceneList, Sound aSound)
+    DeletingAnimation(Handler aResponseHandler, Scene aScene)
     {
         super(TAG);
-        sound = aSound;
-        sceneList = aSceneList;
+        scene = aScene;
         responseHandler = aResponseHandler;
     }
 
@@ -92,48 +171,10 @@ class DeletingAnimation extends HandlerThread
     protected void onLooperPrepared(){requestHandler = new RequestHandler();}
 
 
-    private void queueLine(Block[][] bars)
-    {
-        Log.d(TAG, "request for Bar Delete");
-        requestHandler.obtainMessage(DELETE_BAR, bars).sendToTarget();
-    }
-
-    private Block[][] getFullLines(int total)
-    {
-        int bottom = Scene.HEIGHT;
-        int lineNo = 0;
-        Block[][] result = new Block[Scene.BLOCKS_PER_WIDTH][total];
-
-        while (lineNo != total)
-        {
-            int index = 0;
-            if(countBlock(bottom) == Scene.BLOCKS_PER_WIDTH)
-            {
-                for (Tetramino current : sceneList)
-                {
-                    for (Block block : current.getBlocks())
-                    {
-                        if (block.active && block.rect.bottom == bottom)
-                        {
-                            result[index][lineNo] = block;
-                            index++;
-                        }
-                    }
-                }
-                if (index == Scene.BLOCKS_PER_WIDTH) {
-                    Arrays.sort(result[lineNo], new CustomComparator());
-                    lineNo++;
-                }
-            }
-            bottom -= Tetramino.SQ_SIZE;
-        }
-        return result;
-    }
-
-    private int countBlock(int line)
+    private static int countBlock(int line)
     {
         int counter = 0;
-        for(Tetramino tetramino: sceneList){
+        for(Tetramino tetramino: scene.getSceneList()){
             for(Block block: tetramino.getBlocks()){
                 if(block.active && block.rect.bottom == line) counter++;
             }
@@ -141,27 +182,8 @@ class DeletingAnimation extends HandlerThread
         return counter;
     }
 
-    private int countFullLines()
-    {
-        int bottom = Scene.HEIGHT;
-        int counter = 0;
-        while(bottom > 0)
-        {
-            int k = countBlock(bottom);
-            if(k == 0) break;
-            if(k == Scene.BLOCKS_PER_WIDTH) counter++;
-            bottom -= Tetramino.SQ_SIZE;
-        }
-        return counter;
-    }
-
     void deleteFullLines()
     {
-        int totalFullLines = countFullLines();
-        if(totalFullLines == 0) return;
-
-        Block[][] bars = getFullLines(totalFullLines);
-        sound.play(Sound.DELETE_LINE);
-        queueLine(bars);
+        requestHandler.obtainMessage(DELETE_BAR).sendToTarget();
     }
 }

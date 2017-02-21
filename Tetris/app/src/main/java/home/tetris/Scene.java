@@ -3,10 +3,8 @@ package home.tetris;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.os.CountDownTimer;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -27,7 +25,7 @@ class Scene extends View
     public static int WIDTH;
     public static int HEIGHT;
 
-    private static final String TAG = "Scene";
+    //private static final String TAG = "Scene";
     private static final int SCORE_PER_LEVEL = 25;
     private static final int TIMER_INTERVAL = 30;
     private static final int TETRAMINO_TOTAL = 19;
@@ -51,6 +49,7 @@ class Scene extends View
 
     void start(){
         if(running) return;
+        callback.onScoreChange(score);
         if(currentMino == null) newMino();
         running = true;
     }
@@ -73,13 +72,13 @@ class Scene extends View
         sceneList = new ArrayList<>();
         paint = new Paint();
         Handler responseHandler = new Handler();
-        deletingAnimation = new DeletingAnimation(responseHandler, sceneList, sound);
+        deletingAnimation = new DeletingAnimation(responseHandler, this);
         deletingAnimation.setBarDeleteListener(new DeletingAnimation.BarDeleteListener()
         {
             @Override
-            public void onDeleteComplete(int totalLines) {
-                Log.d(TAG, "delete complete");
-                score += totalLines;
+            public void onBarDelete()
+            {
+                score ++;
                 callback.onScoreChange(score);
 
                 if ((score % SCORE_PER_LEVEL) == 0) {
@@ -90,11 +89,16 @@ class Scene extends View
             }
 
             @Override
-            public void onDeleteBlock(){invalidate();}
+            public void onDeleteComplete()
+            {
+                clearEmptyTetraminos();
+            }
+
+            @Override
+            public void onRepaint(){invalidate();}
         });
         deletingAnimation.start();
         deletingAnimation.getLooper();
-        Log.d(TAG, "deletingAnimation start here.");
 
         paint.setStrokeWidth(1);
         new CountDownTimer(Long.MAX_VALUE, TIMER_INTERVAL){
@@ -102,8 +106,8 @@ class Scene extends View
             public void onFinish() {}
 
             @Override
-            public void onTick(long millisUntilFinished){
-
+            public void onTick(long millisUntilFinished)
+            {
                 if(running) {
                     moveCurrentDown(0);
                     invalidate();
@@ -115,7 +119,7 @@ class Scene extends View
 // Создает новое тетрамино за пределами экрана, все параметры выбираются случайно
     private void newMino()
     {
-        int type = 2;//(int) (Math.random() * TETRAMINO_TOTAL);
+        int type = (int) (Math.random() * TETRAMINO_TOTAL);
         sceneList.add(Tetramino.intToTetramino(type));
         currentMino = sceneList.get(sceneList.size() - 1);
     }
@@ -130,7 +134,9 @@ class Scene extends View
             paint.setColor(tetramino.getColor());
 
             for(Block block: tetramino.getBlocks())
-                if(block.active) canvas.drawRect(block.rect, paint);
+                if(block.active){
+                    canvas.drawRect(block.subRect, paint);
+                }
         }
     }
 
@@ -141,7 +147,8 @@ class Scene extends View
         Tetramino tetramino = currentMino.rotate();
         if(tetramino == null) return;
 
-        if(!collisionRotate(tetramino, currentMino)){
+        if(!collisionRotate(tetramino, currentMino))
+        {
             sound.play(Sound.ROTATE);
             sceneList.remove(currentMino);
             sceneList.add(tetramino);
@@ -151,12 +158,14 @@ class Scene extends View
 
     private void clearEmptyTetraminos()
     {
-        for(Tetramino next: sceneList)
+        int i = 0;
+        while(i < sceneList.size())
         {
             int counter = 0;
+            Tetramino next = sceneList.get(i);
             for(Block block: next.getBlocks()) if(!block.active) counter++;
 
-            if(counter == Tetramino.MAX_BLOCK_CNT) sceneList.remove(next);
+            if(counter == Tetramino.MAX_BLOCK_CNT) sceneList.remove(next); else i++;
         }
     }
 
@@ -175,7 +184,6 @@ class Scene extends View
                     return;
                 }
                 sound.play(Sound.IMPACT);
-                clearEmptyTetraminos();
                 deletingAnimation.deleteFullLines();
                 newMino();
             }
@@ -207,7 +215,8 @@ class Scene extends View
         return false;
     }
 
-    private boolean collisionBottom(Tetramino current){
+    boolean collisionBottom(Tetramino current)
+    {
         for(Block block: current.getBlocks())
         {
             if(block.active && block.rect.bottom == HEIGHT) return true;
@@ -226,7 +235,8 @@ class Scene extends View
         return false;
     }
 
-    private boolean collisionLeft(Tetramino current){
+    private boolean collisionLeft(Tetramino current)
+    {
        for(Block block: current.getBlocks())
        {
            if(block.active && block.rect.left <= 0) return true;
@@ -268,8 +278,8 @@ class Scene extends View
         return false;
     }
 
-    private boolean collisionRotate(Tetramino newMino, Tetramino current){
-
+    private boolean collisionRotate(Tetramino newMino, Tetramino current)
+    {
         for(Block newBlock: newMino.getBlocks())
         {
             if((newBlock.rect.left < 0) ||
@@ -299,6 +309,14 @@ class Scene extends View
         return false;
     }
 
+    int getLevel(){return level;}
+
+    Tetramino getCurrentMino(){return currentMino;}
+
+    List<Tetramino> getSceneList(){return sceneList;}
+
+    Sound getSound(){return sound;}
+
     void clear()
     {
         sceneList.clear();
@@ -312,6 +330,5 @@ class Scene extends View
     void free()
     {
         deletingAnimation.quit();
-        Log.d(TAG, "deleteAnimation free here");
     }
 }

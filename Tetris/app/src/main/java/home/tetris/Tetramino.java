@@ -14,10 +14,24 @@ import java.util.Comparator;
 
 class Block
 {
+    static int DELTA = 5;
     boolean active = true;
     Rect rect;
+    Rect subRect;
 
-    Block(int left, int top, int right, int bottom){rect = new Rect(left, top, right, bottom);}
+    Block(int left, int top, int right, int bottom){
+        rect = new Rect(left, top, right, bottom);
+        subRect = new Rect(rect);
+        updateSubRect();
+    }
+
+    void updateSubRect()
+    {
+        subRect.left = rect.left + DELTA;
+        subRect.top = rect.top + DELTA;
+        subRect.right = rect.right - DELTA;
+        subRect.bottom = rect.bottom - DELTA;
+    }
 }
 
 abstract class Tetramino{
@@ -49,7 +63,8 @@ abstract class Tetramino{
         for(Block block: blocks)
         {
             block.rect.top += 1;
-            block.rect.bottom = block.rect.top + SQ_SIZE;
+            block.rect.bottom = block.rect.top + Tetramino.SQ_SIZE;
+            block.updateSubRect();
         }
     }
 
@@ -59,6 +74,7 @@ abstract class Tetramino{
         {
             block.rect.left -= SQ_SIZE;
             block.rect.right = block.rect.left + SQ_SIZE;
+            block.updateSubRect();
         }
     }
 
@@ -68,6 +84,7 @@ abstract class Tetramino{
         {
             block.rect.left = block.rect.right;
             block.rect.right = block.rect.left + SQ_SIZE;
+            block.updateSubRect();
         }
     }
 

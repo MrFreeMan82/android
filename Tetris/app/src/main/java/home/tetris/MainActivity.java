@@ -18,7 +18,7 @@ import static java.lang.Math.round;
 public class MainActivity extends AppCompatActivity
         implements ViewTreeObserver.OnGlobalLayoutListener, Scene.Callback, View.OnTouchListener{
 
-    private static final int SPEED_INCREMENT = 50;
+    private static int SPEED_INCREMENT = 100;
 
     private LinearLayout canvasLayout;
     private Scene scene;
@@ -101,6 +101,9 @@ public class MainActivity extends AppCompatActivity
         Scene.WIDTH = canvasLayout.getWidth();
         Scene.HEIGHT = canvasLayout.getHeight();
         Tetramino.SQ_SIZE = Scene.WIDTH / Scene.BLOCKS_PER_WIDTH;
+
+        SPEED_INCREMENT = 50 * (Scene.HEIGHT / 500);
+        Block.DELTA = 5 * (Scene.HEIGHT / 500);
         if(!pause) scene.start();
     }
 
