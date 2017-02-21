@@ -1,6 +1,7 @@
 package home.tetris;
 
 import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.Rect;
 
 import java.util.Comparator;
@@ -18,10 +19,16 @@ class Block
     boolean active = true;
     Rect rect;
     Rect subRect;
+    Rect mid;
+    Point p1;
+    Point p2;
 
     Block(int left, int top, int right, int bottom){
         rect = new Rect(left, top, right, bottom);
         subRect = new Rect(rect);
+        mid = new Rect(rect);
+        p1 = new Point();
+        p2 = new Point();
         updateSubRect();
     }
 
@@ -31,6 +38,21 @@ class Block
         subRect.top = rect.top + DELTA;
         subRect.right = rect.right - DELTA;
         subRect.bottom = rect.bottom - DELTA;
+
+        if(p1 != null) {
+            p1.x = subRect.left + (Tetramino.SQ_SIZE / 2);
+            p1.y = subRect.top + (Tetramino.SQ_SIZE / 2) + ((Tetramino.SQ_SIZE / 2) / 2);
+        }
+
+        if(p2 != null) {
+            p2.x = subRect.left + (Tetramino.SQ_SIZE / 2) + ((Tetramino.SQ_SIZE / 2) / 2);
+            p2.y = subRect.top + (Tetramino.SQ_SIZE / 2);
+        }
+
+        mid.left = rect.left + 3;
+        mid.top = rect.top + 3;
+        mid.right = rect.right - 3;
+        mid.bottom = rect.bottom - 3;
     }
 }
 

@@ -2,6 +2,7 @@ package home.tetris;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -76,7 +77,7 @@ class Scene extends View
         deletingAnimation.setBarDeleteListener(new DeletingAnimation.BarDeleteListener()
         {
             @Override
-            public void onBarDelete()
+            public void onBarDelete(int total)
             {
                 score ++;
                 callback.onScoreChange(score);
@@ -86,12 +87,7 @@ class Scene extends View
                     sound.play(Sound.LEVEL_UP);
                     callback.onLevelUp(level);
                 }
-            }
-
-            @Override
-            public void onDeleteComplete()
-            {
-                clearEmptyTetraminos();
+                deletingAnimation.falling(total);
             }
 
             @Override
@@ -131,11 +127,23 @@ class Scene extends View
 
         for(Tetramino tetramino:sceneList)
         {
-            paint.setColor(tetramino.getColor());
 
             for(Block block: tetramino.getBlocks())
-                if(block.active){
+                if(block.active)
+                {
+                    paint.setColor(tetramino.getColor());
+                    canvas.drawRect(block.rect, paint);
+                    paint.setColor(Color.BLACK);
+                    canvas.drawRect(block.mid, paint);
+                    paint.setColor(tetramino.getColor());
                     canvas.drawRect(block.subRect, paint);
+
+                    if(block.p1 != null && block.p2 != null)
+                    {
+                        paint.setStrokeWidth(2);
+                        paint.setColor(Color.WHITE);
+                        canvas.drawLine(block.p1.x, block.p1.y, block.p2.x, block.p2.y, paint);
+                    }
                 }
         }
     }
@@ -184,6 +192,7 @@ class Scene extends View
                     return;
                 }
                 sound.play(Sound.IMPACT);
+                clearEmptyTetraminos();
                 deletingAnimation.deleteFullLines();
                 newMino();
             }
@@ -308,8 +317,6 @@ class Scene extends View
         }
         return false;
     }
-
-    int getLevel(){return level;}
 
     Tetramino getCurrentMino(){return currentMino;}
 
