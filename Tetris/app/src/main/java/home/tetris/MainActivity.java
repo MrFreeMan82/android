@@ -105,6 +105,7 @@ public class MainActivity extends AppCompatActivity
 
         SPEED_INCREMENT = 50 * (Scene.HEIGHT / 500);
         Block.DELTA = 5 * (Scene.HEIGHT / 500);
+        Background.MOON_RADIUS = 50 * (Scene.HEIGHT / 500);
         if(!pause) scene.start();
     }
 

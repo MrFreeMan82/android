@@ -114,7 +114,7 @@ abstract class Tetramino{
 
     Block[] getBlocks(){return blocks;}
 
-     static void loadTemplate(Tetramino tetramino, byte[][] template, int left, int top)
+    static void loadTemplate(Tetramino tetramino, byte[][] template, int left, int top)
     {
         left = (left >= SQ_SIZE)? (left / SQ_SIZE) * SQ_SIZE: 0;
         int k = 0; int oldLeft = left;

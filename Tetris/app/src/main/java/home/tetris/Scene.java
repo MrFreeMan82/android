@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.view.View;
@@ -35,6 +36,7 @@ class Scene extends View
     private Tetramino currentMino;
     private Paint paint;
     private Sound sound;
+    private Background background;
     private DeletingAnimation deletingAnimation;
     private boolean gameOver = false;
     private boolean running = false;
@@ -53,6 +55,7 @@ class Scene extends View
         callback.onLevelUp(level);
         callback.onScoreChange(score);
         if(currentMino == null) newMino();
+        if(background == null) background = new Background();
         running = true;
     }
 
@@ -106,6 +109,12 @@ class Scene extends View
             public void onTick(long millisUntilFinished)
             {
                 if(running) {
+                    if(Background.INTERVAL > 50) {
+                        background.moveMoon();
+                        background.moveStars();
+                        Background.INTERVAL = 0;
+                    }
+                    Background.INTERVAL += TIMER_INTERVAL;
                     moveCurrentDown(0);
                     invalidate();
                 }
@@ -126,6 +135,9 @@ class Scene extends View
     {
         canvas.drawARGB(255, 0, 0, 0);
 
+        paint.setColor(Color.WHITE);
+        canvas.drawCircle(background.moon.x, background.moon.y, Background.MOON_RADIUS, paint);
+
         for(Tetramino tetramino:sceneList)
         {
             for(Block block: tetramino.getBlocks())
@@ -145,6 +157,13 @@ class Scene extends View
                         canvas.drawLine(block.p1.x, block.p1.y, block.p2.x, block.p2.y, paint);
                     }
                 }
+        }
+
+        for(Point star : background.stars)
+        {
+            paint.setColor(0xffa9e4f4);
+            paint.setStrokeWidth(3);
+            canvas.drawPoint(star.x, star.y, paint);
         }
     }
 
