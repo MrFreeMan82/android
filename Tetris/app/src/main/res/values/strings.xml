@@ -3,4 +3,7 @@
     <string name="new_game">New</string>
     <string name="pause_game">Pause</string>
     <string name="stop_game">Stop</string>
+    <string name="push_again_to_exit">Push again to exit</string>
+    <string name="level_up">Level up to %d</string>
+    <string name="game_over">Game Over</string>
 </resources>

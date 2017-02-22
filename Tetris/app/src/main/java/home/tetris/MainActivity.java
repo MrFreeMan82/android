@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity
     private Menu mMenu;
     private boolean pause = false;
     private boolean moving = false;
+    private static long backPressed = 0;
     private int oldX = 0, oldY = 0;
 
     @Override
@@ -145,13 +146,13 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onLevelUp(int level)
     {
-        Toast.makeText(this, "Level up to " + level, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(R.string.level_up, level), Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onGameOver()
     {
-        Toast.makeText(this, "Game Over", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.game_over, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -159,5 +160,18 @@ public class MainActivity extends AppCompatActivity
     {
         if(getSupportActionBar() != null)
             getSupportActionBar().setSubtitle(String.format(Locale.US, "%04d", score));
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        if(backPressed + 2000 > System.currentTimeMillis())
+        {
+            super.onBackPressed();
+        }
+        {
+            Toast.makeText(this, R.string.push_again_to_exit, Toast.LENGTH_SHORT).show();
+        }
+        backPressed = System.currentTimeMillis();
     }
 }

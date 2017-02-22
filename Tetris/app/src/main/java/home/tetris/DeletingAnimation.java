@@ -56,9 +56,9 @@ class DeletingAnimation extends HandlerThread
             while (bar[0][0].rect.bottom != bar[0][0].rect.top)
             {
                 int k = 1;
-                for(int i = 0; i < bar.length; i++)
+                for(Block[] column : bar)
                 {
-                    for (Block block : bar[i])
+                    for (Block block : column)
                     {
                         block.p1 = null;
                         block.p2 = null;

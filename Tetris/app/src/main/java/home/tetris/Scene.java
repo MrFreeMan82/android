@@ -79,7 +79,7 @@ class Scene extends View
             @Override
             public void onBarDelete(int total)
             {
-                score ++;
+                score += total;
                 callback.onScoreChange(score);
 
                 if ((score % SCORE_PER_LEVEL) == 0) {
@@ -127,7 +127,6 @@ class Scene extends View
 
         for(Tetramino tetramino:sceneList)
         {
-
             for(Block block: tetramino.getBlocks())
                 if(block.active)
                 {

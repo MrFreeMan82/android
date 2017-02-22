@@ -49,10 +49,10 @@ class Block
             p2.y = subRect.top + (Tetramino.SQ_SIZE / 2);
         }
 
-        mid.left = rect.left + 3;
-        mid.top = rect.top + 3;
-        mid.right = rect.right - 3;
-        mid.bottom = rect.bottom - 3;
+        mid.left = rect.left + (DELTA / 2);
+        mid.top = rect.top + (DELTA / 2);
+        mid.right = rect.right - (DELTA / 2);
+        mid.bottom = rect.bottom - (DELTA / 2);
     }
 }
 
@@ -118,12 +118,12 @@ abstract class Tetramino{
     {
         left = (left >= SQ_SIZE)? (left / SQ_SIZE) * SQ_SIZE: 0;
         int k = 0; int oldLeft = left;
-        for(int i = 0; i < template.length; i++)
+        for(byte[] column : template)
         {
             left = oldLeft;
-            for(int j = 0; j < template[i].length; j++)
+            for(byte value : column)
             {
-                if(template[i][j] == 1)
+                if(value == 1)
                 {
                     tetramino.blocks[k] = new Block(left, top, left + SQ_SIZE, top + SQ_SIZE);
                     k++;
