@@ -10,6 +10,7 @@ import android.graphics.Rect;
 
 class Background
 {
+    static final int STAR_COLOR = 0xffa9e4f4;
     private static final int STARS_COUNT = 50;
     static long INTERVAL = 0;
     Point[] stars;

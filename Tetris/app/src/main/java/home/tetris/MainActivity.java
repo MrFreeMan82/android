@@ -16,11 +16,8 @@ import static java.lang.Math.round;
 
 
 public class MainActivity extends AppCompatActivity
-        implements ViewTreeObserver.OnGlobalLayoutListener, Scene.Callback, View.OnTouchListener{
+        implements  Scene.Callback, View.OnTouchListener{
 
-    private static int SPEED_INCREMENT = 100;
-
-    private LinearLayout canvasLayout;
     private Scene scene;
     private Menu mMenu;
     private boolean pause = false;
@@ -36,14 +33,10 @@ public class MainActivity extends AppCompatActivity
 
         scene = new Scene(this);
         scene.setOnTouchListener(this);
-
-        LinearLayout.LayoutParams lParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-        canvasLayout = (LinearLayout) findViewById(R.id.canvas);
-        canvasLayout.addView(scene, lParams);
-
-        ViewTreeObserver observer = canvasLayout.getViewTreeObserver();
-        observer.addOnGlobalLayoutListener(this);
+       // LinearLayout.LayoutParams lParams = new LinearLayout.LayoutParams(
+      //          LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+        LinearLayout canvasLayout = (LinearLayout) findViewById(R.id.canvas);
+        canvasLayout.addView(scene);
     }
 
     @Override
@@ -82,7 +75,7 @@ public class MainActivity extends AppCompatActivity
                 else if(y - oldY > Tetramino.SQ_SIZE){
                     moving = true;
                     oldX = x; oldY = y;
-                    scene.moveCurrentDown(SPEED_INCREMENT);
+                    scene.moveCurrentDown(Scene.FALL_SPEED_INCREMENT);
                     return true;
                 }
                 break;
@@ -96,18 +89,6 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    @Override
-    public void onGlobalLayout()
-    {
-        Scene.WIDTH = canvasLayout.getWidth();
-        Scene.HEIGHT = canvasLayout.getHeight();
-        Tetramino.SQ_SIZE = Scene.WIDTH / Scene.BLOCKS_PER_WIDTH;
-
-        SPEED_INCREMENT = 50 * (Scene.HEIGHT / 500);
-        Block.DELTA = 5 * (Scene.HEIGHT / 500);
-        Background.MOON_RADIUS = 50 * (Scene.HEIGHT / 500);
-        if(!pause) scene.start();
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
@@ -124,7 +105,7 @@ public class MainActivity extends AppCompatActivity
             case R.id.item_pause_game:
                 pause = !pause;
                 if(pause) {
-                    item.setTitle(R.string.new_game);
+                    item.setTitle(R.string.play_game);
                     item.setIcon(R.drawable.ic_action_play);
                     scene.pause();
                 } else {
@@ -132,8 +113,8 @@ public class MainActivity extends AppCompatActivity
                     item.setIcon(R.drawable.ic_action_pause);
                     scene.start();
                 }
-
                 return true;
+
             case R.id.item_stop_game:
                 MenuItem itemPause = mMenu.findItem(R.id.item_pause_game);
                 if(!pause) onOptionsItemSelected(itemPause);

@@ -26,8 +26,8 @@ class Scene extends View
     public static final int BLOCKS_PER_WIDTH = 12;
     public static int WIDTH;
     public static int HEIGHT;
+    static int FALL_SPEED_INCREMENT = 100;
 
-    //private static final String TAG = "Scene";
     private static final int SCORE_PER_LEVEL = 25;
     private static final int TIMER_INTERVAL = 30;
     private static final int TETRAMINO_TOTAL = 19;
@@ -55,7 +55,6 @@ class Scene extends View
         callback.onLevelUp(level);
         callback.onScoreChange(score);
         if(currentMino == null) newMino();
-        if(background == null) background = new Background();
         running = true;
     }
 
@@ -131,6 +130,22 @@ class Scene extends View
     }
 
     @Override
+    public void onSizeChanged (int w, int h, int oldw, int oldh)
+    {
+        if((w != oldw) || (h != oldh)) {
+            Scene.WIDTH = w;
+            Scene.HEIGHT = h;
+            Tetramino.SQ_SIZE = Scene.WIDTH / Scene.BLOCKS_PER_WIDTH;
+
+            FALL_SPEED_INCREMENT = 50 * (Scene.HEIGHT / 500);
+            Block.DELTA = 5 * (Scene.HEIGHT / 500);
+            Background.MOON_RADIUS = 50 * (Scene.HEIGHT / 500);
+            if(background == null) background = new Background();
+            start();
+        }
+    }
+
+    @Override
     public void onDraw(Canvas canvas)
     {
         canvas.drawARGB(255, 0, 0, 0);
@@ -161,7 +176,7 @@ class Scene extends View
 
         for(Point star : background.stars)
         {
-            paint.setColor(0xffa9e4f4);
+            paint.setColor(Background.STAR_COLOR);
             paint.setStrokeWidth(3);
             canvas.drawPoint(star.x, star.y, paint);
         }
