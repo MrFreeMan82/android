@@ -50,6 +50,7 @@ class Scene extends View
 
     void start(){
         if(running) return;
+        callback.onLevelUp(level);
         callback.onScoreChange(score);
         if(currentMino == null) newMino();
         running = true;
@@ -82,7 +83,7 @@ class Scene extends View
                 score += total;
                 callback.onScoreChange(score);
 
-                if ((score % SCORE_PER_LEVEL) == 0) {
+                if (score >= level * SCORE_PER_LEVEL) {
                     level++;
                     sound.play(Sound.LEVEL_UP);
                     callback.onLevelUp(level);
