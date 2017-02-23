@@ -1,5 +1,6 @@
 package home.tetris;
 
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -31,10 +32,12 @@ public class MainActivity extends AppCompatActivity
       //  setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.main);
 
+        new Settings(this);
+
+        new Updater(this).execute();
+
         scene = new Scene(this);
         scene.setOnTouchListener(this);
-       // LinearLayout.LayoutParams lParams = new LinearLayout.LayoutParams(
-      //          LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
         LinearLayout canvasLayout = (LinearLayout) findViewById(R.id.canvas);
         canvasLayout.addView(scene);
     }

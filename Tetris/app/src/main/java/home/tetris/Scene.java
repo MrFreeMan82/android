@@ -1,7 +1,6 @@
 package home.tetris;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -29,14 +28,12 @@ class Scene extends View
     public static int HEIGHT;
     static int FALL_SPEED_INCREMENT = 100;
 
-    private static final String APP_SETTINGS = "settings";
     private static final String APP_SETTING_HISCORE = "hiscore";
 
     private static final int SCORE_PER_LEVEL = 25;
     private static final int TIMER_INTERVAL = 30;
     private static final int TETRAMINO_TOTAL = 19;
 
-    private SharedPreferences preferences;
     private List<Tetramino> sceneList;
     private Tetramino currentMino;
     private Paint paint;
@@ -66,7 +63,7 @@ class Scene extends View
 
     void pause(){
         running = false;
-        preferences.edit().putInt(APP_SETTING_HISCORE, hi_score).apply();
+        Settings.setIntSetting(APP_SETTING_HISCORE, hi_score);
     }
 
     void stop(){
@@ -78,8 +75,7 @@ class Scene extends View
     Scene(Context context)
     {
         super(context);
-        preferences = context.getSharedPreferences(APP_SETTINGS, Context.MODE_PRIVATE);
-        loadPreferences();
+        hi_score = Settings.getIntSetting(APP_SETTING_HISCORE, 0);
 
         callback = (Callback) context;
         sound = new Sound(context);
@@ -132,11 +128,6 @@ class Scene extends View
                 }
             }
         }.start();
-    }
-
-    private void loadPreferences()
-    {
-        hi_score = preferences.getInt(APP_SETTING_HISCORE, 0);
     }
 
 // Создает новое тетрамино за пределами экрана, все параметры выбираются случайно
@@ -239,7 +230,7 @@ class Scene extends View
             {
                 if (collisionUp(currentMino))
                 {
-                    preferences.edit().putInt(APP_SETTING_HISCORE, hi_score).apply();
+                    Settings.setIntSetting(APP_SETTING_HISCORE, hi_score);
                     gameOver = true;
                     callback.onGameOver();
                     return;
