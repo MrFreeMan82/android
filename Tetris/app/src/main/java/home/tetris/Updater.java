@@ -22,14 +22,21 @@ class Updater extends AsyncTask<Void, Void, Void>{
 
     private static final String TAG = "Updater";
     private static final String VERSION_URL = "https://raw.githubusercontent.com/MrFreeMan82/android/master/Tetris/version.txt";
-    private static final String VERSION_APK_URL = "https://github.com/MrFreeMan82/android/blob/master/Tetris/release/";
+    private static final String VERSION_RELEASE_URL = "https://github.com/MrFreeMan82/android/releases/download/";
     private static final String APP_SETTING_IGNORED_VERSION = "ignoredVersion";
 
     private MainActivity mainActivity;
+    private Callback callback;
+
+    interface Callback
+    {
+        void onGotUpdate();
+    }
 
     Updater(MainActivity activity)
     {
         mainActivity = activity;
+        callback = activity;
     }
 
     protected Void doInBackground(Void... params)
@@ -80,7 +87,7 @@ class Updater extends AsyncTask<Void, Void, Void>{
         if(lastAppVersion <= BuildConfig.VERSION_CODE) return; // Last version Ok skipping
 
         int ignoredInt = Settings.getIntSetting(APP_SETTING_IGNORED_VERSION, 0);
-        if((ignoredInt == 0) || (ignoredInt >= lastAppVersion)) return;
+        if(ignoredInt >= lastAppVersion) return;
 
         doUpdate(lastAppVersion);
     }
@@ -91,9 +98,11 @@ class Updater extends AsyncTask<Void, Void, Void>{
         {
             @Override
             public void run() {
+                callback.onGotUpdate();
                 AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
-                builder.setMessage(mainActivity.getString(R.string.update_available, lastAppVersion))
-                .setMessage(mainActivity.getString(R.string.update_info))
+                builder.setMessage(mainActivity.getString(
+                        R.string.update_available, lastAppVersion) + '\n' +
+                                        mainActivity.getString(R.string.update_info))
                         .setCancelable(true)
                         .setPositiveButton("Да", new DialogInterface.OnClickListener()
                         {
@@ -101,8 +110,8 @@ class Updater extends AsyncTask<Void, Void, Void>{
                             public void onClick(DialogInterface dialog, int which)
                             {
                                 Intent intent = new Intent(Intent.ACTION_VIEW);
-                                String apkURL = VERSION_APK_URL + lastAppVersion +
-                                        mainActivity.getString(R.string.app_name) + ".apk";
+                                String apkURL = VERSION_RELEASE_URL + lastAppVersion + '/' +
+                                                 mainActivity.getString(R.string.app_name) + ".apk";
 
                                 intent.setData(Uri.parse(apkURL));
                                 mainActivity.startActivity(intent);

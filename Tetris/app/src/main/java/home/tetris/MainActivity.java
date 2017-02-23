@@ -17,7 +17,7 @@ import static java.lang.Math.round;
 
 
 public class MainActivity extends AppCompatActivity
-        implements  Scene.Callback, View.OnTouchListener{
+        implements Updater.Callback, Scene.Callback, View.OnTouchListener{
 
     private Scene scene;
     private Menu mMenu;
@@ -47,6 +47,18 @@ public class MainActivity extends AppCompatActivity
     {
         super.onDestroy();
         scene.free();
+    }
+
+    private void pauseGame()
+    {
+        MenuItem itemPause = mMenu.findItem(R.id.item_pause_game);
+        onOptionsItemSelected(itemPause);
+    }
+
+    @Override
+    public void onGotUpdate()
+    {
+        if(!pause) pauseGame();
     }
 
     @Override
@@ -120,8 +132,7 @@ public class MainActivity extends AppCompatActivity
                 return true;
 
             case R.id.item_stop_game:
-                MenuItem itemPause = mMenu.findItem(R.id.item_pause_game);
-                if(!pause) onOptionsItemSelected(itemPause);
+                if(!pause) pauseGame();
                 scene.stop();
                 showHiScore(scene.getHi_score());
                 return true;
