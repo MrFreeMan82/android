@@ -1,6 +1,7 @@
 package home.tetris;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -28,10 +29,14 @@ class Scene extends View
     public static int HEIGHT;
     static int FALL_SPEED_INCREMENT = 100;
 
+    private static final String APP_SETTINGS = "settings";
+    private static final String APP_SETTING_HISCORE = "hiscore";
+
     private static final int SCORE_PER_LEVEL = 25;
     private static final int TIMER_INTERVAL = 30;
     private static final int TETRAMINO_TOTAL = 19;
 
+    private SharedPreferences preferences;
     private List<Tetramino> sceneList;
     private Tetramino currentMino;
     private Paint paint;
@@ -41,6 +46,7 @@ class Scene extends View
     private boolean gameOver = false;
     private boolean running = false;
     private int score = 0;
+    private int hi_score = 0;
     private int level = 1;
     private Callback callback;
 
@@ -60,6 +66,7 @@ class Scene extends View
 
     void pause(){
         running = false;
+        preferences.edit().putInt(APP_SETTING_HISCORE, hi_score).apply();
     }
 
     void stop(){
@@ -71,19 +78,25 @@ class Scene extends View
     Scene(Context context)
     {
         super(context);
+        preferences = context.getSharedPreferences(APP_SETTINGS, Context.MODE_PRIVATE);
+        loadPreferences();
+
         callback = (Callback) context;
         sound = new Sound(context);
         sceneList = new ArrayList<>();
         paint = new Paint();
+        background = new Background();
         Handler responseHandler = new Handler();
         deletingAnimation = new DeletingAnimation(responseHandler, this);
         deletingAnimation.setBarDeleteListener(new DeletingAnimation.BarDeleteListener()
         {
             @Override
-            public void onBarDelete(int total)
+            public void onDeleteComplete(int total)
             {
                 score += total;
                 callback.onScoreChange(score);
+
+                if(score > hi_score) hi_score = score;
 
                 if (score >= level * SCORE_PER_LEVEL) {
                     level++;
@@ -121,6 +134,11 @@ class Scene extends View
         }.start();
     }
 
+    private void loadPreferences()
+    {
+        hi_score = preferences.getInt(APP_SETTING_HISCORE, 0);
+    }
+
 // Создает новое тетрамино за пределами экрана, все параметры выбираются случайно
     private void newMino()
     {
@@ -140,7 +158,7 @@ class Scene extends View
             FALL_SPEED_INCREMENT = 50 * (Scene.HEIGHT / 500);
             Block.DELTA = 5 * (Scene.HEIGHT / 500);
             Background.MOON_RADIUS = 50 * (Scene.HEIGHT / 500);
-            if(background == null) background = new Background();
+            background.createBackground();
             start();
         }
     }
@@ -221,6 +239,7 @@ class Scene extends View
             {
                 if (collisionUp(currentMino))
                 {
+                    preferences.edit().putInt(APP_SETTING_HISCORE, hi_score).apply();
                     gameOver = true;
                     callback.onGameOver();
                     return;
@@ -351,6 +370,8 @@ class Scene extends View
         }
         return false;
     }
+
+    int getHi_score(){return hi_score;}
 
     Tetramino getCurrentMino(){return currentMino;}
 

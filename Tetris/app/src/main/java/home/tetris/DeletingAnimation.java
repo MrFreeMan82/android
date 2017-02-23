@@ -28,7 +28,7 @@ class DeletingAnimation extends HandlerThread
     interface BarDeleteListener
     {
         void onRepaint();
-        void onBarDelete(int total);
+        void onDeleteComplete(int total);
     }
 
     void setBarDeleteListener(BarDeleteListener listener){barDeleteListener = listener;}
@@ -91,7 +91,7 @@ class DeletingAnimation extends HandlerThread
                 responseHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        barDeleteListener.onBarDelete(total);
+                        barDeleteListener.onDeleteComplete(total);
                     }
                 });
             }

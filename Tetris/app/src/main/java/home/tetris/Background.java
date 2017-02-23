@@ -1,7 +1,6 @@
 package home.tetris;
 
 import android.graphics.Point;
-import android.graphics.Rect;
 
 /**
  * Created by Дима on 22.02.2017.
@@ -19,10 +18,13 @@ class Background
 
     Background(){
         moon = new Point();
+        stars = new Point[STARS_COUNT];
+    }
+
+    void createBackground()
+    {
         moon.x = (int) (Math.random() * Scene.WIDTH);
         moon.y = (int) (Math.random() * Scene.HEIGHT);
-
-        stars = new Point[STARS_COUNT];
 
         for(int i = 0; i < STARS_COUNT; i++)
         {

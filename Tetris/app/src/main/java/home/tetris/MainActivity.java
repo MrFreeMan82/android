@@ -108,6 +108,7 @@ public class MainActivity extends AppCompatActivity
                     item.setTitle(R.string.play_game);
                     item.setIcon(R.drawable.ic_action_play);
                     scene.pause();
+                    showHiScore(scene.getHi_score());
                 } else {
                     item.setTitle(R.string.pause_game);
                     item.setIcon(R.drawable.ic_action_pause);
@@ -119,10 +120,17 @@ public class MainActivity extends AppCompatActivity
                 MenuItem itemPause = mMenu.findItem(R.id.item_pause_game);
                 if(!pause) onOptionsItemSelected(itemPause);
                 scene.stop();
-
+                showHiScore(scene.getHi_score());
                 return true;
+
             default: return super.onOptionsItemSelected(item);
         }
+    }
+
+    void showHiScore(int hi_score){
+        if(getSupportActionBar() != null)
+            getSupportActionBar().setSubtitle("Hi score:  " +
+                        String.format(Locale.US, "%04d", hi_score));
     }
 
     @Override
