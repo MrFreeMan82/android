@@ -6,4 +6,7 @@
     <string name="push_again_to_exit">Push again to exit</string>
     <string name="level_up">Level %d</string>
     <string name="game_over">Game Over</string>
+    <string name="update_available">Доступно обновление до версии %d, Обновиться?</string>
+    <string name="update_info">Если вы согласны - вы будете перенапрвлены к скачиванию APK файла,
+        который затем нужно будет запустить самостоятельно.</string>
 </resources>
