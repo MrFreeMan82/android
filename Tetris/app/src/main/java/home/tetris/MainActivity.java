@@ -18,8 +18,7 @@ import static java.lang.Math.round;
 
 
 public class MainActivity extends AppCompatActivity
-        implements SettingsDialog.SettingsDialogListener,
-            Updater.Callback, Scene.Callback, View.OnTouchListener
+        implements Updater.Callback, Scene.Callback, View.OnTouchListener
 {
     private static final String DEFAULT_LANG = "en";
     private static final String DIALOG_SETTINGS = "DialogSettings";
@@ -51,7 +50,20 @@ public class MainActivity extends AppCompatActivity
             {
                if(!pause) togglePause();
                FragmentManager manager = getSupportFragmentManager();
-               SettingsDialog dialog = SettingsDialog.get();
+               SettingsDialog dialog = new SettingsDialog();// SettingsDialog.get();
+               dialog.setSettingDialogListener(new SettingsDialog.SettingsDialogListener() {
+                    @Override
+                    public void onCloseSettingsDialog() {
+                        if(pause) togglePause();
+                    }
+
+                    @Override
+                    public void onChangeLanguage(String newLanguage) {
+                        scene.free();
+                        mainLayout.removeView(scene);
+                        recreate();
+                    }
+                });
                dialog.show(manager, DIALOG_SETTINGS);
             }
         });
@@ -66,17 +78,6 @@ public class MainActivity extends AppCompatActivity
         super.attachBaseContext(MyContextWrapper.wrap(newBase,
                 Settings.getStringSetting(Settings.APP_LANGUAGE, DEFAULT_LANG)));
     }
-
-    @Override
-    public void onChangeLanguage(String newLanguage)
-    {
-        scene.free();
-        mainLayout.removeView(scene);
-        recreate();
-    }
-
-    @Override
-    public void onCloseSettingsDialog() {if(pause) togglePause();}
 
     @Override
     protected void onDestroy()

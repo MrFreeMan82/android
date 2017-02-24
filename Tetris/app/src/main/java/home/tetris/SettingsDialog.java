@@ -24,18 +24,15 @@ public class SettingsDialog extends DialogFragment
     private RadioButton english;
     private RadioButton russian;
     private CheckBox sound;
-    private SettingsDialogListener listener;
     private String oldLang;
+    private SettingsDialogListener listener;
 
     interface SettingsDialogListener{
         void onCloseSettingsDialog();
         void onChangeLanguage(String newLanguage);
     }
 
-    static SettingsDialog get()
-    {
-        return new SettingsDialog();
-    }
+    void setSettingDialogListener(SettingsDialogListener settingDialogListener){listener = settingDialogListener;}
 
     @NonNull
     @Override
@@ -71,7 +68,6 @@ public class SettingsDialog extends DialogFragment
             default: english.setChecked(true);
         }
         sound.setChecked(Settings.getBooleanSetting(Settings.APP_SOUND_ENABLED, true));
-        listener = (SettingsDialogListener) getActivity();
 
         return new AlertDialog.Builder(getActivity())
                 .setView(v)
