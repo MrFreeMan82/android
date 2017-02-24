@@ -1,13 +1,14 @@
 package home.tetris;
 
-import android.content.SharedPreferences;
+import android.content.Context;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewTreeObserver;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -17,10 +18,14 @@ import static java.lang.Math.round;
 
 
 public class MainActivity extends AppCompatActivity
-        implements Updater.Callback, Scene.Callback, View.OnTouchListener{
-
+        implements SettingsDialog.SettingsDialogListener,
+            Updater.Callback, Scene.Callback, View.OnTouchListener
+{
+    private static final String DEFAULT_LANG = "en";
+    private static final String DIALOG_SETTINGS = "DialogSettings";
     private Scene scene;
     private Menu mMenu;
+    private LinearLayout mainLayout;
     private boolean pause = false;
     private boolean moving = false;
     private static long backPressed = 0;
@@ -32,15 +37,46 @@ public class MainActivity extends AppCompatActivity
       //  setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.main);
 
-        new Settings(this);
-
         new Updater(this).execute();
 
         scene = new Scene(this);
         scene.setOnTouchListener(this);
-        LinearLayout canvasLayout = (LinearLayout) findViewById(R.id.canvas);
-        canvasLayout.addView(scene);
+        mainLayout = (LinearLayout) findViewById(R.id.canvas);
+        mainLayout.addView(scene);
+
+        ImageButton settingsButton = (ImageButton) findViewById(R.id.settings);
+        settingsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+               if(!pause) pauseGame();
+               FragmentManager manager = getSupportFragmentManager();
+               SettingsDialog dialog = SettingsDialog.get();
+               dialog.show(manager, DIALOG_SETTINGS);
+            }
+        });
+
+        if(getSupportActionBar() != null)
+            getSupportActionBar().setTitle(R.string.app_name);
     }
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        new Settings(newBase);
+        super.attachBaseContext(MyContextWrapper.wrap(newBase,
+                Settings.getStringSetting(Settings.APP_LANGUAGE, DEFAULT_LANG)));
+    }
+
+    @Override
+    public void onChangeLanguage(String newLanguage)
+    {
+        scene.free();
+        mainLayout.removeView(scene);
+        recreate();
+    }
+
+    @Override
+    public void onCloseSettingsDialog() {pauseGame();}
 
     @Override
     protected void onDestroy()
@@ -56,10 +92,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onGotUpdate()
-    {
-        if(!pause) pauseGame();
-    }
+    public void onGotUpdate() {if(!pause) pauseGame();}
 
     @Override
     public boolean onTouch(View v, MotionEvent event)
@@ -143,20 +176,22 @@ public class MainActivity extends AppCompatActivity
 
     void showHiScore(int hi_score){
         if(getSupportActionBar() != null)
-            getSupportActionBar().setSubtitle("Hi score:  " +
-                        String.format(Locale.US, "%04d", hi_score));
+            getSupportActionBar().setSubtitle(
+                        getString(R.string.hi_score,
+                                    String.format(Locale.US, "%04d", hi_score)));
     }
 
     @Override
     public void onLevelUp(int level)
     {
-        Toast.makeText(this, getString(R.string.level_up, level), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(
+                    R.string.level_up, level), Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onGameOver()
     {
-        Toast.makeText(this, R.string.game_over, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(R.string.game_over), Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -172,9 +207,8 @@ public class MainActivity extends AppCompatActivity
         if(backPressed + 2000 > System.currentTimeMillis())
         {
             super.onBackPressed();
-        }
-        {
-            Toast.makeText(this, R.string.push_again_to_exit, Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, getString(R.string.push_again_to_exit), Toast.LENGTH_SHORT).show();
         }
         backPressed = System.currentTimeMillis();
     }

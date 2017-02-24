@@ -28,8 +28,6 @@ class Scene extends View
     public static int HEIGHT;
     static int FALL_SPEED_INCREMENT = 100;
 
-    private static final String APP_SETTING_HISCORE = "hiscore";
-
     private static final int SCORE_PER_LEVEL = 25;
     private static final int TIMER_INTERVAL = 30;
     private static final int TETRAMINO_TOTAL = 19;
@@ -42,6 +40,7 @@ class Scene extends View
     private DeletingAnimation deletingAnimation;
     private boolean gameOver = false;
     private boolean running = false;
+    private boolean cancel = false;
     private int score = 0;
     private int hi_score = 0;
     private int level = 1;
@@ -63,7 +62,7 @@ class Scene extends View
 
     void pause(){
         running = false;
-        Settings.setIntSetting(APP_SETTING_HISCORE, hi_score);
+        Settings.setIntSetting(Settings.APP_SETTING_HISCORE, hi_score);
     }
 
     void stop(){
@@ -75,8 +74,7 @@ class Scene extends View
     Scene(Context context)
     {
         super(context);
-        hi_score = Settings.getIntSetting(APP_SETTING_HISCORE, 0);
-
+        hi_score = Settings.getIntSetting(Settings.APP_SETTING_HISCORE, 0);
         callback = (Callback) context;
         sound = new Sound(context);
         sceneList = new ArrayList<>();
@@ -116,7 +114,10 @@ class Scene extends View
             @Override
             public void onTick(long millisUntilFinished)
             {
-                if(running) {
+                if(cancel) this.cancel();
+
+                if(running)
+                {
                     if(Background.INTERVAL > 50) {
                         background.moveMoon();
                         background.moveStars();
@@ -230,7 +231,7 @@ class Scene extends View
             {
                 if (collisionUp(currentMino))
                 {
-                    Settings.setIntSetting(APP_SETTING_HISCORE, hi_score);
+                    Settings.setIntSetting(Settings.APP_SETTING_HISCORE, hi_score);
                     gameOver = true;
                     callback.onGameOver();
                     return;
@@ -382,6 +383,8 @@ class Scene extends View
 
     void free()
     {
+        cancel = true;
+        stop();
         deletingAnimation.quit();
     }
 }

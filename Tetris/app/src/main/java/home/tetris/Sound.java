@@ -3,8 +3,10 @@ package home.tetris;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
+import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.os.Build;
 import android.util.Log;
 
 import java.io.IOException;
@@ -30,7 +32,19 @@ class Sound {
 
     Sound(Context context){
         assetManager = context.getAssets();
-        soundPool = new SoundPool(MAX_SOUNDS, AudioManager.STREAM_MUSIC, 0);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+        {
+            AudioAttributes attributes = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_GAME)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build();
+            soundPool = new SoundPool.Builder()
+                    .setAudioAttributes(attributes)
+                    .setMaxStreams(MAX_SOUNDS)
+                    .build();
+        } else {
+            soundPool = new SoundPool(MAX_SOUNDS, AudioManager.STREAM_MUSIC, 0);
+        }
 
         loadSounds();
     }
@@ -51,7 +65,9 @@ class Sound {
     }
 
     void play(int soundId){
-        soundPool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f);
+        if(Settings.getBooleanSetting(
+                Settings.APP_SOUND_ENABLED, true))
+                        soundPool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f);
     }
 
 }

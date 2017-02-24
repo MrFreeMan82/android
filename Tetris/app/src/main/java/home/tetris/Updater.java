@@ -23,7 +23,6 @@ class Updater extends AsyncTask<Void, Void, Void>{
     private static final String TAG = "Updater";
     private static final String VERSION_URL = "https://raw.githubusercontent.com/MrFreeMan82/android/master/Tetris/version.txt";
     private static final String VERSION_RELEASE_URL = "https://github.com/MrFreeMan82/android/releases/download/";
-    private static final String APP_SETTING_IGNORED_VERSION = "ignoredVersion";
 
     private MainActivity mainActivity;
     private Callback callback;
@@ -86,7 +85,7 @@ class Updater extends AsyncTask<Void, Void, Void>{
         if(lastAppVersion == 0) return;
         if(lastAppVersion <= BuildConfig.VERSION_CODE) return; // Last version Ok skipping
 
-        int ignoredInt = Settings.getIntSetting(APP_SETTING_IGNORED_VERSION, 0);
+        int ignoredInt = Settings.getIntSetting(Settings.APP_SETTING_IGNORED_VERSION, 0);
         if(ignoredInt >= lastAppVersion) return;
 
         doUpdate(lastAppVersion);
@@ -100,11 +99,10 @@ class Updater extends AsyncTask<Void, Void, Void>{
             public void run() {
                 callback.onGotUpdate();
                 AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
-                builder.setMessage(mainActivity.getString(
-                        R.string.update_available, lastAppVersion) + '\n' +
-                                        mainActivity.getString(R.string.update_info))
+                builder
+                        .setMessage(mainActivity.getString(R.string.update_available, lastAppVersion))
                         .setCancelable(true)
-                        .setPositiveButton("Да", new DialogInterface.OnClickListener()
+                        .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener()
                         {
                             @Override
                             public void onClick(DialogInterface dialog, int which)
@@ -118,12 +116,12 @@ class Updater extends AsyncTask<Void, Void, Void>{
                                 dialog.dismiss();
                             }
                         })
-                        .setNegativeButton("Нет", new DialogInterface.OnClickListener()
+                        .setNegativeButton(R.string.no, new DialogInterface.OnClickListener()
                         {
                             @Override
                             public void onClick(DialogInterface dialog, int which)
                             {
-                                Settings.setIntSetting(APP_SETTING_IGNORED_VERSION, lastAppVersion);
+                                Settings.setIntSetting(Settings.APP_SETTING_IGNORED_VERSION, lastAppVersion);
                                 dialog.cancel();
                             }
                         });
