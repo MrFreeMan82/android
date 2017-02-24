@@ -3,15 +3,16 @@ package home.tetris;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.RadioButton;
+import android.widget.TextView;
 
 /**
  * Created by Дима on 24.02.2017.
@@ -42,6 +43,21 @@ public class SettingsDialog extends DialogFragment
     {
         final ViewGroup nullParent = null;
         View v = LayoutInflater.from(getActivity()).inflate(R.layout.settings_dialog, nullParent, false);
+
+        TextView currentVersionText = (TextView) v.findViewById(R.id.curr_version);
+        currentVersionText.setText(getString(R.string.version, BuildConfig.VERSION_CODE));
+
+        Button newVersionButton = (Button) v.findViewById(R.id.new_version);
+        newVersionButton.setText(getString(R.string.new_version, Updater.LAST_APP_VERSION));
+        newVersionButton.setEnabled(Updater.LAST_APP_VERSION > BuildConfig.VERSION_CODE);
+        newVersionButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v) {
+                new Updater(getActivity(), true).execute();
+                dismiss();
+            }
+        });
 
         english = (RadioButton) v.findViewById(R.id.english_radio);
         russian = (RadioButton) v.findViewById(R.id.russian_radio);

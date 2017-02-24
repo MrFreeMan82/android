@@ -17,4 +17,6 @@
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="hi_score">Hi score: %s</string>
+    <string name="version">Current version: %d</string>
+    <string name="new_version">Update to version %d</string>
 </resources>

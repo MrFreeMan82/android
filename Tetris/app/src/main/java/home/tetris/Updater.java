@@ -1,5 +1,6 @@
 package home.tetris;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -24,18 +25,22 @@ class Updater extends AsyncTask<Void, Void, Void>{
     private static final String VERSION_URL = "https://raw.githubusercontent.com/MrFreeMan82/android/master/Tetris/version.txt";
     private static final String VERSION_RELEASE_URL = "https://github.com/MrFreeMan82/android/releases/download/";
 
-    private MainActivity mainActivity;
+    private Activity mainActivity;
     private Callback callback;
+    private boolean quiet;
+    static int LAST_APP_VERSION;
 
     interface Callback
     {
         void onGotUpdate();
+        void onUpdateDialogClose();
     }
 
-    Updater(MainActivity activity)
+    Updater(Activity activity, boolean quietDownload)
     {
+        quiet = quietDownload;
         mainActivity = activity;
-        callback = activity;
+        callback = (Callback) activity;
     }
 
     protected Void doInBackground(Void... params)
@@ -81,14 +86,21 @@ class Updater extends AsyncTask<Void, Void, Void>{
 
     private void checkUpdates()
     {
-        final int lastAppVersion = getLastAppVersion();
-        if(lastAppVersion == 0) return;
-        if(lastAppVersion <= BuildConfig.VERSION_CODE) return; // Last version Ok skipping
+        LAST_APP_VERSION = getLastAppVersion();
+        if(LAST_APP_VERSION == 0) return;
+        if(LAST_APP_VERSION <= BuildConfig.VERSION_CODE) return; // Last version Ok skipping
 
-        int ignoredInt = Settings.getIntSetting(Settings.APP_SETTING_IGNORED_VERSION, 0);
-        if(ignoredInt >= lastAppVersion) return;
+        doUpdate(LAST_APP_VERSION);
+    }
 
-        doUpdate(lastAppVersion);
+    private void downloadUpdate(int lastAppVersion)
+    {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        String apkURL = VERSION_RELEASE_URL + lastAppVersion + '/' +
+                mainActivity.getString(R.string.app_name) + ".apk";
+
+        intent.setData(Uri.parse(apkURL));
+        mainActivity.startActivity(intent);
     }
 
     private void doUpdate(final int lastAppVersion)
@@ -97,7 +109,17 @@ class Updater extends AsyncTask<Void, Void, Void>{
         {
             @Override
             public void run() {
+                if(quiet)
+                {
+                    downloadUpdate(lastAppVersion);
+                    return;
+                }
+
                 callback.onGotUpdate();
+
+                int ignoredInt = Settings.getIntSetting(Settings.APP_SETTING_IGNORED_VERSION, 0);
+                if(ignoredInt >= LAST_APP_VERSION) return;
+
                 AlertDialog.Builder builder = new AlertDialog.Builder(mainActivity);
                 builder
                         .setMessage(mainActivity.getString(R.string.update_available, lastAppVersion))
@@ -107,12 +129,8 @@ class Updater extends AsyncTask<Void, Void, Void>{
                             @Override
                             public void onClick(DialogInterface dialog, int which)
                             {
-                                Intent intent = new Intent(Intent.ACTION_VIEW);
-                                String apkURL = VERSION_RELEASE_URL + lastAppVersion + '/' +
-                                                 mainActivity.getString(R.string.app_name) + ".apk";
-
-                                intent.setData(Uri.parse(apkURL));
-                                mainActivity.startActivity(intent);
+                                downloadUpdate(lastAppVersion);
+                                callback.onUpdateDialogClose();
                                 dialog.dismiss();
                             }
                         })
@@ -122,6 +140,7 @@ class Updater extends AsyncTask<Void, Void, Void>{
                             public void onClick(DialogInterface dialog, int which)
                             {
                                 Settings.setIntSetting(Settings.APP_SETTING_IGNORED_VERSION, lastAppVersion);
+                                callback.onUpdateDialogClose();
                                 dialog.cancel();
                             }
                         });
@@ -130,5 +149,4 @@ class Updater extends AsyncTask<Void, Void, Void>{
             }
         });
     }
-
 }

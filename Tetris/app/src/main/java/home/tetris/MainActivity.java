@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity
       //  setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.main);
 
-        new Updater(this).execute();
+        new Updater(this, false).execute();
 
         scene = new Scene(this);
         scene.setOnTouchListener(this);
@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v)
             {
-               if(!pause) pauseGame();
+               if(!pause) togglePause();
                FragmentManager manager = getSupportFragmentManager();
                SettingsDialog dialog = SettingsDialog.get();
                dialog.show(manager, DIALOG_SETTINGS);
@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onCloseSettingsDialog() {pauseGame();}
+    public void onCloseSettingsDialog() {if(pause) togglePause();}
 
     @Override
     protected void onDestroy()
@@ -85,14 +85,20 @@ public class MainActivity extends AppCompatActivity
         scene.free();
     }
 
-    private void pauseGame()
+    private void togglePause()
     {
         MenuItem itemPause = mMenu.findItem(R.id.item_pause_game);
         onOptionsItemSelected(itemPause);
     }
 
     @Override
-    public void onGotUpdate() {if(!pause) pauseGame();}
+    public void onUpdateDialogClose()
+    {
+        if(pause) togglePause();
+    }
+
+    @Override
+    public void onGotUpdate() {if(!pause) togglePause();}
 
     @Override
     public boolean onTouch(View v, MotionEvent event)
@@ -165,7 +171,7 @@ public class MainActivity extends AppCompatActivity
                 return true;
 
             case R.id.item_stop_game:
-                if(!pause) pauseGame();
+                if(!pause) togglePause();
                 scene.stop();
                 showHiScore(scene.getHi_score());
                 return true;

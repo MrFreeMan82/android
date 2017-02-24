@@ -20,26 +20,46 @@
     <Space
         android:layout_width="match_parent"
         android:layout_height="10dp" />
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+            <RadioGroup
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp">
+            <RadioButton
+                android:id="@+id/english_radio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/english"/>
+            <RadioButton
+                android:id="@+id/russian_radio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:text="@string/russian"/>
+            </RadioGroup>
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
 
-    <RadioGroup
-        android:orientation="horizontal"
+    <TextView
+        android:id="@+id/curr_version"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="10dp">
-    <RadioButton
-        android:id="@+id/english_radio"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/english"/>
-    <RadioButton
-        android:id="@+id/russian_radio"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
         android:layout_marginStart="10dp"
-        android:layout_marginLeft="10dp"
-        android:text="@string/russian"/>
-    </RadioGroup>
+        android:text="@string/version"/>
 
-
+    <Button
+        android:id="@+id/new_version"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="10dp"
+        android:text="@string/new_version"/>
 
 </LinearLayout>
