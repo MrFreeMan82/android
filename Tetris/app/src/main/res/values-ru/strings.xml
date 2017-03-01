@@ -18,5 +18,6 @@
     <string name="cancel">Отмена</string>
     <string name="hi_score">Топ: %s</string>
     <string name="version">Текущая версия: %d</string>
-    <string name="new_version">Обновить до версии %d</string>
+    <string name="new_version">Обновить до %s</string>
+    <string name="about">О игре</string>
 </resources>

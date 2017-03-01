@@ -23,14 +23,15 @@ import java.util.List;
 
 class Scene extends View
 {
-    public static final int BLOCKS_PER_WIDTH = 12;
-    public static int WIDTH;
-    public static int HEIGHT;
-    static int FALL_SPEED_INCREMENT = 100;
-
-    private static final int SCORE_PER_LEVEL = 25;
-    private static final int TIMER_INTERVAL = 30;
-    private static final int TETRAMINO_TOTAL = 19;
+    public static final int BLOCKS_PER_WIDTH = 12;          // Определяет колл-во блоков по ширине
+    public static int WIDTH;                                // Доступная ширина
+    public static int HEIGHT;                               // Доступная высота
+    static int FALL_SPEED_INCREMENT = 100;                  // Определяет скорость падения тетрамино
+                                                            // когда пальцем проводим вниз
+                                                            // эта веречина меняется в зависимости от разрешения экрана
+    private static final int SCORE_PER_LEVEL = 25;          // Через сколько очков переходим на уровень выше.
+    private static final int TIMER_INTERVAL = 30;           // Интервал таймер выбран методом подбора.
+    private static final int TETRAMINO_TOTAL = 19;          // Кол-во тетрамоно(сюда входят и повороты)
 
     private List<Tetramino> sceneList;
     private Tetramino currentMino;

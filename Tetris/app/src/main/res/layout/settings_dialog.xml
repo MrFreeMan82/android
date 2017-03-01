@@ -46,20 +46,32 @@
             android:layout_height="wrap_content" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/curr_version"
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:layout_marginStart="10dp"
-        android:text="@string/version"/>
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/curr_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="10dp"
+            android:text="@string/version"/>
+
+        <Button
+            android:id="@+id/new_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="10dp"
+            android:text="@string/new_version"/>
+    </LinearLayout>
 
     <Button
-        android:id="@+id/new_version"
+        android:id="@+id/about"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:layout_marginStart="10dp"
-        android:text="@string/new_version"/>
+        android:text="@string/about"
+        android:layout_gravity="center_horizontal"/>
 
 </LinearLayout>
