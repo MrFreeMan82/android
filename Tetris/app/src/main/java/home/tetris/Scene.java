@@ -23,9 +23,9 @@ import java.util.List;
 
 class Scene extends View
 {
-    public static final int BLOCKS_PER_WIDTH = 12;          // Определяет колл-во блоков по ширине
-    public static int WIDTH;                                // Доступная ширина
-    public static int HEIGHT;                               // Доступная высота
+    static final int BLOCKS_PER_WIDTH = 12;          // Определяет колл-во блоков по ширине
+    static int WIDTH;                                       // Доступная ширина
+    static int HEIGHT;                                      // Доступная высота
     static int FALL_SPEED_INCREMENT = 100;                  // Определяет скорость падения тетрамино
                                                             // когда пальцем проводим вниз
                                                             // эта веречина меняется в зависимости от разрешения экрана
@@ -61,10 +61,7 @@ class Scene extends View
         running = true;
     }
 
-    void pause(){
-        running = false;
-        Settings.setIntSetting(Settings.APP_SETTING_HISCORE, hi_score);
-    }
+    void pause(){running = false;}
 
     void stop(){
         running = false;
@@ -91,7 +88,10 @@ class Scene extends View
                 score += total;
                 callback.onScoreChange(score);
 
-                if(score > hi_score) hi_score = score;
+                if(score > hi_score){
+                    hi_score = score;
+                    Settings.setIntSetting(Settings.APP_SETTING_HISCORE, hi_score);
+                }
 
                 if (score >= level * SCORE_PER_LEVEL) {
                     level++;
@@ -232,7 +232,6 @@ class Scene extends View
             {
                 if (collisionUp(currentMino))
                 {
-                    Settings.setIntSetting(Settings.APP_SETTING_HISCORE, hi_score);
                     gameOver = true;
                     callback.onGameOver();
                     return;
@@ -316,7 +315,7 @@ class Scene extends View
     {
         for(Block block: current.getBlocks())
         {
-            if(block.active && block.rect.right >= WIDTH) return true;
+            if(block.active && block.rect.right >= Scene.WIDTH) return true;
 
             for(Tetramino tetramino: sceneList)
             {
@@ -338,7 +337,7 @@ class Scene extends View
         for(Block newBlock: newMino.getBlocks())
         {
             if((newBlock.rect.left < 0) ||
-                    (newBlock.rect.right > WIDTH) ||
+                    (newBlock.rect.right > Scene.WIDTH) ||
                         (newBlock.rect.bottom > HEIGHT)) return true;
 
             for(Tetramino tetramino: sceneList)

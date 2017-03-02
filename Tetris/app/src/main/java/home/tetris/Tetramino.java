@@ -4,9 +4,6 @@ import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
 
-import java.util.Comparator;
-
-
 /**
  * Created by Дима on 23.01.2017.
  * Класс служит для описания возможных видов Тетрамино
@@ -175,7 +172,7 @@ abstract class Tetramino{
         blocks = new Block[MAX_BLOCK_CNT];
     }
 }
-
+/*
 class CustomComparator implements Comparator<Block>
 {
     @Override
@@ -187,7 +184,7 @@ class CustomComparator implements Comparator<Block>
 
     @Override
     public boolean equals(Object obj){return false;}
-}
+}*/
 
 class LineHorizontal extends Tetramino{
     private static final byte[][] template = {{1,1,1,1}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}};

@@ -5,7 +5,6 @@ import android.os.HandlerThread;
 import android.os.Message;
 import android.util.Log;
 
-import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -180,8 +179,6 @@ class DeletingAnimation extends HandlerThread
                         }
                     }
                 }
-
-                Arrays.sort(bar[line], new CustomComparator());
                 line++;
             }
             else if(blockCount == 0) break;
