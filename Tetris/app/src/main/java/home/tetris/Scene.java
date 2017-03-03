@@ -27,11 +27,11 @@ class Scene extends View
     static int WIDTH;                                       // Доступная ширина
     static int HEIGHT;                                      // Доступная высота
     static int FALL_SPEED_INCREMENT = 100;                  // Определяет скорость падения тетрамино
-                                                            // когда пальцем проводим вниз
+                                                            // когда пальцем проводим вниз,
                                                             // эта веречина меняется в зависимости от разрешения экрана
+
     private static final int SCORE_PER_LEVEL = 25;          // Через сколько очков переходим на уровень выше.
     private static final int TIMER_INTERVAL = 30;           // Интервал таймер выбран методом подбора.
-    private static final int TETRAMINO_TOTAL = 19;          // Кол-во тетрамоно(сюда входят и повороты)
 
     private List<Tetramino> sceneList;
     private Tetramino currentMino;
@@ -132,11 +132,10 @@ class Scene extends View
         }.start();
     }
 
-// Создает новое тетрамино за пределами экрана, все параметры выбираются случайно
+    // Создает новое тетрамино за пределами экрана, все параметры выбираются случайно
     private void newMino()
     {
-        int type = (int) (Math.random() * TETRAMINO_TOTAL);
-        sceneList.add(Tetramino.intToTetramino(type));
+        sceneList.add(MinoGenerator.next());
         currentMino = sceneList.get(sceneList.size() - 1);
     }
 
@@ -282,7 +281,7 @@ class Scene extends View
                 {
                     if(prev.active &&
                             block.rect.bottom == prev.rect.top &&
-                                block.rect.left == prev.rect.left) return true;
+                            block.rect.left == prev.rect.left) return true;
                 }
             }
         }
@@ -291,24 +290,24 @@ class Scene extends View
 
     private boolean collisionLeft(Tetramino current)
     {
-       for(Block block: current.getBlocks())
-       {
-           if(block.active && block.rect.left <= 0) return true;
+        for(Block block: current.getBlocks())
+        {
+            if(block.active && block.rect.left <= 0) return true;
 
-           for(Tetramino tetramino: sceneList)
-           {
-               if(tetramino == current) continue;
+            for(Tetramino tetramino: sceneList)
+            {
+                if(tetramino == current) continue;
 
-               for(Block prev: tetramino.getBlocks())
-               {
-                   if(prev.active &&
-                           block.rect.left == prev.rect.right &&
-                                block.rect.bottom >= prev.rect.top &&
-                                    block.rect.bottom <= prev.rect.bottom) return true;
-               }
-           }
-       }
-       return false;
+                for(Block prev: tetramino.getBlocks())
+                {
+                    if(prev.active &&
+                            block.rect.left == prev.rect.right &&
+                            block.rect.bottom >= prev.rect.top &&
+                            block.rect.bottom <= prev.rect.bottom) return true;
+                }
+            }
+        }
+        return false;
     }
 
     private boolean collisionRight(Tetramino current)
@@ -324,8 +323,8 @@ class Scene extends View
                 {
                     if(prev.active &&
                             block.rect.right == prev.rect.left &&
-                                block.rect.bottom >= prev.rect.top &&
-                                    block.rect.bottom <= prev.rect.bottom) return true;
+                            block.rect.bottom >= prev.rect.top &&
+                            block.rect.bottom <= prev.rect.bottom) return true;
                 }
             }
         }
@@ -338,7 +337,7 @@ class Scene extends View
         {
             if((newBlock.rect.left < 0) ||
                     (newBlock.rect.right > Scene.WIDTH) ||
-                        (newBlock.rect.bottom > HEIGHT)) return true;
+                    (newBlock.rect.bottom > HEIGHT)) return true;
 
             for(Tetramino tetramino: sceneList)
             {
@@ -349,7 +348,7 @@ class Scene extends View
                     if(prev.active)
                     {
                         if ((newBlock.rect.top >= prev.rect.top &&
-                                    newBlock.rect.top <= prev.rect.bottom) ||
+                                newBlock.rect.top <= prev.rect.bottom) ||
                                 (newBlock.rect.bottom >= prev.rect.top &&
                                         newBlock.rect.bottom <= prev.rect.bottom))
                         {

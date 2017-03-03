@@ -3,6 +3,7 @@ package home.tetris;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.util.Log;
 
 /**
  * Created by Дима on 23.01.2017.
@@ -52,6 +53,7 @@ class Block
         mid.bottom = rect.bottom - (DELTA / 2);
     }
 }
+
 
 abstract class Tetramino{
 
@@ -132,34 +134,7 @@ abstract class Tetramino{
         }
     }
 
-    static Tetramino intToTetramino(int value)
-    {
-        switch (value)
-        {
-            case 0: return new LineHorizontal();
-            case 1: return new LineVertical();
-            case 2: return new Square();
-            case 3: return new L0();
-            case 4: return new L90();
-            case 5: return new L180();
-            case 6: return new L270();
-            case 7: return new LR0();
-            case 8: return new LR90();
-            case 9: return new LR180();
-            case 10: return new LR270();
-            case 11: return new T0();
-            case 12: return new T90();
-            case 13: return new T180();
-            case 14: return new T270();
-            case 15: return new Z0();
-            case 16: return new Z180();
-            case 17: return new RZ0();
-            case 18: return new RZ180();
-            default: return null;
-        }
-    }
-
-    private static int randomColor() {
+    static int randomColor() {
         int k = Integer.MAX_VALUE;
         return Color.argb((int) (Math.random() * k),
                 (int) (Math.random() * k), (int) (Math.random() * k), (int) (Math.random() * k));
@@ -168,23 +143,31 @@ abstract class Tetramino{
     abstract Tetramino rotate();
 
     Tetramino(){
-        mColor = randomColor();
         blocks = new Block[MAX_BLOCK_CNT];
     }
 }
-/*
-class CustomComparator implements Comparator<Block>
-{
-    @Override
-    public int compare(Block a, Block b)
-    {
-        if((a == null) || (b == null)) return 0;
-        return (a.rect.left > b.rect.left)? 1: -1;
-    }
 
-    @Override
-    public boolean equals(Object obj){return false;}
-}*/
+class MinoGenerator
+{
+    private static final String TAG = "MinoGenerator";
+
+    private static final Class[] types = {LineHorizontal.class, LineVertical.class, Square.class,
+            L0.class, L90.class, L180.class, L270.class, LR0.class, LR90.class, LR180.class,
+            LR270.class, T0.class, T90.class, T180.class, T270.class, Z0.class,
+            Z180.class, RZ0.class, RZ180.class};
+
+    static Tetramino next()
+    {
+        try{
+            int type = (int) (Math.random() * types.length);
+            return (Tetramino) types[type].newInstance();
+        } catch (Exception e){
+            e.printStackTrace();
+            Log.e(TAG, "Error while creating new tetramino");
+        }
+        return null;
+    }
+}
 
 class LineHorizontal extends Tetramino{
     private static final byte[][] template = {{1,1,1,1}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
@@ -194,10 +177,9 @@ class LineHorizontal extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     LineHorizontal(){
-        int top = -SQ_SIZE;
-        int left = (int) (Math.random() * (Scene.WIDTH - (MAX_BLOCK_CNT * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int)(Math.random() * (Scene.WIDTH - (MAX_BLOCK_CNT * SQ_SIZE))), -SQ_SIZE, randomColor());
     }
 
     LineVertical rotate(){return new LineVertical(getMinLeft(), getMinTop(), getColor());}
@@ -211,10 +193,9 @@ class LineVertical extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     LineVertical(){
-        int top = -(MAX_BLOCK_CNT * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - SQ_SIZE));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - SQ_SIZE)), -(MAX_BLOCK_CNT * SQ_SIZE), randomColor());
     }
 
     LineHorizontal rotate(){return new LineHorizontal(getMinLeft(), getMinTop(), getColor());}
@@ -224,6 +205,7 @@ class Square extends Tetramino{
     private static final byte[][] template = {{1,1,0,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}};
 
     Square(){
+        setColor(randomColor());
         int top = -(2 * SQ_SIZE);
         int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
@@ -240,10 +222,10 @@ class L0 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     L0(){
-        int top = -(3 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() *
+                (Scene.WIDTH - (2 * SQ_SIZE))), -(3 * SQ_SIZE), randomColor());
     }
 
     L90 rotate(){return new L90(getMinLeft(), getMinTop(), getColor());}
@@ -257,10 +239,9 @@ class L90 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     L90(){
-        int top = -(2 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE))), -(2 * SQ_SIZE), randomColor());
     }
 
     L180 rotate(){return new L180(getMinLeft(), getMinTop(), getColor());}
@@ -274,10 +255,9 @@ class L180 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     L180(){
-        int top = -(3 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE))), -(3 * SQ_SIZE), randomColor());
     }
 
     L270 rotate(){return new L270(getMinLeft(), getMinTop(), getColor());}
@@ -291,10 +271,9 @@ class L270 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     L270(){
-        int top = -(2 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE))), -(2 * SQ_SIZE), randomColor());
     }
 
     L0 rotate(){return new L0(getMinLeft(), getMinTop(), getColor());}
@@ -308,10 +287,9 @@ class LR0 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     LR0(){
-        int top = -(2 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE))), -(2 * SQ_SIZE), randomColor());
     }
 
     LR90 rotate(){return new LR90(getMinLeft(), getMinTop(), getColor());}
@@ -325,10 +303,9 @@ class LR90 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     LR90(){
-        int top = -(2 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE))), -(2 * SQ_SIZE), randomColor());
     }
 
     LR180 rotate(){return new LR180(getMinLeft(), getMinTop(), getColor());}
@@ -342,10 +319,9 @@ class LR180 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     LR180(){
-        int top = -(3 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE))), -(3 * SQ_SIZE), randomColor());
     }
 
     LR270 rotate(){return new LR270(getMinLeft(), getMinTop(), getColor());}
@@ -359,10 +335,9 @@ class LR270 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     LR270(){
-        int top = -(2 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE))), -(2 * SQ_SIZE), randomColor());
     }
 
     LR0 rotate(){return new LR0(getMinLeft(), getMinTop(), getColor());}
@@ -376,10 +351,9 @@ class T0 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     T0(){
-        int top = -(2 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE))), -(2 * SQ_SIZE), randomColor());
     }
 
     T90 rotate(){return new T90(getMinLeft(), getMinTop(), getColor());}
@@ -393,10 +367,9 @@ class T90 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     T90(){
-        int top = -(3 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE))), -(3 * SQ_SIZE), randomColor());
     }
 
     T180 rotate(){return new T180(getMinLeft(), getMinTop(), getColor());}
@@ -410,10 +383,9 @@ class T180 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     T180(){
-        int top = -(2 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE))), -(2 * SQ_SIZE), randomColor());
     }
 
     T270 rotate(){return new T270(getMinLeft(), getMinTop(), getColor());}
@@ -427,10 +399,9 @@ class T270 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     T270(){
-        int top = -(3 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE))), -(3 * SQ_SIZE), randomColor());
     }
 
     T0 rotate(){return new T0(getMinLeft(), getMinTop(), getColor());}
@@ -444,10 +415,9 @@ class Z0 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     Z0(){
-        int top = -(3 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE))), -(3 * SQ_SIZE), randomColor());
     }
 
     Z180 rotate(){return new Z180(getMinLeft(), getMinTop(), getColor());}
@@ -461,10 +431,9 @@ class Z180 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     Z180(){
-        int top = -(2 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE))), -(2 * SQ_SIZE), randomColor());
     }
 
     Z0 rotate(){return new Z0(getMinLeft(), getMinTop(), getColor());}
@@ -478,10 +447,9 @@ class RZ0 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     RZ0(){
-        int top = -(3 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - (2 * SQ_SIZE))), -(3 * SQ_SIZE), randomColor());
     }
 
     RZ180 rotate(){return new RZ180(getMinLeft(), getMinTop(), getColor());}
@@ -495,10 +463,9 @@ class RZ180 extends Tetramino{
         Tetramino.loadTemplate(this, template, left, top);
     }
 
+    @SuppressWarnings("unused")
     RZ180(){
-        int top = -(2 * SQ_SIZE);
-        int left = (int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE)));
-        Tetramino.loadTemplate(this, template, left, top);
+        this((int) (Math.random() * (Scene.WIDTH - (3 * SQ_SIZE))), -(2 * SQ_SIZE), randomColor());
     }
 
     RZ0 rotate(){return new RZ0(getMinLeft(), getMinTop(), getColor());}

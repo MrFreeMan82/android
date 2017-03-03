@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-      //  setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        //  setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.main);
 
         new Updater(this, false).execute();
@@ -48,10 +48,10 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v)
             {
-               if(!pause) togglePause();
-               FragmentManager manager = getSupportFragmentManager();
-               SettingsDialog dialog = new SettingsDialog();// SettingsDialog.get();
-               dialog.setSettingDialogListener(new SettingsDialog.SettingsDialogListener() {
+                if(!pause) togglePause();
+                FragmentManager manager = getSupportFragmentManager();
+                SettingsDialog dialog = new SettingsDialog();// SettingsDialog.get();
+                dialog.setSettingDialogListener(new SettingsDialog.SettingsDialogListener() {
                     @Override
                     public void onCloseSettingsDialog() {
                         if(pause) togglePause();
@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity
                         recreate();
                     }
                 });
-               dialog.show(manager, DIALOG_SETTINGS);
+                dialog.show(manager, DIALOG_SETTINGS);
             }
         });
 
@@ -184,15 +184,15 @@ public class MainActivity extends AppCompatActivity
     void showHiScore(int hi_score){
         if(getSupportActionBar() != null)
             getSupportActionBar().setSubtitle(
-                        getString(R.string.hi_score,
-                                    String.format(Locale.US, "%04d", hi_score)));
+                    getString(R.string.hi_score,
+                            String.format(Locale.US, "%04d", hi_score)));
     }
 
     @Override
     public void onLevelUp(int level)
     {
         Toast.makeText(this, getString(
-                    R.string.level_up, level), Toast.LENGTH_SHORT).show();
+                R.string.level_up, level), Toast.LENGTH_SHORT).show();
     }
 
     @Override
