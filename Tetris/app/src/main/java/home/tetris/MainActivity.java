@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity
 
                     @Override
                     public void onChangeLanguage(String newLanguage) {
-                        scene.free();
+                        scene.stop();
                         mainLayout.removeView(scene);
                         recreate();
                     }

@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.os.CountDownTimer;
-import android.os.Handler;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -38,7 +37,7 @@ class Scene extends View
     private Paint paint;
     private Sound sound;
     private Background background;
-    private DeletingAnimation deletingAnimation;
+    private DeleteAnimation deleteAnimation;
     private boolean gameOver = false;
     private boolean running = false;
     private boolean cancel = false;
@@ -69,6 +68,11 @@ class Scene extends View
         invalidate();
     }
 
+    void free(){
+        stop();
+        cancel = true;
+    }
+
     Scene(Context context)
     {
         super(context);
@@ -78,9 +82,8 @@ class Scene extends View
         sceneList = new ArrayList<>();
         paint = new Paint();
         background = new Background();
-        Handler responseHandler = new Handler();
-        deletingAnimation = new DeletingAnimation(responseHandler, this);
-        deletingAnimation.setBarDeleteListener(new DeletingAnimation.BarDeleteListener()
+        deleteAnimation = new DeleteAnimation(this);
+        deleteAnimation.setBarDeleteListener(new BarDeleteListener()
         {
             @Override
             public void onDeleteComplete(int total)
@@ -98,14 +101,8 @@ class Scene extends View
                     sound.play(Sound.LEVEL_UP);
                     callback.onLevelUp(level);
                 }
-                deletingAnimation.falling(total);
             }
-
-            @Override
-            public void onRepaint(){invalidate();}
         });
-        deletingAnimation.start();
-        deletingAnimation.getLooper();
 
         paint.setStrokeWidth(1);
         new CountDownTimer(Long.MAX_VALUE, TIMER_INTERVAL){
@@ -135,7 +132,7 @@ class Scene extends View
     // Создает новое тетрамино за пределами экрана, все параметры выбираются случайно
     private void newMino()
     {
-        sceneList.add(MinoGenerator.next());
+        sceneList.add(Tetramino.next());
         currentMino = sceneList.get(sceneList.size() - 1);
     }
 
@@ -237,7 +234,7 @@ class Scene extends View
                 }
                 sound.play(Sound.IMPACT);
                 clearEmptyTetraminos();
-                deletingAnimation.deleteFullLines();
+                deleteAnimation.deleteFullLines();
                 newMino();
             }
             currentMino.moveDown();
@@ -370,7 +367,7 @@ class Scene extends View
 
     Sound getSound(){return sound;}
 
-    void clear()
+    private void clear()
     {
         sceneList.clear();
         gameOver = false;
@@ -378,12 +375,5 @@ class Scene extends View
         callback.onScoreChange(score);
         level = 1;
         currentMino = null;
-    }
-
-    void free()
-    {
-        cancel = true;
-        stop();
-        deletingAnimation.quit();
     }
 }

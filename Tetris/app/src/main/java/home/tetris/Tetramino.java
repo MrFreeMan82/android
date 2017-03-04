@@ -55,10 +55,17 @@ class Block
 }
 
 
-abstract class Tetramino{
-
+abstract class Tetramino
+{
     static final int MAX_BLOCK_CNT = 4;
     static int SQ_SIZE;
+
+    private static final String TAG = "Tetramino";
+
+    private static final Class[] types = {LineHorizontal.class, LineVertical.class, Square.class,
+            L0.class, L90.class, L180.class, L270.class, LR0.class, LR90.class, LR180.class,
+            LR270.class, T0.class, T90.class, T180.class, T270.class, Z0.class,
+            Z180.class, RZ0.class, RZ180.class};
 
     private Block[] blocks;
     private int mColor;
@@ -114,6 +121,18 @@ abstract class Tetramino{
 
     Block[] getBlocks(){return blocks;}
 
+    static Tetramino next()
+    {
+        try{
+            int type = (int) (Math.random() * types.length);
+            return (Tetramino) types[type].newInstance();
+        } catch (Exception e){
+            e.printStackTrace();
+            Log.e(TAG, "Error while creating new tetramino");
+        }
+        return null;
+    }
+
     static void loadTemplate(Tetramino tetramino, byte[][] template, int left, int top)
     {
         left = (left >= SQ_SIZE)? (left / SQ_SIZE) * SQ_SIZE: 0;
@@ -144,28 +163,6 @@ abstract class Tetramino{
 
     Tetramino(){
         blocks = new Block[MAX_BLOCK_CNT];
-    }
-}
-
-class MinoGenerator
-{
-    private static final String TAG = "MinoGenerator";
-
-    private static final Class[] types = {LineHorizontal.class, LineVertical.class, Square.class,
-            L0.class, L90.class, L180.class, L270.class, LR0.class, LR90.class, LR180.class,
-            LR270.class, T0.class, T90.class, T180.class, T270.class, Z0.class,
-            Z180.class, RZ0.class, RZ180.class};
-
-    static Tetramino next()
-    {
-        try{
-            int type = (int) (Math.random() * types.length);
-            return (Tetramino) types[type].newInstance();
-        } catch (Exception e){
-            e.printStackTrace();
-            Log.e(TAG, "Error while creating new tetramino");
-        }
-        return null;
     }
 }
 

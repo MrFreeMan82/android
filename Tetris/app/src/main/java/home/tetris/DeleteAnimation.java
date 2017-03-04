@@ -1,72 +1,46 @@
 package home.tetris;
 
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Message;
+import android.os.AsyncTask;
 import android.util.Log;
-
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * Created by Дима on 20.02.2017.
  *
  */
 
-class DeletingAnimation extends HandlerThread
+interface BarDeleteListener
 {
-    private static final String TAG = "DeleteAnimation";
-    private static final int DELETE_BAR = 1;
+    void onDeleteComplete(int total);
+}
 
+class DeleteAnimation
+{
     private static Scene scene;
-    private Handler requestHandler;
-    private static Handler responseHandler;
     private static BarDeleteListener barDeleteListener;
-    private static ConcurrentMap<Block[][], Integer> concurrentMap = new ConcurrentHashMap<>();
 
-    interface BarDeleteListener
+    DeleteAnimation(Scene aScene)
     {
-        void onRepaint();
-        void onDeleteComplete(int total);
+        scene = aScene;
     }
 
     void setBarDeleteListener(BarDeleteListener listener){barDeleteListener = listener;}
 
-    DeletingAnimation(Handler aResponseHandler, Scene aScene)
+    private class DeleteTask extends AsyncTask<Block[][], Void, Integer>
     {
-        super(TAG);
-        scene = aScene;
-        responseHandler = aResponseHandler;
-    }
-
-    @Override
-    protected void onLooperPrepared(){requestHandler = new RequestHandler();}
-
-            //В этом классе код выполняется отдельным потоком
-    private static class RequestHandler extends Handler
-    {
-        Runnable repaint = new Runnable() {
-            @Override
-            public void run() {barDeleteListener.onRepaint();}
-        };
-
-        private void deleting(Block[][] bar)
-        {
-            while (bar[0][0].rect.bottom != bar[0][0].rect.top)
-            {
+        @Override
+        protected Integer doInBackground(Block[][]... params) {
+            Block[][] bar = params[0];
+            while (bar[0][0].rect.bottom != bar[0][0].rect.top) {
                 int k = 1;
-                for(Block[] column : bar)
-                {
-                    for (Block block : column)
-                    {
+                for (Block[] column : bar) {
+                    for (Block block : column) {
                         block.p1 = null;
                         block.p2 = null;
                         block.rect.bottom -= 1;
                         block.updateSubRect();
                         if (block.rect.bottom == block.rect.top) block.active = false;
-                        if ((k == Scene.BLOCKS_PER_WIDTH) && (block.rect.bottom % 2 == 0))
-                        {
-                            responseHandler.post(repaint);
+                        if ((k == Scene.BLOCKS_PER_WIDTH) && (block.rect.bottom % 2 == 0)) {
+                            publishProgress();
                             try {
                                 Thread.sleep(10);
                             } catch (InterruptedException ie) {
@@ -77,27 +51,22 @@ class DeletingAnimation extends HandlerThread
                     }
                 }
             }
+            return bar.length;
         }
 
         @Override
-        public void handleMessage(Message msg)
-        {
-            if (msg.what == DELETE_BAR)
-            {
-                Block[][] bar = (Block[][]) msg.obj;
-                final int total = concurrentMap.get(bar);
-                deleting(bar);
-                responseHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        barDeleteListener.onDeleteComplete(total);
-                    }
-                });
-            }
+        public void onProgressUpdate(Void... params) {
+            scene.invalidate();
+        }
+
+        @Override
+        public void onPostExecute(Integer totalDeleted) {
+            falling(totalDeleted);
+            barDeleteListener.onDeleteComplete(totalDeleted);
         }
     }
 
-    void falling(int totalDeleted)
+    private void falling(int totalDeleted)
     {
         int bottom = Scene.HEIGHT;
         int moved = 0;
@@ -140,16 +109,17 @@ class DeletingAnimation extends HandlerThread
 
     private int countTotal()
     {
+        int count;
         int result = 0;
         int bottom = Scene.HEIGHT;
 
-        while (bottom > 0)
-        {
-            int count = countBlock(bottom);
+        do {
+            count = countBlock(bottom);
             if(count == Scene.BLOCKS_PER_WIDTH) result++;
-
             bottom -= Tetramino.SQ_SIZE;
         }
+        while(bottom > 0 && count > 0);
+
         return result;
     }
 
@@ -185,7 +155,6 @@ class DeletingAnimation extends HandlerThread
 
             bottom -= Tetramino.SQ_SIZE;
         }
-        concurrentMap.put(bar, total);
-        requestHandler.obtainMessage(DELETE_BAR, bar).sendToTarget();
+        new DeleteTask().execute(bar);
     }
 }
