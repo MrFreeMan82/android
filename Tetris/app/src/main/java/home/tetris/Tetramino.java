@@ -5,6 +5,9 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 /**
  * Created by Дима on 23.01.2017.
  * Класс служит для описания возможных видов Тетрамино
@@ -62,10 +65,16 @@ abstract class Tetramino
 
     private static final String TAG = "Tetramino";
 
-    private static final Class[] types = {LineHorizontal.class, LineVertical.class, Square.class,
-            L0.class, L90.class, L180.class, L270.class, LR0.class, LR90.class, LR180.class,
-            LR270.class, T0.class, T90.class, T180.class, T270.class, Z0.class,
-            Z180.class, RZ0.class, RZ180.class};
+    private static final
+        ArrayList<Class<? extends Tetramino>> types =
+            new ArrayList<>(Arrays.asList
+            (
+               LineHorizontal.class, LineVertical.class, Square.class, L0.class,
+                       L90.class, L180.class, L270.class, LR0.class, LR90.class, LR180.class,
+                  LR270.class, T0.class, T90.class, T180.class, T270.class, Z0.class,
+               Z180.class, RZ0.class, RZ180.class
+            )
+    );
 
     private Block[] blocks;
     private int mColor;
@@ -124,8 +133,8 @@ abstract class Tetramino
     static Tetramino next()
     {
         try{
-            int type = (int) (Math.random() * types.length);
-            return (Tetramino) types[type].newInstance();
+            int type = (int) (Math.random() * types.size());
+            return types.get(type).newInstance();
         } catch (Exception e){
             e.printStackTrace();
             Log.e(TAG, "Error while creating new tetramino");
@@ -161,9 +170,7 @@ abstract class Tetramino
 
     abstract Tetramino rotate();
 
-    Tetramino(){
-        blocks = new Block[MAX_BLOCK_CNT];
-    }
+    Tetramino(){blocks = new Block[MAX_BLOCK_CNT];}
 }
 
 class LineHorizontal extends Tetramino{
