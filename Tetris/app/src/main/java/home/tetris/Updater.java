@@ -22,6 +22,7 @@ import java.net.URL;
 class Updater extends AsyncTask<Void, Void, Void>{
 
     private static final String TAG = "Updater";
+    private static final String RELEASE_NAME = "Tetris";
     private static final String VERSION_URL = "https://raw.githubusercontent.com/MrFreeMan82/android/master/Tetris/version.txt";
     private static final String VERSION_RELEASE_URL = "https://github.com/MrFreeMan82/android/releases/download/";
 
@@ -96,8 +97,7 @@ class Updater extends AsyncTask<Void, Void, Void>{
     private void downloadUpdate(int lastAppVersion)
     {
         Intent intent = new Intent(Intent.ACTION_VIEW);
-        String apkURL = VERSION_RELEASE_URL + lastAppVersion + '/' +
-                mainActivity.getString(R.string.app_name) + ".apk";
+        String apkURL = VERSION_RELEASE_URL + lastAppVersion + '/' + RELEASE_NAME + ".apk";
 
         intent.setData(Uri.parse(apkURL));
         mainActivity.startActivity(intent);
