@@ -115,19 +115,19 @@ public class MainActivity extends AppCompatActivity
                 break;
 
             case MotionEvent.ACTION_MOVE:
-                if(x - oldX < -Tetramino.SQ_SIZE){
+                if(x - oldX < -Block.SQ_SIZE){
                     moving = true;
                     oldX = x; oldY = y;
                     scene.moveCurrentLeft();
                     return true;
                 }
-                else if(x - oldX > Tetramino.SQ_SIZE){
+                else if(x - oldX > Block.SQ_SIZE){
                     moving = true;
                     oldX = x; oldY = y;
                     scene.moveCurrentRight();
                     return true;
                 }
-                else if(y - oldY > Tetramino.SQ_SIZE){
+                else if(y - oldY > Block.SQ_SIZE){
                     moving = true;
                     oldX = x; oldY = y;
                     scene.moveCurrentDown(Scene.getFallSpeedIncrement());

@@ -30,16 +30,17 @@ class DeleteAnimation
         @Override
         protected Integer doInBackground(Block[][]... params) {
             Block[][] bar = params[0];
-            while (bar[0][0].rect.bottom != bar[0][0].rect.top) {
+            while (bar[0][0].getRect().bottom != bar[0][0].getRect().top)
+            {
                 int k = 1;
-                for (Block[] column : bar) {
-                    for (Block block : column) {
-                        block.p1 = null;
-                        block.p2 = null;
-                        block.rect.bottom -= 1;
-                        block.updateSubRect();
-                        if (block.rect.bottom == block.rect.top) block.active = false;
-                        if ((k == Scene.BLOCKS_PER_WIDTH) && (block.rect.bottom % 2 == 0)) {
+                for (Block[] column : bar)
+                {
+                    for (Block block : column)
+                    {
+                        block.decrease();
+                        if (block.getRect().bottom == block.getRect().top) block.setVisible(false);
+                        if ((k == Scene.BLOCKS_PER_WIDTH) && (block.getRect().bottom % 2 == 0))
+                        {
                             publishProgress();
                             try {
                                 Thread.sleep(10);
@@ -82,17 +83,15 @@ class DeleteAnimation
                     if(tetramino == scene.getCurrentMino()) continue;
                     for (Block block : tetramino.getBlocks())
                     {
-                        if (block.active && block.rect.bottom < bottom)
+                        if (block.isVisible() && block.getRect().bottom < bottom)
                         {
-                            block.rect.top += Tetramino.SQ_SIZE;
-                            block.rect.bottom = block.rect.top + Tetramino.SQ_SIZE;
-                            block.updateSubRect();
+                            block.moveDown(Block.SQ_SIZE);
                         }
                     }
                 }
                 moved++;
             }
-            bottom -= Tetramino.SQ_SIZE;
+            bottom -= Block.SQ_SIZE;
         }
     }
 
@@ -101,7 +100,7 @@ class DeleteAnimation
         int counter = 0;
         for(Tetramino tetramino: scene.getSceneList()){
             for(Block block: tetramino.getBlocks()){
-                if(block.active && block.rect.bottom == line) counter++;
+                if(block.isVisible() && block.getRect().bottom == line) counter++;
             }
         }
         return counter;
@@ -116,7 +115,7 @@ class DeleteAnimation
         do {
             count = countBlock(bottom);
             if(count == Scene.BLOCKS_PER_WIDTH) result++;
-            bottom -= Tetramino.SQ_SIZE;
+            bottom -= Block.SQ_SIZE;
         }
         while(bottom > 0 && count > 0);
 
@@ -142,7 +141,7 @@ class DeleteAnimation
                 {
                     for(Block block : tetramino.getBlocks())
                     {
-                        if(block.active && block.rect.bottom == bottom)
+                        if(block.isVisible() && block.getRect().bottom == bottom)
                         {
                             bar[line][index] = block;
                             index++;
@@ -153,7 +152,7 @@ class DeleteAnimation
             }
             else if(blockCount == 0) break;
 
-            bottom -= Tetramino.SQ_SIZE;
+            bottom -= Block.SQ_SIZE;
         }
         new DeleteTask().execute(bar);
     }

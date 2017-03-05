@@ -8,24 +8,28 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import static home.tetris.Block.SQ_SIZE;
+
 /**
  * Created by Дима on 23.01.2017.
  * Класс служит для описания возможных видов Тетрамино
  * Цифры в именах классов обозначают угол поворота
  */
 
-class Block
+final class Block
 {
+    static final int SQ_SIZE = Scene.getWIDTH() / Scene.BLOCKS_PER_WIDTH;
     private static final int DELTA = 5 * (Scene.getHEIGHT() / Scene.SCREEN_DELTA);
 
-    boolean active = true;
-    Rect rect;
-    Rect subRect;
-    Rect mid;
-    Point p1;
-    Point p2;
+    private boolean visible = true;
+    private Rect rect;
+    private Rect subRect;
+    private Rect mid;
+    private Point p1;
+    private Point p2;
 
-    Block(int left, int top, int right, int bottom){
+    Block(int left, int top, int right, int bottom)
+    {
         rect = new Rect(left, top, right, bottom);
         subRect = new Rect(rect);
         mid = new Rect(rect);
@@ -34,21 +38,57 @@ class Block
         updateSubRect();
     }
 
-    void updateSubRect()
+    Rect getRect(){return rect;}
+    Rect getSubRect(){return subRect;}
+    Rect getMid(){return mid;}
+    Point getP1(){return p1;}
+    Point getP2(){return p2;}
+    boolean isVisible(){return visible;}
+    void setVisible(boolean value){visible = value;}
+
+    void moveDown(int value)
+    {
+        rect.top += value;
+        rect.bottom = rect.top + SQ_SIZE;
+        updateSubRect();
+    }
+
+    void moveLeft()
+    {
+        rect.left -= SQ_SIZE;
+        rect.right = rect.left + SQ_SIZE;
+        updateSubRect();
+    }
+
+    void moveRight()
+    {
+        rect.left = rect.right;
+        rect.right = rect.left + SQ_SIZE;
+        updateSubRect();
+    }
+
+    void decrease()
+    {
+        rect.bottom -= 1;
+        updateSubRect();
+    }
+
+    private void updateSubRect()
     {
         subRect.left = rect.left + DELTA;
         subRect.top = rect.top + DELTA;
         subRect.right = rect.right - DELTA;
         subRect.bottom = rect.bottom - DELTA;
 
-        if(p1 != null) {
-            p1.x = subRect.left + (Tetramino.SQ_SIZE / 2);
-            p1.y = subRect.top + (Tetramino.SQ_SIZE / 2) + ((Tetramino.SQ_SIZE / 2) / 2);
-        }
+        if(subRect.bottom > subRect.top) {
+            int h = subRect.bottom - subRect.top;
+            int w = subRect.right - subRect.left;
 
-        if(p2 != null) {
-            p2.x = subRect.left + (Tetramino.SQ_SIZE / 2) + ((Tetramino.SQ_SIZE / 2) / 2);
-            p2.y = subRect.top + (Tetramino.SQ_SIZE / 2);
+            p1.x = subRect.right;
+            p1.y = subRect.top + (h / 2) + ((h / 2) / 2);
+
+            p2.x = subRect.left + ((w / 2) + ((w / 2) / 2));
+            p2.y = subRect.bottom;
         }
 
         mid.left = rect.left + (DELTA / 2);
@@ -62,7 +102,6 @@ class Block
 abstract class Tetramino
 {
     static final int MAX_BLOCK_CNT = 4;
-    static final int SQ_SIZE = Scene.getWIDTH() / Scene.BLOCKS_PER_WIDTH;
 
     private static final String TAG = "Tetramino";
 
@@ -82,7 +121,7 @@ abstract class Tetramino
     int getMinLeft() {
         int r = Integer.MAX_VALUE;
         for(Block block: blocks)
-            if(block.active && block.rect.left < r) r = block.rect.left;
+            if(block.isVisible() && block.getRect().left < r) r = block.getRect().left;
 
         return r;
     }
@@ -90,39 +129,24 @@ abstract class Tetramino
     int getMinTop(){
         int r = Integer.MAX_VALUE;
         for(Block block: blocks)
-            if(block.active && block.rect.top < r) r = block.rect.top;
+            if(block.isVisible() && block.getRect().top < r) r = block.getRect().top;
 
         return r;
     }
 
     void moveDown()
     {
-        for(Block block: blocks)
-        {
-            block.rect.top += 1;
-            block.rect.bottom = block.rect.top + SQ_SIZE;
-            block.updateSubRect();
-        }
+        for(Block block: blocks) block.moveDown(1);
     }
 
     void moveLeft()
     {
-        for(Block block: blocks)
-        {
-            block.rect.left -= SQ_SIZE;
-            block.rect.right = block.rect.left + SQ_SIZE;
-            block.updateSubRect();
-        }
+        for(Block block: blocks) block.moveLeft();
     }
 
     void moveRight()
     {
-        for(Block block: blocks)
-        {
-            block.rect.left = block.rect.right;
-            block.rect.right = block.rect.left + SQ_SIZE;
-            block.updateSubRect();
-        }
+        for(Block block: blocks) block.moveRight();
     }
 
     int getColor(){return mColor;}

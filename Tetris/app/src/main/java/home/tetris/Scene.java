@@ -164,21 +164,20 @@ class Scene extends View
         for(Tetramino tetramino:sceneList)
         {
             for(Block block: tetramino.getBlocks())
-                if(block.active)
+                if(block.isVisible())
                 {
                     paint.setColor(tetramino.getColor());
-                    canvas.drawRect(block.rect, paint);
+                    canvas.drawRect(block.getRect(), paint);
                     paint.setColor(Color.BLACK);
-                    canvas.drawRect(block.mid, paint);
+                    canvas.drawRect(block.getMid(), paint);
                     paint.setColor(tetramino.getColor());
-                    canvas.drawRect(block.subRect, paint);
+                    canvas.drawRect(block.getSubRect(), paint);
 
-                    if(block.p1 != null && block.p2 != null)
-                    {
-                        paint.setStrokeWidth(2);
-                        paint.setColor(Color.WHITE);
-                        canvas.drawLine(block.p1.x, block.p1.y, block.p2.x, block.p2.y, paint);
-                    }
+                    paint.setStrokeWidth(2);
+                    paint.setColor(Color.WHITE);
+                    Point p1 = block.getP1();
+                    Point p2 = block.getP2();
+                    canvas.drawLine(p1.x, p1.y, p2.x, p2.y, paint);
                 }
         }
 
@@ -213,7 +212,7 @@ class Scene extends View
         {
             int counter = 0;
             Tetramino next = sceneList.get(i);
-            for(Block block: next.getBlocks()) if(!block.active) counter++;
+            for(Block block: next.getBlocks()) if(!block.isVisible()) counter++;
 
             if(counter == Tetramino.MAX_BLOCK_CNT) sceneList.remove(next); else i++;
         }
@@ -261,7 +260,7 @@ class Scene extends View
     private boolean collisionUp(Tetramino mino)
     {
         for(Block current: mino.getBlocks())
-            if (current.active && current.rect.top < 0) return true;
+            if (current.isVisible() && current.getRect().top < 0) return true;
 
         return false;
     }
@@ -270,16 +269,16 @@ class Scene extends View
     {
         for(Block block: current.getBlocks())
         {
-            if(block.active && block.rect.bottom == HEIGHT) return true;
+            if(block.isVisible() && block.getRect().bottom == HEIGHT) return true;
 
             for(Tetramino tetramino: sceneList)
             {
                 if(tetramino == current) continue;
                 for(Block prev: tetramino.getBlocks())
                 {
-                    if(prev.active &&
-                            block.rect.bottom == prev.rect.top &&
-                            block.rect.left == prev.rect.left) return true;
+                    if(prev.isVisible() &&
+                            block.getRect().bottom == prev.getRect().top &&
+                            block.getRect().left == prev.getRect().left) return true;
                 }
             }
         }
@@ -290,7 +289,7 @@ class Scene extends View
     {
         for(Block block: current.getBlocks())
         {
-            if(block.active && block.rect.left <= 0) return true;
+            if(block.isVisible() && block.getRect().left <= 0) return true;
 
             for(Tetramino tetramino: sceneList)
             {
@@ -298,10 +297,10 @@ class Scene extends View
 
                 for(Block prev: tetramino.getBlocks())
                 {
-                    if(prev.active &&
-                            block.rect.left == prev.rect.right &&
-                            block.rect.bottom >= prev.rect.top &&
-                            block.rect.bottom <= prev.rect.bottom) return true;
+                    if(prev.isVisible() &&
+                            block.getRect().left == prev.getRect().right &&
+                            block.getRect().bottom >= prev.getRect().top &&
+                            block.getRect().bottom <= prev.getRect().bottom) return true;
                 }
             }
         }
@@ -312,17 +311,17 @@ class Scene extends View
     {
         for(Block block: current.getBlocks())
         {
-            if(block.active && (WIDTH - block.rect.right) < Tetramino.SQ_SIZE) return true;
+            if(block.isVisible() && (WIDTH - block.getRect().right) < Block.SQ_SIZE) return true;
 
             for(Tetramino tetramino: sceneList)
             {
                 if(tetramino == current) continue;
                 for(Block prev: tetramino.getBlocks())
                 {
-                    if(prev.active &&
-                            block.rect.right == prev.rect.left &&
-                            block.rect.bottom >= prev.rect.top &&
-                            block.rect.bottom <= prev.rect.bottom) return true;
+                    if(prev.isVisible() &&
+                            block.getRect().right == prev.getRect().left &&
+                            block.getRect().bottom >= prev.getRect().top &&
+                            block.getRect().bottom <= prev.getRect().bottom) return true;
                 }
             }
         }
@@ -333,9 +332,9 @@ class Scene extends View
     {
         for(Block newBlock: newMino.getBlocks())
         {
-            if((newBlock.rect.left < 0) ||
-                    (newBlock.rect.right > WIDTH) ||
-                    (newBlock.rect.bottom > HEIGHT)) return true;
+            if((newBlock.getRect().left < 0) ||
+                    (newBlock.getRect().right > WIDTH) ||
+                    (newBlock.getRect().bottom > HEIGHT)) return true;
 
             for(Tetramino tetramino: sceneList)
             {
@@ -343,15 +342,15 @@ class Scene extends View
 
                 for(Block prev: tetramino.getBlocks())
                 {
-                    if(prev.active)
+                    if(prev.isVisible())
                     {
-                        if ((newBlock.rect.top >= prev.rect.top &&
-                                newBlock.rect.top <= prev.rect.bottom) ||
-                                (newBlock.rect.bottom >= prev.rect.top &&
-                                        newBlock.rect.bottom <= prev.rect.bottom))
+                        if ((newBlock.getRect().top >= prev.getRect().top &&
+                                newBlock.getRect().top <= prev.getRect().bottom) ||
+                                (newBlock.getRect().bottom >= prev.getRect().top &&
+                                        newBlock.getRect().bottom <= prev.getRect().bottom))
                         {
-                            if ((newBlock.rect.left == prev.rect.left) ||
-                                    (newBlock.rect.right == prev.rect.right)) return true;
+                            if ((newBlock.getRect().left == prev.getRect().left) ||
+                                    (newBlock.getRect().right == prev.getRect().right)) return true;
                         }
                     }
                 }
