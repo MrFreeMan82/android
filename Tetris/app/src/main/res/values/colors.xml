@@ -4,4 +4,5 @@
     <color name="colorPrimaryDark">#303f9f</color>
     <color name="colorAccent">#FF4081</color>
     <color name="starColor">#a9e4f4</color>
+    <color name="moonColor">#f5f5c8</color>
 </resources>

@@ -5,7 +5,7 @@ android {
     buildToolsVersion "25.0.1"
     defaultConfig {
         applicationId "home.tetris"
-        minSdkVersion 17
+        minSdkVersion 16
         targetSdkVersion 25
         versionCode 7
         versionName "7.0"

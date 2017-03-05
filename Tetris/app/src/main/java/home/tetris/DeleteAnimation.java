@@ -15,8 +15,9 @@ interface BarDeleteListener
 
 class DeleteAnimation
 {
-    private static Scene scene;
-    private static BarDeleteListener barDeleteListener;
+    private Scene scene;
+    private BarDeleteListener barDeleteListener;
+    private static final String TAG = "DeleteAnimation";
 
     DeleteAnimation(Scene aScene)
     {
@@ -45,7 +46,8 @@ class DeleteAnimation
                             try {
                                 Thread.sleep(10);
                             } catch (InterruptedException ie) {
-                                Log.e("DeleteLineAnimation", ie.getMessage());
+                                ie.printStackTrace();
+                                Log.e(TAG, "Delete Animation Error");
                             }
                         }
                         k++;
@@ -154,6 +156,6 @@ class DeleteAnimation
 
             bottom -= Block.SQ_SIZE;
         }
-        new DeleteTask().execute(bar);
+        new DeleteTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, bar);
     }
 }

@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.os.AsyncTask;
 import android.os.CountDownTimer;
 import android.view.View;
 
@@ -40,8 +41,8 @@ class Scene extends View
     private Background background;
     private DeleteAnimation deleteAnimation;
     private boolean gameOver = false;
-    private boolean running = false;
-    private boolean cancel = false;
+    private static boolean running = false;
+    private static boolean cancel = false;
     private int score = 0;
     private int hi_score = 0;
     private int level = 1;
@@ -107,8 +108,6 @@ class Scene extends View
         paint.setStrokeWidth(1);
         new CountDownTimer(Long.MAX_VALUE, TIMER_INTERVAL)
         {
-            long BackgroundInterval = 50;
-
             @Override
             public void onFinish() {}
 
@@ -116,16 +115,8 @@ class Scene extends View
             public void onTick(long millisUntilFinished)
             {
                 if(cancel) this.cancel();
-
                 if(running)
                 {
-                    if(BackgroundInterval > 50)
-                    {
-                        background.moveMoon();
-                        background.moveStars();
-                        BackgroundInterval = 0;
-                    }
-                    BackgroundInterval += TIMER_INTERVAL;
                     moveCurrentDown(0);
                     invalidate();
                 }
@@ -147,9 +138,9 @@ class Scene extends View
             WIDTH = w;
             HEIGHT = h;
             FALL_SPEED_INCREMENT = 50 * (HEIGHT / SCREEN_DELTA);
-            background = new Background();
-            background.createBackground();
             start();
+            background = new Background();
+            background.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
     }
 
@@ -158,7 +149,7 @@ class Scene extends View
     {
         canvas.drawARGB(255, 0, 0, 0);
 
-        paint.setColor(Color.WHITE);
+        paint.setColor(Background.MOON_COLOR);
         canvas.drawCircle(background.moon.x, background.moon.y, Background.MOON_RADIUS, paint);
 
         for(Tetramino tetramino:sceneList)
@@ -359,18 +350,14 @@ class Scene extends View
         return false;
     }
 
+    static boolean isRunning(){return running;}
+    static boolean isCancel(){return cancel;}
     static int getWIDTH(){return WIDTH;}
-
     static int getHEIGHT(){return HEIGHT;}
-
     static int getFallSpeedIncrement(){return FALL_SPEED_INCREMENT;}
-
     int getHi_score(){return hi_score;}
-
     Tetramino getCurrentMino(){return currentMino;}
-
     List<Tetramino> getSceneList(){return sceneList;}
-
     Sound getSound(){return sound;}
 
     private void clear()

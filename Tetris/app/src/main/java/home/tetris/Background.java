@@ -1,28 +1,31 @@
 package home.tetris;
 
 import android.graphics.Point;
+import android.os.AsyncTask;
+import android.util.Log;
 
 /**
  * Created by Дима on 22.02.2017.
  *
  */
 
-class Background
+class Background extends AsyncTask<Void, Void, Void>
 {
     static final int MOON_RADIUS = 50 * (Scene.getHEIGHT() / Scene.SCREEN_DELTA);
     static final int STAR_COLOR = 0xffa9e4f4;
+    static final int MOON_COLOR = 0xfff5f5c8;
+
+    private static final String TAG = "Background";
     private static final int STARS_COUNT = 50;
+
     Point[] stars;
     Point moon;
 
-
-    Background(){
+    Background()
+    {
         moon = new Point();
         stars = new Point[STARS_COUNT];
-    }
 
-    void createBackground()
-    {
         moon.x = (int) (Math.random() * Scene.getWIDTH());
         moon.y = (int) (Math.random() * Scene.getHEIGHT());
 
@@ -34,7 +37,7 @@ class Background
         }
     }
 
-    void moveMoon()
+    private void moveMoon()
     {
         moon.x += 1;
         moon.y -= 1;
@@ -43,12 +46,32 @@ class Background
         if(moon.y + MOON_RADIUS < -MOON_RADIUS * 2) moon.y = Scene.getHEIGHT() + MOON_RADIUS;
     }
 
-    void moveStars()
+    private void moveStars()
     {
        for(Point star : stars)
        {
            star.y -= 1;
            if(star.y < 0) star.y = Scene.getHEIGHT();
        }
+    }
+
+    @Override
+    protected Void doInBackground(Void... params)
+    {
+        while (!Scene.isCancel())
+        {
+            if(Scene.isRunning())
+            {
+                moveMoon();
+                moveStars();
+                try {
+                    Thread.sleep(60);
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                    Log.e(TAG, "Background Animation Error");
+                }
+            }
+        }
+        return null;
     }
 }

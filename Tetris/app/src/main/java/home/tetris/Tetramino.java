@@ -98,7 +98,6 @@ final class Block
     }
 }
 
-
 abstract class Tetramino
 {
     static final int MAX_BLOCK_CNT = 4;
