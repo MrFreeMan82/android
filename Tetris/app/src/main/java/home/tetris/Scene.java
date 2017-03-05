@@ -22,15 +22,16 @@ import java.util.List;
 
 class Scene extends View
 {
+    static final int SCREEN_DELTA = 500;
     static final int BLOCKS_PER_WIDTH = 12;          // Определяет колл-во блоков по ширине
-    static int WIDTH;                                       // Доступная ширина
-    static int HEIGHT;                                      // Доступная высота
-    static int FALL_SPEED_INCREMENT = 100;                  // Определяет скорость падения тетрамино
-                                                            // когда пальцем проводим вниз,
-                                                            // эта веречина меняется в зависимости от разрешения экрана
+    private static int WIDTH;                        // Доступная ширина
+    private static int HEIGHT;                       // Доступная высота
+    private static int FALL_SPEED_INCREMENT;         // Определяет скорость падения тетрамино
+                                                     // когда пальцем проводим вниз,
+                                                     // эта веречина меняется в зависимости от разрешения экрана
 
-    private static final int SCORE_PER_LEVEL = 25;          // Через сколько очков переходим на уровень выше.
-    private static final int TIMER_INTERVAL = 30;           // Интервал таймер выбран методом подбора.
+    private static final int SCORE_PER_LEVEL = 25;   // Через сколько очков переходим на уровень выше.
+    private static final int TIMER_INTERVAL = 30;    // Интервал таймер выбран методом подбора.
 
     private List<Tetramino> sceneList;
     private Tetramino currentMino;
@@ -81,7 +82,6 @@ class Scene extends View
         sound = new Sound(context);
         sceneList = new ArrayList<>();
         paint = new Paint();
-        background = new Background();
         deleteAnimation = new DeleteAnimation(this);
         deleteAnimation.setBarDeleteListener(new BarDeleteListener()
         {
@@ -105,7 +105,10 @@ class Scene extends View
         });
 
         paint.setStrokeWidth(1);
-        new CountDownTimer(Long.MAX_VALUE, TIMER_INTERVAL){
+        new CountDownTimer(Long.MAX_VALUE, TIMER_INTERVAL)
+        {
+            long BackgroundInterval = 50;
+
             @Override
             public void onFinish() {}
 
@@ -116,12 +119,13 @@ class Scene extends View
 
                 if(running)
                 {
-                    if(Background.INTERVAL > 50) {
+                    if(BackgroundInterval > 50)
+                    {
                         background.moveMoon();
                         background.moveStars();
-                        Background.INTERVAL = 0;
+                        BackgroundInterval = 0;
                     }
-                    Background.INTERVAL += TIMER_INTERVAL;
+                    BackgroundInterval += TIMER_INTERVAL;
                     moveCurrentDown(0);
                     invalidate();
                 }
@@ -140,13 +144,10 @@ class Scene extends View
     public void onSizeChanged (int w, int h, int oldw, int oldh)
     {
         if((w != oldw) || (h != oldh)) {
-            Scene.WIDTH = w;
-            Scene.HEIGHT = h;
-            Tetramino.SQ_SIZE = Scene.WIDTH / Scene.BLOCKS_PER_WIDTH;
-
-            FALL_SPEED_INCREMENT = 50 * (Scene.HEIGHT / 500);
-            Block.DELTA = 5 * (Scene.HEIGHT / 500);
-            Background.MOON_RADIUS = 50 * (Scene.HEIGHT / 500);
+            WIDTH = w;
+            HEIGHT = h;
+            FALL_SPEED_INCREMENT = 50 * (HEIGHT / SCREEN_DELTA);
+            background = new Background();
             background.createBackground();
             start();
         }
@@ -311,7 +312,7 @@ class Scene extends View
     {
         for(Block block: current.getBlocks())
         {
-            if(block.active && block.rect.right >= Scene.WIDTH) return true;
+            if(block.active && (WIDTH - block.rect.right) < Tetramino.SQ_SIZE) return true;
 
             for(Tetramino tetramino: sceneList)
             {
@@ -333,7 +334,7 @@ class Scene extends View
         for(Block newBlock: newMino.getBlocks())
         {
             if((newBlock.rect.left < 0) ||
-                    (newBlock.rect.right > Scene.WIDTH) ||
+                    (newBlock.rect.right > WIDTH) ||
                     (newBlock.rect.bottom > HEIGHT)) return true;
 
             for(Tetramino tetramino: sceneList)
@@ -358,6 +359,12 @@ class Scene extends View
         }
         return false;
     }
+
+    static int getWIDTH(){return WIDTH;}
+
+    static int getHEIGHT(){return HEIGHT;}
+
+    static int getFallSpeedIncrement(){return FALL_SPEED_INCREMENT;}
 
     int getHi_score(){return hi_score;}
 

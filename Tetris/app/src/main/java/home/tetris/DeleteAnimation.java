@@ -68,7 +68,7 @@ class DeleteAnimation
 
     private void falling(int totalDeleted)
     {
-        int bottom = Scene.HEIGHT;
+        int bottom = Scene.getHEIGHT();
         int moved = 0;
         int size = scene.getSceneList().size();
         if((totalDeleted == 0) || (size == 0) || (size == 1)) return;
@@ -111,7 +111,7 @@ class DeleteAnimation
     {
         int count;
         int result = 0;
-        int bottom = Scene.HEIGHT;
+        int bottom = Scene.getHEIGHT();
 
         do {
             count = countBlock(bottom);
@@ -125,7 +125,7 @@ class DeleteAnimation
 
     void deleteFullLines()
     {
-        int bottom = Scene.HEIGHT;
+        int bottom = Scene.getHEIGHT();
         int line = 0;
         int total = countTotal();
         if(total == 0) return;

@@ -52,10 +52,4 @@ class Settings
     {
         return preferences.getBoolean(key, def);
     }
-
-    static boolean exists(String key)
-    {
-        return preferences.contains(key);
-    }
-
 }

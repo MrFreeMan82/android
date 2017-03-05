@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity
                 else if(y - oldY > Tetramino.SQ_SIZE){
                     moving = true;
                     oldX = x; oldY = y;
-                    scene.moveCurrentDown(Scene.FALL_SPEED_INCREMENT);
+                    scene.moveCurrentDown(Scene.getFallSpeedIncrement());
                     return true;
                 }
                 break;
