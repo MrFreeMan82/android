@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity
     private static final String DIALOG_SETTINGS = "DialogSettings";
     private Scene scene;
     private Menu mMenu;
-    private LinearLayout mainLayout;
+    private LinearLayout canvasLayout;
     private boolean pause = false;
     private boolean moving = false;
     private static long backPressed = 0;
@@ -40,8 +40,8 @@ public class MainActivity extends AppCompatActivity
 
         scene = new Scene(this);
         scene.setOnTouchListener(this);
-        mainLayout = (LinearLayout) findViewById(R.id.canvas);
-        mainLayout.addView(scene);
+        canvasLayout = (LinearLayout) findViewById(R.id.canvas);
+        canvasLayout.addView(scene);
 
         ImageButton settingsButton = (ImageButton) findViewById(R.id.settings);
         settingsButton.setOnClickListener(new View.OnClickListener() {
@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onChangeLanguage(String newLanguage) {
                         scene.stop();
-                        mainLayout.removeView(scene);
+                        canvasLayout.removeView(scene);
                         recreate();
                     }
                 });

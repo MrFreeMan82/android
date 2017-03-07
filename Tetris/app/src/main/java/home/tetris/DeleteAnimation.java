@@ -42,7 +42,6 @@ class DeleteAnimation
                         if (block.getRect().bottom == block.getRect().top) block.setVisible(false);
                         if ((k == Scene.BLOCKS_PER_WIDTH) && (block.getRect().bottom % 2 == 0))
                         {
-                            publishProgress();
                             try {
                                 Thread.sleep(10);
                             } catch (InterruptedException ie) {
@@ -55,11 +54,6 @@ class DeleteAnimation
                 }
             }
             return bar.length;
-        }
-
-        @Override
-        public void onProgressUpdate(Void... params) {
-            scene.invalidate();
         }
 
         @Override
