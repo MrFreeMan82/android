@@ -15,21 +15,20 @@ interface BarDeleteListener
 
 class DeleteAnimation
 {
-    private Scene scene;
-    private BarDeleteListener barDeleteListener;
     private static final String TAG = "DeleteAnimation";
 
-    DeleteAnimation(Scene aScene)
-    {
-        scene = aScene;
-    }
+    private Scene scene;
+    private BarDeleteListener barDeleteListener;
+
+    DeleteAnimation(Scene aScene){scene = aScene;}
 
     void setBarDeleteListener(BarDeleteListener listener){barDeleteListener = listener;}
 
     private class DeleteTask extends AsyncTask<Block[][], Void, Integer>
     {
         @Override
-        protected Integer doInBackground(Block[][]... params) {
+        protected Integer doInBackground(Block[][]... params)
+        {
             Block[][] bar = params[0];
             while (bar[0][0].getRect().bottom != bar[0][0].getRect().top)
             {

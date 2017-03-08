@@ -79,7 +79,9 @@ public class SettingsDialog extends DialogFragment
         {
             case "en": english.setChecked(true); break;
             case "ru": russian.setChecked(true); break;
-            default: english.setChecked(true);
+            default:
+                oldLang = "en";
+                english.setChecked(true);
         }
         sound.setChecked(Settings.getBooleanSetting(Settings.APP_SOUND_ENABLED, true));
 
@@ -91,7 +93,7 @@ public class SettingsDialog extends DialogFragment
                     @Override
                     public void onClick(DialogInterface dialog, int which)
                     {
-                        String newLang = "";
+                        String newLang;
                         if(english.isChecked()) {
                             newLang = "en";
                             Settings.setStringSetting(Settings.APP_LANGUAGE, newLang);
@@ -100,12 +102,11 @@ public class SettingsDialog extends DialogFragment
                             newLang = "ru";
                             Settings.setStringSetting(Settings.APP_LANGUAGE, newLang);
                         }
+                        else newLang = "";
 
                         Settings.setBooleanSetting(Settings.APP_SOUND_ENABLED, sound.isChecked());
 
-                        if(!oldLang.equals("") &&
-                                !oldLang.equals(newLang))
-                                    listener.onChangeLanguage(newLang);
+                        if(!oldLang.equals(newLang)) listener.onChangeLanguage(newLang);
 
                         listener.onCloseSettingsDialog();
                         dismiss();

@@ -20,4 +20,5 @@
     <string name="version">Current version: %d</string>
     <string name="new_version">Update to %s</string>
     <string name="about">About game</string>
+    <string name="red_text">(need restart)</string>
 </resources>

@@ -16,7 +16,7 @@ class Settings
     static final String APP_LANGUAGE = "language";
     static final String APP_SOUND_ENABLED = "sound_enabled";
 
-    private static SharedPreferences preferences = null;
+    private static SharedPreferences preferences;
 
     Settings(Context context)
     {

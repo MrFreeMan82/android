@@ -25,7 +25,7 @@ class Sound {
     static final int DELETE_LINE = 5;
 
     private static final String SOUND_FOLDER = "tetris_sounds";
-    private static final int MAX_SOUNDS = 2;
+    private static final int MAX_SOUNDS = 10;
 
     private AssetManager assetManager;
     private SoundPool soundPool;

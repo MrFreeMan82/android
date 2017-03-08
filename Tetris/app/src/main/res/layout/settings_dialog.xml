@@ -33,14 +33,24 @@
                 android:id="@+id/english_radio"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/english"/>
+                android:text="@string/english"
+                android:textColor="@color/red"/>
             <RadioButton
                 android:id="@+id/russian_radio"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
-                android:text="@string/russian"/>
+                android:layout_marginLeft="10dp"
+                android:text="@string/russian"
+                android:textColor="@color/red"/>
             </RadioGroup>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"
+            android:text="@string/red_text"
+            android:textColor="@color/red" />
         <Space
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
@@ -56,6 +66,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"
             android:text="@string/version"/>
 
         <Button
@@ -64,6 +75,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"
             android:text="@string/new_version"/>
     </LinearLayout>
 

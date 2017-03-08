@@ -18,7 +18,7 @@ import static java.lang.Math.round;
 
 
 public class MainActivity extends AppCompatActivity
-        implements Updater.Callback, Scene.Callback, View.OnTouchListener
+        implements Updater.Callback, GameListener, View.OnTouchListener
 {
     private static final String DEFAULT_LANG = "en";
     private static final String DIALOG_SETTINGS = "DialogSettings";
@@ -38,9 +38,13 @@ public class MainActivity extends AppCompatActivity
 
         new Updater(this, false).execute();
 
-        scene = new Scene(this);
-        scene.setOnTouchListener(this);
         canvasLayout = (LinearLayout) findViewById(R.id.canvas);
+        canvasLayout.setOnTouchListener(this);
+
+        scene = new Scene(this);
+        scene.setGameListener(this);
+        scene.setSound(new Sound(this));
+
         canvasLayout.addView(scene);
 
         ImageButton settingsButton = (ImageButton) findViewById(R.id.settings);
@@ -59,7 +63,7 @@ public class MainActivity extends AppCompatActivity
 
                     @Override
                     public void onChangeLanguage(String newLanguage) {
-                        scene.stop();
+                        scene.free();
                         canvasLayout.removeView(scene);
                         recreate();
                     }
@@ -83,7 +87,7 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy()
     {
         super.onDestroy();
-        scene.free();
+        //scene.free();
     }
 
     private void togglePause()
@@ -130,7 +134,7 @@ public class MainActivity extends AppCompatActivity
                 else if(y - oldY > Block.SQ_SIZE){
                     moving = true;
                     oldX = x; oldY = y;
-                    scene.moveCurrentDown(Scene.getFallSpeedIncrement());
+                    scene.moveCurrentDown(scene.getFallSpeedIncrement());
                     return true;
                 }
                 break;

@@ -18,6 +18,9 @@ class Background extends AsyncTask<Void, Void, Void>
     private static final String TAG = "Background";
     private static final int STARS_COUNT = 50;
 
+    private boolean pause;
+    private boolean cancel;
+
     Point[] stars;
     Point moon;
 
@@ -48,19 +51,22 @@ class Background extends AsyncTask<Void, Void, Void>
 
     private void moveStars()
     {
-       for(Point star : stars)
-       {
-           star.y -= 1;
-           if(star.y < 0) star.y = Scene.getHEIGHT();
-       }
+        for(Point star : stars)
+        {
+            star.y -= 1;
+            if(star.y < 0) star.y = Scene.getHEIGHT();
+        }
     }
+
+    void setPause(boolean value){pause = value;}
+    void setCancel(boolean value){cancel = value;}
 
     @Override
     protected Void doInBackground(Void... params)
     {
-        while (!Scene.isCancel())
+        while (!cancel)
         {
-            if(Scene.isRunning())
+            if(!pause)
             {
                 moveMoon();
                 moveStars();

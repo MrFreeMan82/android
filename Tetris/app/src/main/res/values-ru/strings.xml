@@ -20,4 +20,5 @@
     <string name="version">Текущая версия: %d</string>
     <string name="new_version">Обновить до %s</string>
     <string name="about">О игре</string>
+    <string name="red_text">(требуется перезапуск)</string>
 </resources>

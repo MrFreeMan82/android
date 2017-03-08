@@ -101,7 +101,6 @@ final class Block
 abstract class Tetramino
 {
     static final int MAX_BLOCK_CNT = 4;
-
     private static final String TAG = "Tetramino";
 
     private static final
@@ -200,8 +199,8 @@ class LineHorizontal extends Tetramino{
     private static final byte[][] template = {{1,1,1,1}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
 
     LineHorizontal(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -216,8 +215,8 @@ class LineVertical extends Tetramino{
     private static final byte[][] template = {{1,0,0,0}, {1,0,0,0}, {1,0,0,0}, {1,0,0,0}};
 
     LineVertical(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -232,10 +231,10 @@ class Square extends Tetramino{
     private static final byte[][] template = {{1,1,0,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}};
 
     Square(){
-        setColor(randomColor());
         int top = -(2 * SQ_SIZE);
         int left = (int) (Math.random() * (Scene.getWIDTH() - (2 * SQ_SIZE)));
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(randomColor());
     }
 
     Square rotate(){return null;}
@@ -245,8 +244,8 @@ class L0 extends Tetramino{
     private static final byte[][] template = {{1,0,0,0}, {1,0,0,0}, {1,1,0,0}, {0,0,0,0}};
 
     L0(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -262,8 +261,8 @@ class L90 extends Tetramino{
     private static final byte[][] template = {{1,1,1,0}, {1,0,0,0}, {0,0,0,0}, {0,0,0,0}};
 
     L90(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -278,8 +277,8 @@ class L180 extends Tetramino{
     private static final byte[][] template = {{1,1,0,0}, {0,1,0,0}, {0,1,0,0}, {0,0,0,0}};
 
     L180(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -294,8 +293,8 @@ class L270 extends Tetramino{
     private static final byte[][] template = {{0,0,1,0},{1,1,1,0}, {0,0,0,0}, {0,0,0,0}};
 
     L270(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -310,8 +309,8 @@ class LR0 extends Tetramino{
     private static final byte[][] template = {{0,1,0,0}, {0,1,0,0}, {1,1,0,0}, {0,0,0,0}};
 
     LR0(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -326,8 +325,8 @@ class LR90 extends Tetramino{
     private static final byte[][] template = {{1,0,0,0}, {1,1,1,0}, {0,0,0,0}, {0,0,0,0}};
 
     LR90(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -342,8 +341,8 @@ class LR180 extends Tetramino{
     private static final byte[][] template = {{1,1,0,0}, {1,0,0,0}, {1,0,0,0}, {0,0,0,0}};
 
     LR180(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -358,8 +357,8 @@ class LR270 extends Tetramino{
     private static final byte[][] template = {{1,1,1,0}, {0,0,1,0}, {0,0,0,0}, {0,0,0,0}};
 
     LR270(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -374,8 +373,8 @@ class T0 extends Tetramino{
     private static final byte[][] template = {{0,1,0,0}, {1,1,1,0}, {0,0,0,0}, {0,0,0,0}};
 
     T0(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -390,8 +389,8 @@ class T90 extends Tetramino{
     private static final byte[][] template = {{1,0,0,0}, {1,1,0,0}, {1,0,0,0}, {0,0,0,0}};
 
     T90(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -406,8 +405,8 @@ class T180 extends Tetramino{
     private static final byte[][] template = {{1,1,1,0}, {0,1,0,0}, {0,0,0,0}, {0,0,0,0}};
 
     T180(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -422,8 +421,8 @@ class T270 extends Tetramino{
     private static final byte[][] template = {{0,1,0,0}, {1,1,0,0}, {0,1,0,0}, {0,0,0,0}};
 
     T270(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -438,8 +437,8 @@ class Z0 extends Tetramino{
     private static final byte[][] template = {{1,1,0,0}, {0,1,1,0}, {0,0,0,0}, {0,0,0,0}};
 
     Z0(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -454,8 +453,8 @@ class Z180 extends Tetramino{
     private static final byte[][] template = {{0,1,0,0}, {1,1,0,0},{1,0,0,0}, {0,0,0,0}};
 
     Z180(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -470,8 +469,8 @@ class RZ0 extends Tetramino{
     private static final byte[][] template = {{0,1,1,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}};
 
     RZ0(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
@@ -486,8 +485,8 @@ class RZ180 extends Tetramino{
     private static final byte[][] template = {{1,0,0,0}, {1,1,0,0}, {0,1,0,0}, {0,0,0,0}};
 
     RZ180(int left, int top, int color){
-        setColor(color);
         Tetramino.loadTemplate(this, template, left, top);
+        setColor(color);
     }
 
     @SuppressWarnings("unused")
