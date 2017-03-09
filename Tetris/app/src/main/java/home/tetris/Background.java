@@ -11,7 +11,7 @@ import android.util.Log;
 
 class Background extends AsyncTask<Void, Void, Void>
 {
-    static final int MOON_RADIUS = 50 * (Scene.getHEIGHT() / Scene.SCREEN_DELTA);
+    static final int MOON_RADIUS = 50 * (Scene.HEIGHT / Scene.SCREEN_DELTA);
     static final int STAR_COLOR = 0xffa9e4f4;
     static final int MOON_COLOR = 0xfff5f5c8;
 
@@ -29,14 +29,14 @@ class Background extends AsyncTask<Void, Void, Void>
         moon = new Point();
         stars = new Point[STARS_COUNT];
 
-        moon.x = (int) (Math.random() * Scene.getWIDTH());
-        moon.y = (int) (Math.random() * Scene.getHEIGHT());
+        moon.x = (int) (Math.random() * Scene.WIDTH);
+        moon.y = (int) (Math.random() * Scene.HEIGHT);
 
         for(int i = 0; i < STARS_COUNT; i++)
         {
             stars[i] = new Point();
-            stars[i].x = (int) (Math.random() * Scene.getWIDTH());
-            stars[i].y = (int) (Math.random() * Scene.getHEIGHT());
+            stars[i].x = (int) (Math.random() * Scene.WIDTH);
+            stars[i].y = (int) (Math.random() * Scene.HEIGHT);
         }
     }
 
@@ -45,8 +45,8 @@ class Background extends AsyncTask<Void, Void, Void>
         moon.x += 1;
         moon.y -= 1;
 
-        if(moon.x - MOON_RADIUS * 2 > Scene.getWIDTH()) moon.x = -MOON_RADIUS;
-        if(moon.y + MOON_RADIUS < -MOON_RADIUS * 2) moon.y = Scene.getHEIGHT() + MOON_RADIUS;
+        if(moon.x - MOON_RADIUS * 2 > Scene.WIDTH) moon.x = -MOON_RADIUS;
+        if(moon.y + MOON_RADIUS < -MOON_RADIUS * 2) moon.y = Scene.HEIGHT + MOON_RADIUS;
     }
 
     private void moveStars()
@@ -54,7 +54,7 @@ class Background extends AsyncTask<Void, Void, Void>
         for(Point star : stars)
         {
             star.y -= 1;
-            if(star.y < 0) star.y = Scene.getHEIGHT();
+            if(star.y < 0) star.y = Scene.HEIGHT;
         }
     }
 

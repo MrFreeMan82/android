@@ -27,20 +27,19 @@ interface GameListener{
     void onGameOver();
 }
 
-class Scene extends View
+final class Scene extends View
 {
     static final int SCREEN_DELTA = 500;
-    static final int BLOCKS_PER_WIDTH = 12;          // Определяет колл-во блоков по ширине
-    private static int width;                        // Доступная ширина
-    private static int height;                       // Доступная высота
-    private int fallSpeedIncrement;         // Определяет скорость падения тетрамино
-                                            // когда пальцем проводим вниз,
-                                            // эта веречина меняется в зависимости от разрешения экрана
+    static final int BLOCKS_PER_WIDTH = 12;                         // Определяет колл-во блоков по ширине
+    static final int WIDTH = MainActivity.getSceneWidth();          // Доступная ширина
+    static final int HEIGHT = MainActivity.getSceneHeight();       // Доступная высота
+    static final int BLOCKS_PER_HEIGHT = HEIGHT / (WIDTH / BLOCKS_PER_WIDTH);
 
     private static final int SCORE_PER_LEVEL = 25;   // Через сколько очков переходим на уровень выше.
     private static final int TIMER_INTERVAL = 30;    // Интервал таймер выбран методом подбора.
 
     private List<Tetramino> sceneList;
+    private Block[][] field;
     private Tetramino currentMino;
     private Paint paint;
     private Sound sound;
@@ -90,6 +89,7 @@ class Scene extends View
         super(context);
         hi_score = Settings.getIntSetting(Settings.APP_SETTING_HISCORE, 0);
         paint = new Paint();
+        field = new Block[BLOCKS_PER_WIDTH][BLOCKS_PER_HEIGHT];
         sceneList = new ArrayList<>();
         deleteAnimation = new DeleteAnimation(this);
         deleteAnimation.setBarDeleteListener(new BarDeleteListener()
@@ -130,6 +130,9 @@ class Scene extends View
                 }
             }
         }.start();
+
+        background = new Background();
+        background.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     @Override
@@ -143,22 +146,60 @@ class Scene extends View
         for(Tetramino tetramino:sceneList)
         {
             for(Block block: tetramino.getBlocks())
-                if(block.isVisible())
+                if(block.visible)
                 {
                     paint.setColor(tetramino.getColor());
-                    canvas.drawRect(block.getRect(), paint);
+                    canvas.drawRect(block.rect, paint);
                     paint.setColor(Color.BLACK);
-                    canvas.drawRect(block.getMid(), paint);
+                    canvas.drawRect(block.mid, paint);
                     paint.setColor(tetramino.getColor());
-                    canvas.drawRect(block.getSubRect(), paint);
+                    canvas.drawRect(block.subRect, paint);
 
                     paint.setStrokeWidth(2);
                     paint.setColor(Color.WHITE);
-                    Point p1 = block.getP1();
-                    Point p2 = block.getP2();
+                    Point p1 = block.p1;
+                    Point p2 = block.p2;
                     canvas.drawLine(p1.x, p1.y, p2.x, p2.y, paint);
                 }
         }
+      /*  if(currentMino != null)
+        for(Block block: currentMino.getBlocks())
+        {
+            paint.setColor(Color.BLUE);
+            canvas.drawRect(block.rect, paint);
+            paint.setColor(Color.BLACK);
+            canvas.drawRect(block.mid, paint);
+            paint.setColor(Color.BLUE);
+            canvas.drawRect(block.subRect, paint);
+
+            paint.setStrokeWidth(2);
+            paint.setColor(Color.WHITE);
+            Point p1 = block.p1;
+            Point p2 = block.p2;
+            canvas.drawLine(p1.x, p1.y, p2.x, p2.y, paint);
+        }
+
+        for(Block[] blocks: field)
+        {
+            for (Block block: blocks)
+            {
+                if(block != null && block.visible)
+                {
+                    paint.setColor(Color.BLUE);
+                    canvas.drawRect(block.rect, paint);
+                    paint.setColor(Color.BLACK);
+                    canvas.drawRect(block.mid, paint);
+                    paint.setColor(Color.BLUE);
+                    canvas.drawRect(block.subRect, paint);
+
+                    paint.setStrokeWidth(2);
+                    paint.setColor(Color.WHITE);
+                    Point p1 = block.p1;
+                    Point p2 = block.p2;
+                    canvas.drawLine(p1.x, p1.y, p2.x, p2.y, paint);
+                }
+            }
+        }*/
 
         for(Point star : background.stars)
         {
@@ -168,19 +209,6 @@ class Scene extends View
         }
     }
 
-    @Override
-    public void onSizeChanged (int w, int h, int oldw, int oldh)
-    {
-        width = w;
-        height = h;
-        fallSpeedIncrement = 50 * (height / SCREEN_DELTA);
-
-        background = new Background();
-        background.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-
-        start();
-    }
-
     void rotateCurrent()
     {
         if(gameOver) return;
@@ -188,7 +216,7 @@ class Scene extends View
         Tetramino tetramino = currentMino.rotate();
         if(tetramino == null) return;
 
-        if(!collisionRotate(tetramino, currentMino))
+        if(!collisionRotate(tetramino))
         {
             sound.play(Sound.ROTATE);
             sceneList.remove(currentMino);
@@ -204,9 +232,31 @@ class Scene extends View
         {
             int counter = 0;
             Tetramino next = sceneList.get(i);
-            for(Block block: next.getBlocks()) if(!block.isVisible()) counter++;
+            for(Block block: next.getBlocks()) if(!block.visible) counter++;
 
             if(counter == Tetramino.MAX_BLOCK_CNT) sceneList.remove(next); else i++;
+        }
+    }
+
+    void putTetramino(Tetramino tetramino)
+    {
+        for (Block block: tetramino.getBlocks())
+        {
+            int x = block.rect.left / Block.SIZE;
+            int y = block.rect.top / Block.SIZE;
+
+            if(y >= 0 && block.visible) field[x][y] = block;
+        }
+    }
+
+    void takeTetramino(Tetramino tetramino)
+    {
+        for (Block block: tetramino.getBlocks())
+        {
+            int x = block.rect.left / Block.SIZE;
+            int y = block.rect.top / Block.SIZE;
+
+            field[x][y] = null;
         }
     }
 
@@ -235,6 +285,7 @@ class Scene extends View
                 }
                 sound.play(Sound.IMPACT);
                 clearEmptyTetraminos();
+                putTetramino(currentMino);
                 deleteAnimation.deleteFullLines();
                 newMino();
             }
@@ -262,111 +313,93 @@ class Scene extends View
     private boolean collisionUp(Tetramino mino)
     {
         for(Block current: mino.getBlocks())
-            if (current.isVisible() && current.getRect().top < 0) return true;
+            if (current.visible && current.rect.top < 0) return true;
 
         return false;
     }
 
    private boolean collisionBottom(Tetramino current)
     {
-        for(Block block: current.getBlocks())
-        {
-            if(block.isVisible() && block.getRect().bottom == height) return true;
+       for(Block block: current.getBlocks())
+       {
+           int x = block.rect.left / Block.SIZE;
+           int y = block.rect.top / Block.SIZE;
 
-            for(Tetramino tetramino: sceneList)
-            {
-                if(tetramino == current) continue;
-                for(Block prev: tetramino.getBlocks())
-                {
-                    if(prev.isVisible() &&
-                            block.getRect().bottom == prev.getRect().top &&
-                            block.getRect().left == prev.getRect().left) return true;
-                }
-            }
-        }
-        return false;
+           if(HEIGHT - block.rect.bottom < 1) return true;
+           if(y < 0) continue;
+           while (y < BLOCKS_PER_HEIGHT)
+           {
+               if(field[x][y] != null && field[x][y].visible &&
+                       field[x][y].rect.top == block.rect.bottom) return true;
+               y++;
+           }
+       }
+       return false;
     }
 
     private boolean collisionLeft(Tetramino current)
     {
-        for(Block block: current.getBlocks())
-        {
-            if(block.isVisible() && block.getRect().left <= 0) return true;
+       for(Block block: current.getBlocks())
+       {
+           int x = block.rect.left / Block.SIZE;
+           int y = block.rect.top / Block.SIZE;
 
-            for(Tetramino tetramino: sceneList)
-            {
-                if(tetramino == current) continue;
-
-                for(Block prev: tetramino.getBlocks())
-                {
-                    if(prev.isVisible() &&
-                            block.getRect().left == prev.getRect().right &&
-                            block.getRect().bottom >= prev.getRect().top &&
-                            block.getRect().bottom <= prev.getRect().bottom) return true;
-                }
-            }
-        }
-        return false;
+           if(x == 0) return true;
+           if((y < 0) || (y == BLOCKS_PER_HEIGHT)) continue;
+           while (x >= 0)
+           {
+               if (field[x][y] != null && field[x][y].visible &&
+                       field[x][y].rect.right == block.rect.left) return true;
+               x--;
+           }
+       }
+       return false;
     }
 
     private boolean collisionRight(Tetramino current)
     {
-        for(Block block: current.getBlocks())
-        {
-            if(block.isVisible() && (width - block.getRect().right) < Block.SQ_SIZE) return true;
+       for(Block block: current.getBlocks())
+       {
+           int x = block.rect.left / Block.SIZE;
+           int y = block.rect.top / Block.SIZE;
 
-            for(Tetramino tetramino: sceneList)
-            {
-                if(tetramino == current) continue;
-                for(Block prev: tetramino.getBlocks())
-                {
-                    if(prev.isVisible() &&
-                            block.getRect().right == prev.getRect().left &&
-                            block.getRect().bottom >= prev.getRect().top &&
-                            block.getRect().bottom <= prev.getRect().bottom) return true;
-                }
-            }
-        }
-        return false;
+           if(WIDTH - block.rect.right < 1) return true;
+           if((y < 0) || (y == BLOCKS_PER_HEIGHT)) continue;
+           while (x < BLOCKS_PER_WIDTH)
+           {
+               if (field[x][y] != null && field[x][y].visible &&
+                       field[x][y].rect.left == block.rect.right) return true;
+
+               x++;
+           }
+       }
+       return false;
     }
 
-    private boolean collisionRotate(Tetramino newTetramino, Tetramino current)
+    private boolean collisionRotate(Tetramino newTetramino)
     {
-        for(Block newBlock: newTetramino.getBlocks())
+        for(Block block: newTetramino.getBlocks())
         {
-            if((newBlock.getRect().left < 0) ||
-                    (newBlock.getRect().right > width) ||
-                    (newBlock.getRect().bottom > height)) return true;
+            int x = block.rect.left / Block.SIZE;
+            int y = block.rect.top / Block.SIZE;
 
-            for(Tetramino tetramino: sceneList)
-            {
-                if(tetramino == current) continue;
+            if((x < 0) || (x >= BLOCKS_PER_WIDTH) ||
+                    (y >= BLOCKS_PER_HEIGHT)) return true;
 
-                for(Block prev: tetramino.getBlocks())
-                {
-                    if(prev.isVisible())
-                    {
-                        if ((newBlock.getRect().top >= prev.getRect().top &&
-                                newBlock.getRect().top <= prev.getRect().bottom) ||
-                                (newBlock.getRect().bottom >= prev.getRect().top &&
-                                        newBlock.getRect().bottom <= prev.getRect().bottom))
-                        {
-                            if ((newBlock.getRect().left == prev.getRect().left) ||
-                                    (newBlock.getRect().right == prev.getRect().right)) return true;
-                        }
-                    }
-                }
-            }
+            if((y < 0) || (field[x][y] == null)) continue;
+
+            if((block.rect.left >= field[x][y].rect.left &&
+                    block.rect.left <= field[x][y].rect.right) ||
+               (block.rect.top >= field[x][y].rect.top &&
+                    block.rect.top <= field[x][y].rect.bottom)) return true;
         }
         return false;
     }
 
-    static int getWIDTH(){return width;}
-    static int getHEIGHT(){return height;}
-    int getFallSpeedIncrement(){return fallSpeedIncrement;}
-    int getHi_score(){return hi_score;}
     Tetramino getCurrentMino(){return currentMino;}
     List<Tetramino> getSceneList(){return sceneList;}
+    Block[][] getField(){return field;}
+    int getHi_score(){return hi_score;}
     Sound getSound(){return sound;}
 
     private void clear()
@@ -377,5 +410,6 @@ class Scene extends View
         listener.onScoreChange(score);
         level = 1;
         currentMino = null;
+        field = new Block[BLOCKS_PER_WIDTH][BLOCKS_PER_HEIGHT];
     }
 }

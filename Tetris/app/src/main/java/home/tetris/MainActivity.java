@@ -8,6 +8,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -22,6 +23,8 @@ public class MainActivity extends AppCompatActivity
 {
     private static final String DEFAULT_LANG = "en";
     private static final String DIALOG_SETTINGS = "DialogSettings";
+    private static int sceneWidth, sceneHeight;
+    private MainActivity activity;
     private Scene scene;
     private Menu mMenu;
     private LinearLayout canvasLayout;
@@ -29,6 +32,7 @@ public class MainActivity extends AppCompatActivity
     private boolean moving = false;
     private static long backPressed = 0;
     private int oldX = 0, oldY = 0;
+    private int fallIncrement;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,14 +42,30 @@ public class MainActivity extends AppCompatActivity
 
         new Updater(this, false).execute();
 
+        activity = this;
         canvasLayout = (LinearLayout) findViewById(R.id.canvas);
         canvasLayout.setOnTouchListener(this);
 
-        scene = new Scene(this);
-        scene.setGameListener(this);
-        scene.setSound(new Sound(this));
+        ViewTreeObserver observer = canvasLayout.getViewTreeObserver();
+        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
+        {
+            @Override
+            public void onGlobalLayout()
+            {
+                if(scene == null)
+                {
+                    sceneWidth = canvasLayout.getWidth();
+                    sceneHeight = canvasLayout.getHeight();
+                    fallIncrement = 50 * (sceneHeight / Scene.SCREEN_DELTA);
+                    scene = new Scene(activity);
+                    scene.setGameListener(activity);
+                    scene.setSound(new Sound(activity));
 
-        canvasLayout.addView(scene);
+                    canvasLayout.addView(scene);
+                    scene.start();
+                }
+            }
+        });
 
         ImageButton settingsButton = (ImageButton) findViewById(R.id.settings);
         settingsButton.setOnClickListener(new View.OnClickListener() {
@@ -75,6 +95,9 @@ public class MainActivity extends AppCompatActivity
         if(getSupportActionBar() != null)
             getSupportActionBar().setTitle(R.string.app_name);
     }
+
+    static int getSceneWidth(){return sceneWidth;}
+    static int getSceneHeight(){return sceneHeight;}
 
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -119,22 +142,22 @@ public class MainActivity extends AppCompatActivity
                 break;
 
             case MotionEvent.ACTION_MOVE:
-                if(x - oldX < -Block.SQ_SIZE){
+                if(x - oldX < -Block.SIZE){
                     moving = true;
                     oldX = x; oldY = y;
                     scene.moveCurrentLeft();
                     return true;
                 }
-                else if(x - oldX > Block.SQ_SIZE){
+                else if(x - oldX > Block.SIZE){
                     moving = true;
                     oldX = x; oldY = y;
                     scene.moveCurrentRight();
                     return true;
                 }
-                else if(y - oldY > Block.SQ_SIZE){
+                else if(y - oldY > Block.SIZE){
                     moving = true;
                     oldX = x; oldY = y;
-                    scene.moveCurrentDown(scene.getFallSpeedIncrement());
+                    scene.moveCurrentDown(fallIncrement);
                     return true;
                 }
                 break;
@@ -217,6 +240,7 @@ public class MainActivity extends AppCompatActivity
     {
         if(backPressed + 2000 > System.currentTimeMillis())
         {
+            scene.free();
             super.onBackPressed();
         } else {
             Toast.makeText(this, getString(R.string.push_again_to_exit), Toast.LENGTH_SHORT).show();

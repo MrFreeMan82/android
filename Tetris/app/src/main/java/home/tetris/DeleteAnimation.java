@@ -30,7 +30,7 @@ class DeleteAnimation
         protected Integer doInBackground(Block[][]... params)
         {
             Block[][] bar = params[0];
-            while (bar[0][0].getRect().bottom != bar[0][0].getRect().top)
+            while (bar[0][0].rect.bottom != bar[0][0].rect.top)
             {
                 int k = 1;
                 for (Block[] column : bar)
@@ -38,8 +38,8 @@ class DeleteAnimation
                     for (Block block : column)
                     {
                         block.decrease();
-                        if (block.getRect().bottom == block.getRect().top) block.setVisible(false);
-                        if ((k == Scene.BLOCKS_PER_WIDTH) && (block.getRect().bottom % 2 == 0))
+                        if (block.rect.bottom == block.rect.top) block.visible = false;
+                        if ((k == Scene.BLOCKS_PER_WIDTH) && (block.rect.bottom % 2 == 0))
                         {
                             try {
                                 Thread.sleep(10);
@@ -64,91 +64,78 @@ class DeleteAnimation
 
     private void falling(int totalDeleted)
     {
-        int bottom = Scene.getHEIGHT();
-        int moved = 0;
-        int size = scene.getSceneList().size();
-        if((totalDeleted == 0) || (size == 0) || (size == 1)) return;
+        int movedLines = 0;
+        int y = Scene.BLOCKS_PER_HEIGHT - 1;
 
-        while (bottom > 0 && totalDeleted != moved)
+        while(y >= 0 && totalDeleted != movedLines)
         {
-            while (countBlock(bottom) == 0 && totalDeleted != moved)
+            int top = y * Block.SIZE;
+            while(countBlock(y) == 0 && totalDeleted != movedLines)
             {
-                for (Tetramino tetramino : scene.getSceneList())
-                {
-                    if(tetramino == scene.getCurrentMino()) continue;
-                    for (Block block : tetramino.getBlocks())
-                    {
-                        if (block.isVisible() && block.getRect().bottom < bottom)
-                        {
-                            block.moveDown(Block.SQ_SIZE);
-                        }
-                    }
-                }
-                moved++;
+               for(Tetramino tetramino: scene.getSceneList())
+               {
+                   if(tetramino == scene.getCurrentMino()) continue;
+
+                   scene.takeTetramino(tetramino);
+                   for(Block block: tetramino.getBlocks())
+                   {
+                        if(block.visible &&
+                                block.rect.top < top)
+                                    block.moveDown(Block.SIZE);
+                   }
+                   scene.putTetramino(tetramino);
+               }
+               movedLines++;
             }
-            bottom -= Block.SQ_SIZE;
+            y--;
         }
     }
 
-    private int countBlock(int line)
+    private int countBlock(int y)
     {
-        int counter = 0;
-        for(Tetramino tetramino: scene.getSceneList()){
-            for(Block block: tetramino.getBlocks()){
-                if(block.isVisible() && block.getRect().bottom == line) counter++;
-            }
-        }
-        return counter;
+       int counter = 0;
+       Block[][] field = scene.getField();
+       for(int x = 0; x < Scene.BLOCKS_PER_WIDTH; x++)
+            if(field[x][y] != null && field[x][y].visible) counter++;
+
+       return counter;
     }
 
     private int countTotal()
     {
         int count;
         int result = 0;
-        int bottom = Scene.getHEIGHT();
 
-        do {
-            count = countBlock(bottom);
-            if(count == Scene.BLOCKS_PER_WIDTH) result++;
-            bottom -= Block.SQ_SIZE;
+        for(int y = Scene.BLOCKS_PER_HEIGHT - 1; y >= 0; y--)
+        {
+            count = countBlock(y);
+            if(count == 0) return result;
+            else if(count == Scene.BLOCKS_PER_WIDTH) result++;
         }
-        while(bottom > 0 && count > 0);
 
         return result;
     }
 
     void deleteFullLines()
     {
-        int bottom = Scene.getHEIGHT();
         int line = 0;
         int total = countTotal();
         if(total == 0) return;
         scene.getSound().play(Sound.DELETE_LINE);
+        Block[][] field = scene.getField();
         Block[][] bar = new Block[total][Scene.BLOCKS_PER_WIDTH];
 
-        while (bottom > 0)
+        for(int y = Scene.BLOCKS_PER_HEIGHT - 1; y >= 0; y--)
         {
-            int blockCount = countBlock(bottom);
+            int blockCount = countBlock(y);
             if(blockCount == Scene.BLOCKS_PER_WIDTH)
             {
-                int index = 0;
-                for(Tetramino tetramino : scene.getSceneList())
-                {
-                    for(Block block : tetramino.getBlocks())
-                    {
-                        if(block.isVisible() && block.getRect().bottom == bottom)
-                        {
-                            bar[line][index] = block;
-                            index++;
-                        }
-                    }
-                }
+                for(int x = 0; x < Scene.BLOCKS_PER_WIDTH; x++) bar[line][x] = field[x][y];
                 line++;
+                if(line == total) break;
             }
-            else if(blockCount == 0) break;
-
-            bottom -= Block.SQ_SIZE;
         }
+
         new DeleteTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, bar);
     }
 }
