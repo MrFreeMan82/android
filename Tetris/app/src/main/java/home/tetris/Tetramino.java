@@ -128,23 +128,17 @@ abstract class Tetramino
     {
         for(Block block: blocks) block.moveDown(1);
     }
-
     void moveLeft()
     {
         for(Block block: blocks) block.moveLeft();
     }
-
     void moveRight()
     {
         for(Block block: blocks) block.moveRight();
     }
 
     int getColor(){return mColor;}
-    void setColor(int color)
-    {
-        mColor = color;
-       // for(Block block: blocks) block.color = color;
-    }
+    void setColor(int color){mColor = color;}
 
     Block[] getBlocks(){return blocks;}
 

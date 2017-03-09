@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy()
     {
         super.onDestroy();
-        //scene.free();
+        scene.free();
     }
 
     private void togglePause()

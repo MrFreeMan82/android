@@ -332,7 +332,6 @@ final class Scene extends View
 
     private void clear()
     {
-        //sceneList.clear();
         gameOver = false;
         score = 0;
         listener.onScoreChange(score);
