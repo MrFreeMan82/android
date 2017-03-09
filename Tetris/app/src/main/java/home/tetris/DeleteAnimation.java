@@ -65,26 +65,24 @@ class DeleteAnimation
     private void falling(int totalDeleted)
     {
         int movedLines = 0;
+        Block[][] field = scene.getField();
         int y = Scene.BLOCKS_PER_HEIGHT - 1;
 
         while(y >= 0 && totalDeleted != movedLines)
         {
-            int top = y * Block.SIZE;
             while(countBlock(y) == 0 && totalDeleted != movedLines)
             {
-               for(Tetramino tetramino: scene.getSceneList())
-               {
-                   if(tetramino == scene.getCurrentMino()) continue;
-
-                   scene.takeTetramino(tetramino);
-                   for(Block block: tetramino.getBlocks())
-                   {
-                        if(block.visible &&
-                                block.rect.top < top)
-                                    block.moveDown(Block.SIZE);
-                   }
-                   scene.putTetramino(tetramino);
-               }
+                for(int x = 0; x < Scene.BLOCKS_PER_WIDTH; x++)
+                {
+                    for(int y1 = y - 1; y1 >= 0; y1--)
+                    {
+                        int k = y1 + 1;
+                        field[x][k] = field[x][y1];
+                        if(field[x][k] != null &&
+                                field[x][k].visible)
+                                    field[x][k].moveDown(Block.SIZE);
+                    }
+                }
                movedLines++;
             }
             y--;

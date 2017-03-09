@@ -9,9 +9,6 @@ import android.os.AsyncTask;
 import android.os.CountDownTimer;
 import android.view.View;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Created by Дима on 23.01.2017.
  * Служит для описания игрового поля (положение всех тетрамино на поле)
@@ -38,7 +35,6 @@ final class Scene extends View
     private static final int SCORE_PER_LEVEL = 25;   // Через сколько очков переходим на уровень выше.
     private static final int TIMER_INTERVAL = 30;    // Интервал таймер выбран методом подбора.
 
-    private List<Tetramino> sceneList;
     private Block[][] field;
     private Tetramino currentMino;
     private Paint paint;
@@ -90,7 +86,6 @@ final class Scene extends View
         hi_score = Settings.getIntSetting(Settings.APP_SETTING_HISCORE, 0);
         paint = new Paint();
         field = new Block[BLOCKS_PER_WIDTH][BLOCKS_PER_HEIGHT];
-        sceneList = new ArrayList<>();
         deleteAnimation = new DeleteAnimation(this);
         deleteAnimation.setBarDeleteListener(new BarDeleteListener()
         {
@@ -135,6 +130,23 @@ final class Scene extends View
         background.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
+    private void drawBlock(Canvas canvas, Block block)
+    {
+        int color = block.tetramino.getColor();
+        paint.setColor(color);
+        canvas.drawRect(block.rect, paint);
+        paint.setColor(Color.BLACK);
+        canvas.drawRect(block.mid, paint);
+        paint.setColor(color);
+        canvas.drawRect(block.subRect, paint);
+
+        paint.setStrokeWidth(2);
+        paint.setColor(Color.WHITE);
+        Point p1 = block.p1;
+        Point p2 = block.p2;
+        canvas.drawLine(p1.x, p1.y, p2.x, p2.y, paint);
+    }
+
     @Override
     public void onDraw(Canvas canvas)
     {
@@ -143,63 +155,14 @@ final class Scene extends View
         paint.setColor(Background.MOON_COLOR);
         canvas.drawCircle(background.moon.x, background.moon.y, Background.MOON_RADIUS, paint);
 
-        for(Tetramino tetramino:sceneList)
-        {
-            for(Block block: tetramino.getBlocks())
-                if(block.visible)
-                {
-                    paint.setColor(tetramino.getColor());
-                    canvas.drawRect(block.rect, paint);
-                    paint.setColor(Color.BLACK);
-                    canvas.drawRect(block.mid, paint);
-                    paint.setColor(tetramino.getColor());
-                    canvas.drawRect(block.subRect, paint);
-
-                    paint.setStrokeWidth(2);
-                    paint.setColor(Color.WHITE);
-                    Point p1 = block.p1;
-                    Point p2 = block.p2;
-                    canvas.drawLine(p1.x, p1.y, p2.x, p2.y, paint);
-                }
-        }
-      /*  if(currentMino != null)
-        for(Block block: currentMino.getBlocks())
-        {
-            paint.setColor(Color.BLUE);
-            canvas.drawRect(block.rect, paint);
-            paint.setColor(Color.BLACK);
-            canvas.drawRect(block.mid, paint);
-            paint.setColor(Color.BLUE);
-            canvas.drawRect(block.subRect, paint);
-
-            paint.setStrokeWidth(2);
-            paint.setColor(Color.WHITE);
-            Point p1 = block.p1;
-            Point p2 = block.p2;
-            canvas.drawLine(p1.x, p1.y, p2.x, p2.y, paint);
-        }
+        if(currentMino != null)
+        for(Block block: currentMino.getBlocks()) drawBlock(canvas, block);
 
         for(Block[] blocks: field)
         {
             for (Block block: blocks)
-            {
-                if(block != null && block.visible)
-                {
-                    paint.setColor(Color.BLUE);
-                    canvas.drawRect(block.rect, paint);
-                    paint.setColor(Color.BLACK);
-                    canvas.drawRect(block.mid, paint);
-                    paint.setColor(Color.BLUE);
-                    canvas.drawRect(block.subRect, paint);
-
-                    paint.setStrokeWidth(2);
-                    paint.setColor(Color.WHITE);
-                    Point p1 = block.p1;
-                    Point p2 = block.p2;
-                    canvas.drawLine(p1.x, p1.y, p2.x, p2.y, paint);
-                }
-            }
-        }*/
+                if(block != null && block.visible) drawBlock(canvas, block);
+        }
 
         for(Point star : background.stars)
         {
@@ -219,22 +182,7 @@ final class Scene extends View
         if(!collisionRotate(tetramino))
         {
             sound.play(Sound.ROTATE);
-            sceneList.remove(currentMino);
-            sceneList.add(tetramino);
             currentMino = tetramino;
-        }
-    }
-
-    private void clearEmptyTetraminos()
-    {
-        int i = 0;
-        while(i < sceneList.size())
-        {
-            int counter = 0;
-            Tetramino next = sceneList.get(i);
-            for(Block block: next.getBlocks()) if(!block.visible) counter++;
-
-            if(counter == Tetramino.MAX_BLOCK_CNT) sceneList.remove(next); else i++;
         }
     }
 
@@ -249,27 +197,10 @@ final class Scene extends View
         }
     }
 
-    void takeTetramino(Tetramino tetramino)
-    {
-        for (Block block: tetramino.getBlocks())
-        {
-            int x = block.rect.left / Block.SIZE;
-            int y = block.rect.top / Block.SIZE;
-
-            field[x][y] = null;
-        }
-    }
-
-    private void newMino()
-    {
-        sceneList.add(Tetramino.next());
-        currentMino = sceneList.get(sceneList.size() - 1);
-    }
-
     void moveCurrentDown(int speedInc)
     {
         if(gameOver) return;
-        if(currentMino == null) newMino();
+        if(currentMino == null) currentMino = Tetramino.next();
 
         if(speedInc != 0) sound.play(Sound.MOVE_MINO);
 
@@ -284,10 +215,9 @@ final class Scene extends View
                     return;
                 }
                 sound.play(Sound.IMPACT);
-                clearEmptyTetraminos();
                 putTetramino(currentMino);
                 deleteAnimation.deleteFullLines();
-                newMino();
+                currentMino = Tetramino.next();
             }
 
             currentMino.moveDown();
@@ -396,15 +326,13 @@ final class Scene extends View
         return false;
     }
 
-    Tetramino getCurrentMino(){return currentMino;}
-    List<Tetramino> getSceneList(){return sceneList;}
     Block[][] getField(){return field;}
     int getHi_score(){return hi_score;}
     Sound getSound(){return sound;}
 
     private void clear()
     {
-        sceneList.clear();
+        //sceneList.clear();
         gameOver = false;
         score = 0;
         listener.onScoreChange(score);

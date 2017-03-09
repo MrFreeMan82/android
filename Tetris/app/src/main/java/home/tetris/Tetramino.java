@@ -26,6 +26,7 @@ final class Block
     Rect mid;
     Point p1;
     Point p2;
+    Tetramino tetramino;
 
     Block(int left, int top, int right, int bottom)
     {
@@ -139,7 +140,11 @@ abstract class Tetramino
     }
 
     int getColor(){return mColor;}
-    void setColor(int color){mColor = color;}
+    void setColor(int color)
+    {
+        mColor = color;
+       // for(Block block: blocks) block.color = color;
+    }
 
     Block[] getBlocks(){return blocks;}
 
@@ -168,6 +173,7 @@ abstract class Tetramino
                 if(value == 1)
                 {
                     tetramino.blocks[k] = new Block(left, top, left + SIZE, top + SIZE);
+                    tetramino.blocks[k].tetramino = tetramino;
                     k++;
                 }
                 left += SIZE;
