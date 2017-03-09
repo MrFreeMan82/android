@@ -19,7 +19,6 @@ class Background extends AsyncTask<Void, Void, Void>
     private static final int STARS_COUNT = 50;
 
     private boolean pause;
-    private boolean cancel;
 
     Point[] stars;
     Point moon;
@@ -59,12 +58,11 @@ class Background extends AsyncTask<Void, Void, Void>
     }
 
     void setPause(boolean value){pause = value;}
-    void setCancel(boolean value){cancel = value;}
 
     @Override
     protected Void doInBackground(Void... params)
     {
-        while (!cancel)
+        while (!isCancelled())
         {
             if(!pause)
             {

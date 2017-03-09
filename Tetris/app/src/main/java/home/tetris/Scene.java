@@ -77,7 +77,7 @@ final class Scene extends View
         running = false;
         clear();
         cancel = true;
-        background.setCancel(true);
+        background.cancel(true);
     }
 
     Scene(Context context)
