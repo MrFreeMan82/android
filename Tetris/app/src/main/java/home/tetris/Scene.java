@@ -2,9 +2,7 @@ package home.tetris;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Point;
 import android.os.AsyncTask;
 import android.os.CountDownTimer;
 import android.view.View;
@@ -84,7 +82,7 @@ final class Scene extends View
     {
         super(context);
         hi_score = Settings.getIntSetting(Settings.APP_SETTING_HISCORE, 0);
-        paint = new Paint();
+        paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         field = new Block[BLOCKS_PER_WIDTH][BLOCKS_PER_HEIGHT];
         deleteAnimation = new DeleteAnimation(this);
         deleteAnimation.setBarDeleteListener(new BarDeleteListener()
@@ -130,45 +128,19 @@ final class Scene extends View
         background.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
-    private void drawBlock(Canvas canvas, Block block)
-    {
-        int color = block.tetramino.getColor();
-        paint.setColor(color);
-        canvas.drawRect(block.rect, paint);
-        paint.setColor(Color.BLACK);
-        canvas.drawRect(block.mid, paint);
-        paint.setColor(color);
-        canvas.drawRect(block.subRect, paint);
-
-        paint.setStrokeWidth(2);
-        paint.setColor(Color.WHITE);
-        Point p1 = block.p1;
-        Point p2 = block.p2;
-        canvas.drawLine(p1.x, p1.y, p2.x, p2.y, paint);
-    }
-
     @Override
     public void onDraw(Canvas canvas)
     {
         canvas.drawARGB(255, 0, 0, 0);
 
-        paint.setColor(Background.MOON_COLOR);
-        canvas.drawCircle(background.moon.x, background.moon.y, Background.MOON_RADIUS, paint);
+        background.draw(canvas, paint);
 
-        if(currentMino != null)
-        for(Block block: currentMino.getBlocks()) drawBlock(canvas, block);
+        if(currentMino != null) currentMino.draw(canvas, paint);
 
         for(Block[] blocks: field)
         {
             for (Block block: blocks)
-                if(block != null && block.visible) drawBlock(canvas, block);
-        }
-
-        for(Point star : background.stars)
-        {
-            paint.setColor(Background.STAR_COLOR);
-            paint.setStrokeWidth(3);
-            canvas.drawPoint(star.x, star.y, paint);
+                if(block != null) block.draw(canvas, paint);
         }
     }
 

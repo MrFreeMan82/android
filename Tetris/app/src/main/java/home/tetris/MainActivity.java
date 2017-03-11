@@ -1,7 +1,5 @@
 package home.tetris;
-
 import android.content.Context;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -25,9 +23,10 @@ public class MainActivity extends AppCompatActivity
     private static final String DIALOG_SETTINGS = "DialogSettings";
     private static int sceneWidth, sceneHeight;
     private MainActivity activity;
-    private Scene scene;
+    private Scene sceneView;
     private Menu mMenu;
     private LinearLayout canvasLayout;
+    private Statistic statisticView;
     private boolean pause = false;
     private boolean moving = false;
     private static long backPressed = 0;
@@ -43,8 +42,8 @@ public class MainActivity extends AppCompatActivity
         new Updater(this, false).execute();
 
         activity = this;
+
         canvasLayout = (LinearLayout) findViewById(R.id.canvas);
-        canvasLayout.setOnTouchListener(this);
 
         ViewTreeObserver observer = canvasLayout.getViewTreeObserver();
         observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
@@ -52,17 +51,17 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onGlobalLayout()
             {
-                if(scene == null)
+                if(sceneView == null)
                 {
                     sceneWidth = canvasLayout.getWidth();
                     sceneHeight = canvasLayout.getHeight();
                     fallIncrement = 50 * (sceneHeight / Scene.SCREEN_DELTA);
-                    scene = new Scene(activity);
-                    scene.setGameListener(activity);
-                    scene.setSound(new Sound(activity));
-
-                    canvasLayout.addView(scene);
-                    scene.start();
+                    sceneView = new Scene(activity);
+                    sceneView.setOnTouchListener(activity);
+                    sceneView.setGameListener(activity);
+                    sceneView.setSound(new Sound(activity));
+                    canvasLayout.addView(sceneView);
+                    sceneView.start();
                 }
             }
         });
@@ -73,22 +72,24 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View v)
             {
                 if(!pause) togglePause();
-                FragmentManager manager = getSupportFragmentManager();
-                SettingsDialog dialog = new SettingsDialog();// SettingsDialog.get();
-                dialog.setSettingDialogListener(new SettingsDialog.SettingsDialogListener() {
+                SettingsDialog dialog = new SettingsDialog();
+                dialog.setSettingDialogListener(new SettingsDialog.SettingsDialogListener()
+                {
                     @Override
                     public void onCloseSettingsDialog() {
+                        if(statisticView != null) return;
                         if(pause) togglePause();
                     }
 
                     @Override
                     public void onChangeLanguage(String newLanguage) {
-                        scene.free();
-                        canvasLayout.removeView(scene);
+                        sceneView.free();
+                        canvasLayout.removeView(sceneView);
+                        canvasLayout.removeView(statisticView);
                         recreate();
                     }
                 });
-                dialog.show(manager, DIALOG_SETTINGS);
+                dialog.show(getSupportFragmentManager(), DIALOG_SETTINGS);
             }
         });
 
@@ -110,7 +111,7 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy()
     {
         super.onDestroy();
-        scene.free();
+        sceneView.free();
     }
 
     private void togglePause()
@@ -145,26 +146,26 @@ public class MainActivity extends AppCompatActivity
                 if(x - oldX < -Block.SIZE){
                     moving = true;
                     oldX = x; oldY = y;
-                    scene.moveCurrentLeft();
+                    sceneView.moveCurrentLeft();
                     return true;
                 }
                 else if(x - oldX > Block.SIZE){
                     moving = true;
                     oldX = x; oldY = y;
-                    scene.moveCurrentRight();
+                    sceneView.moveCurrentRight();
                     return true;
                 }
                 else if(y - oldY > Block.SIZE){
                     moving = true;
                     oldX = x; oldY = y;
-                    scene.moveCurrentDown(fallIncrement);
+                    sceneView.moveCurrentDown(fallIncrement);
                     return true;
                 }
                 break;
 
             case MotionEvent.ACTION_UP:
                 if(!moving) {
-                    scene.rotateCurrent();
+                    sceneView.rotateCurrent();
                 }
                 moving = false;
         }
@@ -189,30 +190,50 @@ public class MainActivity extends AppCompatActivity
                 if(pause) {
                     item.setTitle(R.string.play_game);
                     item.setIcon(R.drawable.ic_action_play);
-                    scene.pause();
-                    showHiScore(scene.getHi_score());
+                    sceneView.pause();
+                    showHiScore(sceneView.getHi_score());
                 } else {
                     item.setTitle(R.string.pause_game);
                     item.setIcon(R.drawable.ic_action_pause);
-                    scene.start();
+                    hideStatistic();
+                    sceneView.start();
                 }
                 return true;
 
             case R.id.item_stop_game:
                 if(!pause) togglePause();
-                scene.stop();
-                showHiScore(scene.getHi_score());
+                sceneView.stop();
+                showHiScore(sceneView.getHi_score());
+                showStatistic();
                 return true;
 
             default: return super.onOptionsItemSelected(item);
         }
     }
 
-    void showHiScore(int hi_score){
+    private void hideStatistic()
+    {
+        if(statisticView == null) return;
+        Tetramino.clearStatistic();
+        canvasLayout.removeView(statisticView);
+        canvasLayout.addView(sceneView);
+        statisticView = null;
+    }
+
+    private void showStatistic()
+    {
+        if(statisticView == null) {
+            canvasLayout.removeView(sceneView);
+            statisticView = new Statistic(activity);
+            canvasLayout.addView(statisticView);
+        }
+    }
+
+    private void showHiScore(int hi_score){
         if(getSupportActionBar() != null)
             getSupportActionBar().setSubtitle(
                     getString(R.string.hi_score,
-                            String.format(Locale.US, "%04d", hi_score)));
+                            String.format(Locale.getDefault(), "%04d", hi_score)));
     }
 
     @Override
@@ -232,7 +253,7 @@ public class MainActivity extends AppCompatActivity
     public void onScoreChange(int score)
     {
         if(getSupportActionBar() != null)
-            getSupportActionBar().setSubtitle(String.format(Locale.US, "%04d", score));
+            getSupportActionBar().setSubtitle(String.format(Locale.getDefault(), "%04d", score));
     }
 
     @Override
@@ -240,7 +261,7 @@ public class MainActivity extends AppCompatActivity
     {
         if(backPressed + 2000 > System.currentTimeMillis())
         {
-            scene.free();
+            sceneView.free();
             super.onBackPressed();
         } else {
             Toast.makeText(this, getString(R.string.push_again_to_exit), Toast.LENGTH_SHORT).show();

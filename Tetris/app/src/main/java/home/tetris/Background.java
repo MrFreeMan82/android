@@ -1,5 +1,7 @@
 package home.tetris;
 
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Point;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -11,17 +13,17 @@ import android.util.Log;
 
 class Background extends AsyncTask<Void, Void, Void>
 {
-    static final int MOON_RADIUS = 50 * (Scene.HEIGHT / Scene.SCREEN_DELTA);
-    static final int STAR_COLOR = 0xffa9e4f4;
-    static final int MOON_COLOR = 0xfff5f5c8;
+    private static final int MOON_RADIUS = 50 * (Scene.HEIGHT / Scene.SCREEN_DELTA);
+    private static final int STAR_COLOR = 0xFFA9E4F4;
+    private static final int MOON_COLOR = 0xFFF9F6C7;
 
     private static final String TAG = "Background";
     private static final int STARS_COUNT = 50;
 
     private boolean pause;
 
-    Point[] stars;
-    Point moon;
+    private Point[] stars;
+    private Point moon;
 
     Background()
     {
@@ -54,6 +56,19 @@ class Background extends AsyncTask<Void, Void, Void>
         {
             star.y -= 1;
             if(star.y < 0) star.y = Scene.HEIGHT;
+        }
+    }
+
+    void draw(Canvas canvas, Paint paint)
+    {
+        paint.setColor(Background.MOON_COLOR);
+        canvas.drawCircle(moon.x, moon.y, Background.MOON_RADIUS, paint);
+
+        for(Point star : stars)
+        {
+            paint.setColor(Background.STAR_COLOR);
+            paint.setStrokeWidth(3);
+            canvas.drawPoint(star.x, star.y, paint);
         }
     }
 
