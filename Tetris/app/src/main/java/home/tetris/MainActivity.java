@@ -111,6 +111,7 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy()
     {
         super.onDestroy();
+        Tetramino.clearStatistic();
         sceneView.free();
     }
 
@@ -171,7 +172,6 @@ public class MainActivity extends AppCompatActivity
         }
         return true;
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
@@ -261,8 +261,8 @@ public class MainActivity extends AppCompatActivity
     {
         if(backPressed + 2000 > System.currentTimeMillis())
         {
-            sceneView.free();
             super.onBackPressed();
+
         } else {
             Toast.makeText(this, getString(R.string.push_again_to_exit), Toast.LENGTH_SHORT).show();
         }
