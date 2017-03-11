@@ -3,9 +3,6 @@ package home.tetris;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Point;
-import android.graphics.Rect;
-import android.util.Log;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -16,106 +13,32 @@ import static home.tetris.Block.SIZE;
  * Класс служит для описания возможных видов Тетрамино
  * Цифры в именах классов обозначают угол поворота
  */
-
-final class Block
-{
-    static final int SIZE = Scene.WIDTH / Scene.BLOCKS_PER_WIDTH;
-    private static final int DELTA = 5 * (Scene.HEIGHT / Scene.SCREEN_DELTA);
-
-    boolean visible = true;
-    Tetramino tetramino;
-    Rect rect;
-    private Rect subRect;
-    private Rect mid;
-    private Point p1;
-    private Point p2;
-
-    Block(int left, int top, int right, int bottom)
-    {
-        rect = new Rect(left, top, right, bottom);
-        subRect = new Rect(rect);
-        mid = new Rect(rect);
-        p1 = new Point();
-        p2 = new Point();
-        updateSubRect();
-    }
-
-    void moveDown(int value)
-    {
-        rect.top += value;
-        rect.bottom = rect.top + SIZE;
-        updateSubRect();
-    }
-
-    void moveLeft()
-    {
-        rect.left -= SIZE;
-        rect.right = rect.left + SIZE;
-        updateSubRect();
-    }
-
-    void moveRight()
-    {
-        rect.left = rect.right;
-        rect.right = rect.left + SIZE;
-        updateSubRect();
-    }
-
-    void decrease()
-    {
-        rect.bottom -= 1;
-        updateSubRect();
-    }
-
-    private void updateSubRect()
-    {
-        subRect.left = rect.left + DELTA;
-        subRect.top = rect.top + DELTA;
-        subRect.right = rect.right - DELTA;
-        subRect.bottom = rect.bottom - DELTA;
-
-        if(subRect.bottom > subRect.top) {
-            int h = subRect.bottom - subRect.top;
-            int w = subRect.right - subRect.left;
-
-            p1.x = subRect.right;
-            p1.y = subRect.top + (h / 2) + ((h / 2) / 2);
-
-            p2.x = subRect.left + ((w / 2) + ((w / 2) / 2));
-            p2.y = subRect.bottom;
-        }
-
-        mid.left = rect.left + (DELTA / 2);
-        mid.top = rect.top + (DELTA / 2);
-        mid.right = rect.right - (DELTA / 2);
-        mid.bottom = rect.bottom - (DELTA / 2);
-    }
-
-    void draw(Canvas canvas, Paint paint)
-    {
-        if(!visible) return;
-        int color = tetramino.getColor();
-        paint.setColor(color);
-        canvas.drawRect(rect, paint);
-        paint.setColor(Color.BLACK);
-        canvas.drawRect(mid, paint);
-        paint.setColor(color);
-        canvas.drawRect(subRect, paint);
-
-        paint.setStrokeWidth(2);
-        paint.setColor(Color.WHITE);
-
-        canvas.drawLine(p1.x, p1.y, p2.x, p2.y, paint);
-    }
+interface Generator{
+    Tetramino next();
 }
-
-abstract class Tetramino
+abstract class Tetramino implements Generator
 {
-    static final int MAX_BLOCK_CNT = 4;
-    private static final String TAG = "Tetramino";
+    private Block[] blocks = new Block[4];
+    private int color;
 
-    private Block[] blocks;
-    private int mColor;
+    private static class MinoGenerator
+    {
+        private static final ArrayList<? extends Tetramino> types = new ArrayList<>
+        (
+            Arrays.asList(
+               new Line(), new Square(), new LLike(),
+                    new LRLike(), new TLike(), new ZLike(), new RZLike()
+        ));
+
+        static int[] statistic = new int[types.size()];
+
+        static Tetramino next()
+        {
+            int type = (int) (Math.random() * types.size());
+            statistic[type]++;
+            return types.get(type).next();
+        }
+    }
 
     int getMinLeft() {
         int r = Integer.MAX_VALUE;
@@ -137,7 +60,6 @@ abstract class Tetramino
     {
         for(Block block: blocks) block.draw(canvas, paint);
     }
-
     void moveDown()
     {
         for(Block block: blocks) block.moveDown(1);
@@ -151,55 +73,17 @@ abstract class Tetramino
         for(Block block: blocks) block.moveRight();
     }
 
-    int getColor(){return mColor;}
-    void setColor(int color){mColor = color;}
+    int getColor(){return color;}
+    void setColor(int aColor){color = aColor;}
 
     Block[] getBlocks(){return blocks;}
 
-    private static class Generator
-    {
-        private static final ArrayList<Class<? extends Tetramino>> types = new ArrayList<>
-        (
-          Arrays.asList
-          (
-            LineHorizontal.class, LineVertical.class, Square.class, L0.class, L90.class,
-            L180.class, L270.class, LR0.class, LR90.class, LR180.class, LR270.class, T0.class,
-            T90.class, T180.class, T270.class, Z0.class, Z180.class, RZ0.class, RZ180.class
-           )
-        );
-
-        static int stat[] = {0, 0, 0, 0, 0, 0, 0};
-
-        private static void add(int type)
-        {
-            if(type >= 0 && type <= 1) stat[0]++;
-            else if(type == 2) stat[1]++;
-            else if(type >= 3 && type <= 6) stat[2]++;
-            else if(type >= 7 && type <= 10) stat[3]++;
-            else if(type >= 11 && type <= 14) stat[4]++;
-            else if(type >= 15 && type <= 16) stat[5]++;
-            else if(type >= 17 && type <= 18) stat[6]++;
-        }
-
-        static Tetramino next()
-        {
-            try{
-                int type = (int) (Math.random() * types.size());
-                add(type);
-                return types.get(type).newInstance();
-            } catch (Exception e){
-                e.printStackTrace();
-                Log.e(TAG, "Error while creating new tetramino");
-            }
-            return null;
-        }
-    }
+    static Tetramino getNext(){return MinoGenerator.next();}
 
     static void clearStatistic(){
-        for(int i = 0; i < Generator.stat.length; i++) Generator.stat[i] = 0;
+        for(int i = 0; i < MinoGenerator.statistic.length; i++) MinoGenerator.statistic[i] = 0;
     }
-    static int[] getStatistic(){return Generator.stat;}
-    static Tetramino next(){return Generator.next();}
+    static int[] getStatistic(){return MinoGenerator.statistic;}
 
     static void loadTemplate(Tetramino tetramino, byte[][] template, int left, int top)
     {
@@ -229,388 +113,343 @@ abstract class Tetramino
     }
 
     abstract Tetramino rotate();
-    abstract int blockPerHeight();
-
-    Tetramino(){blocks = new Block[MAX_BLOCK_CNT];}
+    abstract int getBlockPerHeight();
 }
 
-class LineHorizontal extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 1;
-    private static final byte[][] template = {{1,1,1,1}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
+class Line extends Tetramino{
+    private static final int MAX_POSITIONS = 2;
+    private static final byte[][] h_line = {{1,1,1,1}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
+    private static final byte[][] v_line = {{1,0,0,0}, {1,0,0,0}, {1,0,0,0}, {1,0,0,0}};
 
-    LineHorizontal(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
+    private int position;
+    private int blockPerHeight;
+    private int blockPerWidth;
+
+    Line(){}
+
+    Line(int left, int top, int aPosition, int color)
+    {
+        position = aPosition;
+
+        if((position == 1) || (position > MAX_POSITIONS) || (position < 1))
+        {
+            position = 1;
+            blockPerHeight = 1;
+            blockPerWidth = 4;
+            Tetramino.loadTemplate(this, h_line, left, top);
+        }
+        else if (position == 2)
+        {
+            blockPerHeight = 4;
+            blockPerWidth = 1;
+            Tetramino.loadTemplate(this, v_line, left, top);
+        }
+
         setColor(color);
     }
 
-    @SuppressWarnings("unused")
-    LineHorizontal(){
-        this((int)(Math.random() *
-                (Scene.WIDTH - MAX_BLOCK_CNT * SIZE)), -SIZE, randomColor());
+    public Line next()
+    {
+        position = (int) (Math.random() * MAX_POSITIONS + 1);
+        blockPerHeight = position == 1 ? 1: 4;
+        blockPerWidth = position == 1 ? 4: 1;
+        int top = -blockPerHeight * SIZE;
+        int left = (int)(Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
+        return new Line(left, top, position, randomColor());
     }
 
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
+    int getBlockPerHeight(){return blockPerHeight;}
 
-    LineVertical rotate(){return new LineVertical(getMinLeft(), getMinTop(), getColor());}
-}
-
-class LineVertical extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 4;
-    private static final byte[][] template = {{1,0,0,0}, {1,0,0,0}, {1,0,0,0}, {1,0,0,0}};
-
-    LineVertical(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
-        setColor(color);
-    }
-
-    @SuppressWarnings("unused")
-    LineVertical(){
-        this((int) (Math.random() *
-                (Scene.WIDTH - SIZE)),
-                    -(BLOCK_PER_HEIGHT * SIZE), randomColor());
-    }
-
-    final int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    LineHorizontal rotate(){return new LineHorizontal(getMinLeft(), getMinTop(), getColor());}
+    Line rotate(){return new Line(getMinLeft(), getMinTop(), position+1, getColor());}
 }
 
 class Square extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 2;
-    private static final byte[][] template = {{1,1,0,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}};
+    private static final byte[][] square = {{1,1,0,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}};
+
+    private int blockPerHeight;
+    private int blockPerWidth;
+
+    Square(){}
 
     Square(int left, int top, int color)
     {
-        Tetramino.loadTemplate(this, template, left, top);
+        blockPerWidth = 2;
+        blockPerHeight = 2;
+        Tetramino.loadTemplate(this, square, left, top);
         setColor(color);
     }
 
-    @SuppressWarnings("unused")
-    Square(){
-        this((int) (Math.random() *
-                (Scene.WIDTH - 2 * SIZE)),
-                    -BLOCK_PER_HEIGHT * SIZE, randomColor());
+    public Square next()
+    {
+        int top = -blockPerHeight * SIZE;
+        int left = (int)(Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
+        return new Square(left, top, randomColor());
     }
 
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
+    int getBlockPerHeight(){return blockPerHeight;}
     Square rotate(){return null;}
 }
 
-class L0 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 3;
-    private static final byte[][] template = {{1,0,0,0}, {1,0,0,0}, {1,1,0,0}, {0,0,0,0}};
+class LLike extends Tetramino{
+    private static final int MAX_POSITIONS = 4;
+    private static final byte[][] l0 = {{1,0,0,0}, {1,0,0,0}, {1,1,0,0}, {0,0,0,0}};
+    private static final byte[][] l90 = {{1,1,1,0}, {1,0,0,0}, {0,0,0,0}, {0,0,0,0}};
+    private static final byte[][] l180 = {{1,1,0,0}, {0,1,0,0}, {0,1,0,0}, {0,0,0,0}};
+    private static final byte[][] l270 = {{0,0,1,0},{1,1,1,0}, {0,0,0,0}, {0,0,0,0}};
 
-    L0(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
+    private int position;
+    private int blockPerHeight;
+    private int blockPerWidth;
+
+    LLike(){}
+
+    LLike(int left, int top, int aPosition, int color)
+    {
+        position = aPosition;
+        if((position == 1) || (position > MAX_POSITIONS) || (position < 1))
+        {
+            position = 1;
+            blockPerWidth = 2;
+            blockPerHeight = 3;
+            Tetramino.loadTemplate(this, l0, left, top);
+        }
+        else if(position == 2)
+        {
+            blockPerWidth = 3;
+            blockPerHeight = 2;
+            Tetramino.loadTemplate(this, l90, left, top);
+        }
+        else if(position == 3)
+        {
+            blockPerWidth = 2;
+            blockPerHeight = 3;
+            Tetramino.loadTemplate(this, l180, left, top);
+        }
+        else if(position == 4)
+        {
+            blockPerWidth = 3;
+            blockPerHeight = 2;
+            Tetramino.loadTemplate(this, l270, left, top);
+        }
         setColor(color);
     }
 
-    @SuppressWarnings("unused")
-    L0(){
-        this((int) (Math.random() *
-                (Scene.WIDTH - 2 * SIZE)),
-                    -BLOCK_PER_HEIGHT * SIZE, randomColor());
+    public LLike next()
+    {
+        position = (int) (Math.random() * MAX_POSITIONS + 1);
+        blockPerHeight = (position == 1) || (position == 3) ? 3 : 2;
+        blockPerWidth = (position == 1) || (position == 3) ? 2 : 3;
+        int top = -blockPerHeight * SIZE;
+        int left = (int) (Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
+        return new LLike(left, top, position, randomColor());
     }
 
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    L90 rotate(){return new L90(getMinLeft(), getMinTop(), getColor());}
+    int getBlockPerHeight(){return blockPerHeight;}
+    LLike rotate(){return new LLike(getMinLeft(), getMinTop(), position+1, getColor());}
 }
 
-class L90 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 2;
-    private static final byte[][] template = {{1,1,1,0}, {1,0,0,0}, {0,0,0,0}, {0,0,0,0}};
+class LRLike extends Tetramino{
+    private static final int MAX_POSITIONS = 4;
+    private static final byte[][] lr0 = {{0,1,0,0}, {0,1,0,0}, {1,1,0,0}, {0,0,0,0}};
+    private static final byte[][] lr90 = {{1,0,0,0}, {1,1,1,0}, {0,0,0,0}, {0,0,0,0}};
+    private static final byte[][] lr180 = {{1,1,0,0}, {1,0,0,0}, {1,0,0,0}, {0,0,0,0}};
+    private static final byte[][] lr270 = {{1,1,1,0}, {0,0,1,0}, {0,0,0,0}, {0,0,0,0}};
 
-    L90(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
+    private int position;
+    private int blockPerHeight;
+    private int blockPerWidth;
+
+    LRLike(){}
+
+    LRLike(int left, int top, int aPosition, int color)
+    {
+        position = aPosition;
+        if((position == 1) || (position > MAX_POSITIONS) || (position < 1))
+        {
+            position = 1;
+            blockPerWidth = 2;
+            blockPerHeight = 3;
+            Tetramino.loadTemplate(this, lr0, left, top);
+        }
+        else if(position == 2)
+        {
+            blockPerWidth = 3;
+            blockPerHeight = 2;
+            Tetramino.loadTemplate(this, lr90, left, top);
+        }
+        else if(position == 3)
+        {
+            blockPerWidth = 2;
+            blockPerHeight = 3;
+            Tetramino.loadTemplate(this, lr180, left, top);
+        }
+        else if(position == 4)
+        {
+            blockPerWidth = 3;
+            blockPerHeight = 2;
+            Tetramino.loadTemplate(this, lr270, left, top);
+        }
         setColor(color);
     }
 
-    @SuppressWarnings("unused")
-    L90(){
-        this((int) (Math.random() *
-                (Scene.WIDTH - 3 * SIZE)),
-                    -BLOCK_PER_HEIGHT * SIZE, randomColor());
+    public LRLike next()
+    {
+        position = (int) (Math.random() * MAX_POSITIONS + 1);
+        blockPerHeight = (position == 1) || (position == 3) ? 3 : 2;
+        blockPerWidth = (position == 1) || (position == 3) ? 2 : 3;
+        int top = -blockPerHeight * SIZE;
+        int left = (int) (Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
+        return new LRLike(left, top, position, randomColor());
     }
 
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    L180 rotate(){return new L180(getMinLeft(), getMinTop(), getColor());}
+    int getBlockPerHeight(){return blockPerHeight;}
+    LRLike rotate(){return new LRLike(getMinLeft(), getMinTop(), position+1, getColor());}
 }
 
-class L180 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 3;
-    private static final byte[][] template = {{1,1,0,0}, {0,1,0,0}, {0,1,0,0}, {0,0,0,0}};
+class TLike extends Tetramino{
+    private static final int MAX_POSITIONS = 4;
+    private static final byte[][] t0 = {{0,1,0,0}, {1,1,1,0}, {0,0,0,0}, {0,0,0,0}};
+    private static final byte[][] t90 = {{1,0,0,0}, {1,1,0,0}, {1,0,0,0}, {0,0,0,0}};
+    private static final byte[][] t180 = {{1,1,1,0}, {0,1,0,0}, {0,0,0,0}, {0,0,0,0}};
+    private static final byte[][] t270 = {{0,1,0,0}, {1,1,0,0}, {0,1,0,0}, {0,0,0,0}};
 
-    L180(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
+    private int position;
+    private int blockPerHeight;
+    private int blockPerWidth;
+
+    TLike(){}
+
+    TLike(int left, int top, int aPosition, int color)
+    {
+        position = aPosition;
+        if((position == 1) || (position > 4) || (position < 1))
+        {
+            position = 1;
+            blockPerWidth = 3;
+            blockPerHeight = 2;
+            Tetramino.loadTemplate(this, t0, left, top);
+        }
+        else if(position == 2)
+        {
+            blockPerWidth = 2;
+            blockPerHeight = 3;
+            Tetramino.loadTemplate(this, t90, left, top);
+        }
+        else if(position == 3)
+        {
+            blockPerWidth = 3;
+            blockPerHeight = 2;
+            Tetramino.loadTemplate(this, t180, left, top);
+        }
+        else if(position == 4)
+        {
+            blockPerWidth = 2;
+            blockPerHeight = 3;
+            Tetramino.loadTemplate(this, t270, left, top);
+        }
         setColor(color);
     }
 
-    @SuppressWarnings("unused")
-    L180(){
-        this((int) (Math.random() *
-                (Scene.WIDTH - 2 * SIZE)),
-                    -BLOCK_PER_HEIGHT * SIZE, randomColor());
+    public TLike next()
+    {
+        position = (int) (Math.random() * MAX_POSITIONS + 1);
+        blockPerHeight = (position == 1) || (position == 3) ? 2 : 3;
+        blockPerWidth = (position == 1) || (position == 3) ? 3 : 2;
+        int top = -blockPerHeight * SIZE;
+        int left = (int) (Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
+        return new TLike(left, top, position, randomColor());
     }
 
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    L270 rotate(){return new L270(getMinLeft(), getMinTop(), getColor());}
+    int getBlockPerHeight(){return blockPerHeight;}
+    TLike rotate(){return new TLike(getMinLeft(), getMinTop(), position+1, getColor());}
 }
 
-class L270 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 2;
-    private static final byte[][] template = {{0,0,1,0},{1,1,1,0}, {0,0,0,0}, {0,0,0,0}};
+class ZLike extends Tetramino{
+    private static final int MAX_POSITIONS = 2;
+    private static final byte[][] z0 = {{1,1,0,0}, {0,1,1,0}, {0,0,0,0}, {0,0,0,0}};
+    private static final byte[][] z180 = {{0,1,0,0}, {1,1,0,0},{1,0,0,0}, {0,0,0,0}};
 
-    L270(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
+    private int position;
+    private int blockPerHeight;
+    private int blockPerWidth;
+
+    ZLike(){}
+
+    ZLike(int left, int top, int aPosition, int color)
+    {
+        position = aPosition;
+
+        if((position == 1) || (position > MAX_POSITIONS) || (position < 1))
+        {
+            position = 1;
+            blockPerHeight = 2;
+            blockPerWidth = 3;
+            Tetramino.loadTemplate(this, z0, left, top);
+        }
+        else if (position == 2)
+        {
+            blockPerHeight = 3;
+            blockPerWidth = 2;
+            Tetramino.loadTemplate(this, z180, left, top);
+        }
         setColor(color);
     }
 
-    @SuppressWarnings("unused")
-    L270(){
-        this((int) (Math.random() *
-                (Scene.WIDTH - 3 * SIZE)),
-                    -BLOCK_PER_HEIGHT * SIZE, randomColor());
+    public ZLike next()
+    {
+        position = (int) (Math.random() * MAX_POSITIONS + 1);
+        blockPerHeight = position == 1 ? 2: 3;
+        blockPerWidth = position == 1 ? 3: 2;
+        int top = -blockPerHeight * SIZE;
+        int left = (int)(Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
+        return new ZLike(left, top, position, randomColor());
     }
 
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    L0 rotate(){return new L0(getMinLeft(), getMinTop(), getColor());}
+    int getBlockPerHeight(){return blockPerHeight;}
+    ZLike rotate(){return new ZLike(getMinLeft(), getMinTop(), position+1, getColor());}
 }
 
-class LR0 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 3;
-    private static final byte[][] template = {{0,1,0,0}, {0,1,0,0}, {1,1,0,0}, {0,0,0,0}};
+class RZLike extends Tetramino{
+    private static final int MAX_POSITIONS = 2;
+    private static final byte[][] rz0 = {{0,1,1,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}};
+    private static final byte[][] rz180 = {{1,0,0,0}, {1,1,0,0}, {0,1,0,0}, {0,0,0,0}};
 
-    LR0(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
+    private int position;
+    private int blockPerHeight;
+    private int blockPerWidth;
+
+    RZLike(){}
+
+    RZLike(int left, int top, int aPosition, int color)
+    {
+        position = aPosition;
+
+        if((position == 1) || (position > MAX_POSITIONS) || (position < 1))
+        {
+            position = 1;
+            blockPerHeight = 2;
+            blockPerWidth = 3;
+            Tetramino.loadTemplate(this, rz0, left, top);
+        }
+        else if (position == 2)
+        {
+            blockPerHeight = 3;
+            blockPerWidth = 2;
+            Tetramino.loadTemplate(this, rz180, left, top);
+        }
         setColor(color);
     }
 
-    @SuppressWarnings("unused")
-    LR0(){
-        this((int) (Math.random() *
-                (Scene.WIDTH - 3 * SIZE)),
-                    -BLOCK_PER_HEIGHT * SIZE, randomColor());
+    public RZLike next()
+    {
+        position = (int) (Math.random() * MAX_POSITIONS + 1);
+        blockPerHeight = position == 1 ? 2: 3;
+        blockPerWidth = position == 1 ? 3: 2;
+        int top = -blockPerHeight * SIZE;
+        int left = (int)(Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
+        return new RZLike(left, top, position, randomColor());
     }
 
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    LR90 rotate(){return new LR90(getMinLeft(), getMinTop(), getColor());}
-}
-
-class LR90 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 2;
-    private static final byte[][] template = {{1,0,0,0}, {1,1,1,0}, {0,0,0,0}, {0,0,0,0}};
-
-    LR90(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
-        setColor(color);
-    }
-
-    @SuppressWarnings("unused")
-    LR90(){
-        this((int) (Math.random() *
-                (Scene.WIDTH - 3 * SIZE)),
-                    -BLOCK_PER_HEIGHT * SIZE, randomColor());
-    }
-
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    LR180 rotate(){return new LR180(getMinLeft(), getMinTop(), getColor());}
-}
-
-class LR180 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 3;
-    private static final byte[][] template = {{1,1,0,0}, {1,0,0,0}, {1,0,0,0}, {0,0,0,0}};
-
-    LR180(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
-        setColor(color);
-    }
-
-    @SuppressWarnings("unused")
-    LR180(){
-        this((int) (Math.random() *
-                (Scene.WIDTH - 2 * SIZE)),
-                    -BLOCK_PER_HEIGHT * SIZE, randomColor());
-    }
-
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    LR270 rotate(){return new LR270(getMinLeft(), getMinTop(), getColor());}
-}
-
-class LR270 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 2;
-    private static final byte[][] template = {{1,1,1,0}, {0,0,1,0}, {0,0,0,0}, {0,0,0,0}};
-
-    LR270(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
-        setColor(color);
-    }
-
-    @SuppressWarnings("unused")
-    LR270(){
-        this((int) (Math.random() *
-                (Scene.WIDTH - 3 * SIZE)),
-                    -BLOCK_PER_HEIGHT * SIZE, randomColor());
-    }
-
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    LR0 rotate(){return new LR0(getMinLeft(), getMinTop(), getColor());}
-}
-
-class T0 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 2;
-    private static final byte[][] template = {{0,1,0,0}, {1,1,1,0}, {0,0,0,0}, {0,0,0,0}};
-
-    T0(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
-        setColor(color);
-    }
-
-    @SuppressWarnings("unused")
-    T0(){
-        this((int) (Math.random() *
-                (Scene.WIDTH - 3 * SIZE)),
-                        -BLOCK_PER_HEIGHT * SIZE, randomColor());
-    }
-
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    T90 rotate(){return new T90(getMinLeft(), getMinTop(), getColor());}
-}
-
-class T90 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 3;
-    private static final byte[][] template = {{1,0,0,0}, {1,1,0,0}, {1,0,0,0}, {0,0,0,0}};
-
-    T90(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
-        setColor(color);
-    }
-
-    @SuppressWarnings("unused")
-    T90(){
-        this((int) (Math.random() *
-                    (Scene.WIDTH - 2 * SIZE)),
-                            -BLOCK_PER_HEIGHT * SIZE, randomColor());
-    }
-
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    T180 rotate(){return new T180(getMinLeft(), getMinTop(), getColor());}
-}
-
-class T180 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 2;
-    private static final byte[][] template = {{1,1,1,0}, {0,1,0,0}, {0,0,0,0}, {0,0,0,0}};
-
-    T180(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
-        setColor(color);
-    }
-
-    @SuppressWarnings("unused")
-    T180(){
-        this((int) (Math.random() *
-                    (Scene.WIDTH - 3 * SIZE)),
-                            -BLOCK_PER_HEIGHT * SIZE, randomColor());
-    }
-
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    T270 rotate(){return new T270(getMinLeft(), getMinTop(), getColor());}
-}
-
-class T270 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 3;
-    private static final byte[][] template = {{0,1,0,0}, {1,1,0,0}, {0,1,0,0}, {0,0,0,0}};
-
-    T270(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
-        setColor(color);
-    }
-
-    @SuppressWarnings("unused")
-    T270(){
-        this((int) (Math.random() *
-                (Scene.WIDTH - 2 * SIZE)),
-                        -BLOCK_PER_HEIGHT * SIZE, randomColor());
-    }
-
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    T0 rotate(){return new T0(getMinLeft(), getMinTop(), getColor());}
-}
-
-class Z0 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 2;
-    private static final byte[][] template = {{1,1,0,0}, {0,1,1,0}, {0,0,0,0}, {0,0,0,0}};
-
-    Z0(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
-        setColor(color);
-    }
-
-    @SuppressWarnings("unused")
-    Z0(){
-        this((int) (Math.random() *
-                (Scene.WIDTH - 2 * SIZE)),
-                        -BLOCK_PER_HEIGHT * SIZE, randomColor());
-    }
-
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    Z180 rotate(){return new Z180(getMinLeft(), getMinTop(), getColor());}
-}
-
-class Z180 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 3;
-    private static final byte[][] template = {{0,1,0,0}, {1,1,0,0},{1,0,0,0}, {0,0,0,0}};
-
-    Z180(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
-        setColor(color);
-    }
-
-    @SuppressWarnings("unused")
-    Z180(){
-        this((int) (Math.random() *
-                (Scene.WIDTH - 3 * SIZE)),
-                        -BLOCK_PER_HEIGHT * SIZE, randomColor());
-    }
-
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    Z0 rotate(){return new Z0(getMinLeft(), getMinTop(), getColor());}
-}
-
-class RZ0 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 2;
-    private static final byte[][] template = {{0,1,1,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}};
-
-    RZ0(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
-        setColor(color);
-    }
-
-    @SuppressWarnings("unused")
-    RZ0(){
-        this((int) (Math.random() *
-                (Scene.WIDTH - 2 * SIZE)),
-                        -BLOCK_PER_HEIGHT * SIZE, randomColor());
-    }
-
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    RZ180 rotate(){return new RZ180(getMinLeft(), getMinTop(), getColor());}
-}
-
-class RZ180 extends Tetramino{
-    private static final int BLOCK_PER_HEIGHT = 3;
-    private static final byte[][] template = {{1,0,0,0}, {1,1,0,0}, {0,1,0,0}, {0,0,0,0}};
-
-    RZ180(int left, int top, int color){
-        Tetramino.loadTemplate(this, template, left, top);
-        setColor(color);
-    }
-
-    @SuppressWarnings("unused")
-    RZ180(){
-        this((int) (Math.random() *
-                        (Scene.WIDTH - 3 * SIZE)),
-                            -BLOCK_PER_HEIGHT * SIZE, randomColor());
-    }
-
-    int blockPerHeight(){return BLOCK_PER_HEIGHT;}
-    RZ0 rotate(){return new RZ0(getMinLeft(), getMinTop(), getColor());}
+    int getBlockPerHeight(){return blockPerHeight;}
+    RZLike rotate(){return new RZLike(getMinLeft(), getMinTop(), position+1, getColor());}
 }

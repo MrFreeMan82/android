@@ -32,25 +32,25 @@ class Statistic extends View
         top = space;
         left = Scene.WIDTH / 4;
 
-        tetraminos[0] = new LineHorizontal(left, top, Color.RED);
-        top += space + tetraminos[0].blockPerHeight() * Block.SIZE;
+        tetraminos[0] = new Line(left, top, 1, Color.RED);
+        top += space + tetraminos[0].getBlockPerHeight() * Block.SIZE;
 
         tetraminos[1] = new Square(left, top, Color.BLUE);
-        top += space + tetraminos[1].blockPerHeight() * Block.SIZE;
+        top += space + tetraminos[1].getBlockPerHeight() * Block.SIZE;
 
-        tetraminos[2] = new L90(left, top, Color.GREEN);
-        top += space + tetraminos[2].blockPerHeight() * Block.SIZE;
+        tetraminos[2] = new LLike(left, top, 2, Color.GREEN);
+        top += space + tetraminos[2].getBlockPerHeight() * Block.SIZE;
 
-        tetraminos[3] = new LR90(left, top, Color.CYAN);
-        top += space + tetraminos[3].blockPerHeight() * Block.SIZE;
+        tetraminos[3] = new LRLike(left, top, 2, Color.CYAN);
+        top += space + tetraminos[3].getBlockPerHeight() * Block.SIZE;
 
-        tetraminos[4] = new T0(left, top, Color.YELLOW);
-        top += space + tetraminos[4].blockPerHeight() * Block.SIZE;
+        tetraminos[4] = new TLike(left, top, 1, Color.YELLOW);
+        top += space + tetraminos[4].getBlockPerHeight() * Block.SIZE;
 
-        tetraminos[5] = new Z0(left, top, Color.MAGENTA);
-        top += space + tetraminos[5].blockPerHeight() * Block.SIZE;
+        tetraminos[5] = new ZLike(left, top, 1, Color.MAGENTA);
+        top += space + tetraminos[5].getBlockPerHeight() * Block.SIZE;
 
-        tetraminos[6] = new RZ0(left, top, Color.GRAY);
+        tetraminos[6] = new RZLike(left, top, 1, Color.GRAY);
     }
 
     private void drawText(Canvas canvas, Tetramino tetramino, int blockPerWidth, int blockPerHeight, String text)
@@ -73,7 +73,7 @@ class Statistic extends View
         for(int i = 0; i < stat.length; i++)
         {
             for(Block block: tetraminos[i].getBlocks()) block.draw(canvas, paint);
-            drawText(canvas, tetraminos[i], 4, tetraminos[i].blockPerHeight(), "- " + stat[i]);
+            drawText(canvas, tetraminos[i], 4, tetraminos[i].getBlockPerHeight(), "- " + stat[i]);
         }
     }
 }
