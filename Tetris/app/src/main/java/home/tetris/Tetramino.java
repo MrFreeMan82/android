@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static home.tetris.Block.SIZE;
 
@@ -27,10 +28,12 @@ abstract class Tetramino
     {
         private static final ArrayList<Factory> factories = new ArrayList<>
         (
-            Arrays.asList(
+         Collections.unmodifiableList(
+           Arrays.asList(
                Line.getFactory(), Square.getFactory(), LLike.getFactory(),
                     LRLike.getFactory(), TLike.getFactory(), ZLike.getFactory(), RZLike.getFactory()
-        ));
+
+         )));
 
         static int[] statistic = new int[factories.size()];
 
