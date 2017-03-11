@@ -11,23 +11,25 @@ import static home.tetris.Block.SIZE;
 /**
  * Created by Дима on 23.01.2017.
  * Класс служит для описания возможных видов Тетрамино
- * Цифры в именах классов обозначают угол поворота
+ *
  */
-interface Generator{
+
+interface MinoFactory{
     Tetramino next();
 }
-abstract class Tetramino implements Generator
+
+abstract class Tetramino
 {
     private Block[] blocks = new Block[4];
     private int color;
 
     private static class MinoGenerator
     {
-        private static final ArrayList<? extends Tetramino> types = new ArrayList<>
+        private static final ArrayList<MinoFactory> types = new ArrayList<>
         (
             Arrays.asList(
-               new Line(), new Square(), new LLike(),
-                    new LRLike(), new TLike(), new ZLike(), new RZLike()
+               new Line.Factory(), new Square.Factory(), new LLike.Factory(),
+                    new LRLike.Factory(), new TLike.Factory(), new ZLike.Factory(), new RZLike.Factory()
         ));
 
         static int[] statistic = new int[types.size()];
@@ -123,9 +125,19 @@ class Line extends Tetramino{
 
     private int position;
     private int blockPerHeight;
-    private int blockPerWidth;
 
-    Line(){}
+    static class Factory implements MinoFactory
+    {
+        public Line next()
+        {
+            int position = (int) (Math.random() * MAX_POSITIONS + 1);
+            int blockPerHeight = position == 1 ? 1: 4;
+            int blockPerWidth = position == 1 ? 4: 1;
+            int top = -blockPerHeight * SIZE;
+            int left = (int)(Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
+            return new Line(left, top, position, randomColor());
+        }
+    }
 
     Line(int left, int top, int aPosition, int color)
     {
@@ -135,27 +147,15 @@ class Line extends Tetramino{
         {
             position = 1;
             blockPerHeight = 1;
-            blockPerWidth = 4;
             Tetramino.loadTemplate(this, h_line, left, top);
         }
         else if (position == 2)
         {
             blockPerHeight = 4;
-            blockPerWidth = 1;
             Tetramino.loadTemplate(this, v_line, left, top);
         }
 
         setColor(color);
-    }
-
-    public Line next()
-    {
-        position = (int) (Math.random() * MAX_POSITIONS + 1);
-        blockPerHeight = position == 1 ? 1: 4;
-        blockPerWidth = position == 1 ? 4: 1;
-        int top = -blockPerHeight * SIZE;
-        int left = (int)(Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
-        return new Line(left, top, position, randomColor());
     }
 
     int getBlockPerHeight(){return blockPerHeight;}
@@ -167,23 +167,22 @@ class Square extends Tetramino{
     private static final byte[][] square = {{1,1,0,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}};
 
     private int blockPerHeight;
-    private int blockPerWidth;
 
-    Square(){}
+    static class Factory implements MinoFactory
+    {
+        public Square next()
+        {
+            int top = -2 * SIZE;
+            int left = (int)(Math.random() * (Scene.WIDTH - 2 * SIZE));
+            return new Square(left, top, randomColor());
+        }
+    }
 
     Square(int left, int top, int color)
     {
-        blockPerWidth = 2;
         blockPerHeight = 2;
         Tetramino.loadTemplate(this, square, left, top);
         setColor(color);
-    }
-
-    public Square next()
-    {
-        int top = -blockPerHeight * SIZE;
-        int left = (int)(Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
-        return new Square(left, top, randomColor());
     }
 
     int getBlockPerHeight(){return blockPerHeight;}
@@ -199,9 +198,19 @@ class LLike extends Tetramino{
 
     private int position;
     private int blockPerHeight;
-    private int blockPerWidth;
 
-    LLike(){}
+    static class Factory implements MinoFactory
+    {
+        public LLike next()
+        {
+            int position = (int) (Math.random() * MAX_POSITIONS + 1);
+            int blockPerHeight = (position == 1) || (position == 3) ? 3 : 2;
+            int blockPerWidth = (position == 1) || (position == 3) ? 2 : 3;
+            int top = -blockPerHeight * SIZE;
+            int left = (int) (Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
+            return new LLike(left, top, position, randomColor());
+        }
+    }
 
     LLike(int left, int top, int aPosition, int color)
     {
@@ -209,39 +218,25 @@ class LLike extends Tetramino{
         if((position == 1) || (position > MAX_POSITIONS) || (position < 1))
         {
             position = 1;
-            blockPerWidth = 2;
             blockPerHeight = 3;
             Tetramino.loadTemplate(this, l0, left, top);
         }
         else if(position == 2)
         {
-            blockPerWidth = 3;
             blockPerHeight = 2;
             Tetramino.loadTemplate(this, l90, left, top);
         }
         else if(position == 3)
         {
-            blockPerWidth = 2;
             blockPerHeight = 3;
             Tetramino.loadTemplate(this, l180, left, top);
         }
         else if(position == 4)
         {
-            blockPerWidth = 3;
             blockPerHeight = 2;
             Tetramino.loadTemplate(this, l270, left, top);
         }
         setColor(color);
-    }
-
-    public LLike next()
-    {
-        position = (int) (Math.random() * MAX_POSITIONS + 1);
-        blockPerHeight = (position == 1) || (position == 3) ? 3 : 2;
-        blockPerWidth = (position == 1) || (position == 3) ? 2 : 3;
-        int top = -blockPerHeight * SIZE;
-        int left = (int) (Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
-        return new LLike(left, top, position, randomColor());
     }
 
     int getBlockPerHeight(){return blockPerHeight;}
@@ -257,9 +252,19 @@ class LRLike extends Tetramino{
 
     private int position;
     private int blockPerHeight;
-    private int blockPerWidth;
 
-    LRLike(){}
+    static class Factory implements MinoFactory
+    {
+        public LRLike next()
+        {
+            int position = (int) (Math.random() * MAX_POSITIONS + 1);
+            int blockPerHeight = (position == 1) || (position == 3) ? 3 : 2;
+            int blockPerWidth = (position == 1) || (position == 3) ? 2 : 3;
+            int top = -blockPerHeight * SIZE;
+            int left = (int) (Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
+            return new LRLike(left, top, position, randomColor());
+        }
+    }
 
     LRLike(int left, int top, int aPosition, int color)
     {
@@ -267,39 +272,25 @@ class LRLike extends Tetramino{
         if((position == 1) || (position > MAX_POSITIONS) || (position < 1))
         {
             position = 1;
-            blockPerWidth = 2;
             blockPerHeight = 3;
             Tetramino.loadTemplate(this, lr0, left, top);
         }
         else if(position == 2)
         {
-            blockPerWidth = 3;
             blockPerHeight = 2;
             Tetramino.loadTemplate(this, lr90, left, top);
         }
         else if(position == 3)
         {
-            blockPerWidth = 2;
             blockPerHeight = 3;
             Tetramino.loadTemplate(this, lr180, left, top);
         }
         else if(position == 4)
         {
-            blockPerWidth = 3;
             blockPerHeight = 2;
             Tetramino.loadTemplate(this, lr270, left, top);
         }
         setColor(color);
-    }
-
-    public LRLike next()
-    {
-        position = (int) (Math.random() * MAX_POSITIONS + 1);
-        blockPerHeight = (position == 1) || (position == 3) ? 3 : 2;
-        blockPerWidth = (position == 1) || (position == 3) ? 2 : 3;
-        int top = -blockPerHeight * SIZE;
-        int left = (int) (Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
-        return new LRLike(left, top, position, randomColor());
     }
 
     int getBlockPerHeight(){return blockPerHeight;}
@@ -315,9 +306,20 @@ class TLike extends Tetramino{
 
     private int position;
     private int blockPerHeight;
-    private int blockPerWidth;
 
-    TLike(){}
+    static class Factory implements MinoFactory
+    {
+
+        public TLike next()
+        {
+            int position = (int) (Math.random() * MAX_POSITIONS + 1);
+            int blockPerHeight = (position == 1) || (position == 3) ? 2 : 3;
+            int blockPerWidth = (position == 1) || (position == 3) ? 3 : 2;
+            int top = -blockPerHeight * SIZE;
+            int left = (int) (Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
+            return new TLike(left, top, position, randomColor());
+        }
+    }
 
     TLike(int left, int top, int aPosition, int color)
     {
@@ -325,39 +327,25 @@ class TLike extends Tetramino{
         if((position == 1) || (position > 4) || (position < 1))
         {
             position = 1;
-            blockPerWidth = 3;
             blockPerHeight = 2;
             Tetramino.loadTemplate(this, t0, left, top);
         }
         else if(position == 2)
         {
-            blockPerWidth = 2;
             blockPerHeight = 3;
             Tetramino.loadTemplate(this, t90, left, top);
         }
         else if(position == 3)
         {
-            blockPerWidth = 3;
             blockPerHeight = 2;
             Tetramino.loadTemplate(this, t180, left, top);
         }
         else if(position == 4)
         {
-            blockPerWidth = 2;
             blockPerHeight = 3;
             Tetramino.loadTemplate(this, t270, left, top);
         }
         setColor(color);
-    }
-
-    public TLike next()
-    {
-        position = (int) (Math.random() * MAX_POSITIONS + 1);
-        blockPerHeight = (position == 1) || (position == 3) ? 2 : 3;
-        blockPerWidth = (position == 1) || (position == 3) ? 3 : 2;
-        int top = -blockPerHeight * SIZE;
-        int left = (int) (Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
-        return new TLike(left, top, position, randomColor());
     }
 
     int getBlockPerHeight(){return blockPerHeight;}
@@ -371,9 +359,19 @@ class ZLike extends Tetramino{
 
     private int position;
     private int blockPerHeight;
-    private int blockPerWidth;
 
-    ZLike(){}
+    static class Factory implements MinoFactory
+    {
+        public ZLike next()
+        {
+            int position = (int) (Math.random() * MAX_POSITIONS + 1);
+            int blockPerHeight = position == 1 ? 2: 3;
+            int blockPerWidth = position == 1 ? 3: 2;
+            int top = -blockPerHeight * SIZE;
+            int left = (int)(Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
+            return new ZLike(left, top, position, randomColor());
+        }
+    }
 
     ZLike(int left, int top, int aPosition, int color)
     {
@@ -383,26 +381,14 @@ class ZLike extends Tetramino{
         {
             position = 1;
             blockPerHeight = 2;
-            blockPerWidth = 3;
             Tetramino.loadTemplate(this, z0, left, top);
         }
         else if (position == 2)
         {
             blockPerHeight = 3;
-            blockPerWidth = 2;
             Tetramino.loadTemplate(this, z180, left, top);
         }
         setColor(color);
-    }
-
-    public ZLike next()
-    {
-        position = (int) (Math.random() * MAX_POSITIONS + 1);
-        blockPerHeight = position == 1 ? 2: 3;
-        blockPerWidth = position == 1 ? 3: 2;
-        int top = -blockPerHeight * SIZE;
-        int left = (int)(Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
-        return new ZLike(left, top, position, randomColor());
     }
 
     int getBlockPerHeight(){return blockPerHeight;}
@@ -416,9 +402,19 @@ class RZLike extends Tetramino{
 
     private int position;
     private int blockPerHeight;
-    private int blockPerWidth;
 
-    RZLike(){}
+    static class Factory implements MinoFactory
+    {
+        public RZLike next()
+        {
+            int position = (int) (Math.random() * MAX_POSITIONS + 1);
+            int blockPerHeight = position == 1 ? 2: 3;
+            int blockPerWidth = position == 1 ? 3: 2;
+            int top = -blockPerHeight * SIZE;
+            int left = (int)(Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
+            return new RZLike(left, top, position, randomColor());
+        }
+    }
 
     RZLike(int left, int top, int aPosition, int color)
     {
@@ -428,26 +424,14 @@ class RZLike extends Tetramino{
         {
             position = 1;
             blockPerHeight = 2;
-            blockPerWidth = 3;
             Tetramino.loadTemplate(this, rz0, left, top);
         }
         else if (position == 2)
         {
             blockPerHeight = 3;
-            blockPerWidth = 2;
             Tetramino.loadTemplate(this, rz180, left, top);
         }
         setColor(color);
-    }
-
-    public RZLike next()
-    {
-        position = (int) (Math.random() * MAX_POSITIONS + 1);
-        blockPerHeight = position == 1 ? 2: 3;
-        blockPerWidth = position == 1 ? 3: 2;
-        int top = -blockPerHeight * SIZE;
-        int left = (int)(Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
-        return new RZLike(left, top, position, randomColor());
     }
 
     int getBlockPerHeight(){return blockPerHeight;}
