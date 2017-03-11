@@ -14,7 +14,7 @@ import static home.tetris.Block.SIZE;
  *
  */
 
-interface MinoFactory{
+interface Factory{
     Tetramino next();
 }
 
@@ -25,20 +25,20 @@ abstract class Tetramino
 
     private static class MinoGenerator
     {
-        private static final ArrayList<MinoFactory> types = new ArrayList<>
+        private static final ArrayList<Factory> factories = new ArrayList<>
         (
             Arrays.asList(
-               new Line.Factory(), new Square.Factory(), new LLike.Factory(),
-                    new LRLike.Factory(), new TLike.Factory(), new ZLike.Factory(), new RZLike.Factory()
+               Line.getFactory(), Square.getFactory(), LLike.getFactory(),
+                    LRLike.getFactory(), TLike.getFactory(), ZLike.getFactory(), RZLike.getFactory()
         ));
 
-        static int[] statistic = new int[types.size()];
+        static int[] statistic = new int[factories.size()];
 
         static Tetramino next()
         {
-            int type = (int) (Math.random() * types.size());
+            int type = (int) (Math.random() * factories.size());
             statistic[type]++;
-            return types.get(type).next();
+            return factories.get(type).next();
         }
     }
 
@@ -125,10 +125,9 @@ class Line extends Tetramino{
 
     private int position;
     private int blockPerHeight;
-
-    static class Factory implements MinoFactory
+    private static Factory factory = new Factory()
     {
-        public Line next()
+        @Override public Tetramino next()
         {
             int position = (int) (Math.random() * MAX_POSITIONS + 1);
             int blockPerHeight = position == 1 ? 1: 4;
@@ -137,7 +136,7 @@ class Line extends Tetramino{
             int left = (int)(Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
             return new Line(left, top, position, randomColor());
         }
-    }
+    };
 
     Line(int left, int top, int aPosition, int color)
     {
@@ -158,8 +157,8 @@ class Line extends Tetramino{
         setColor(color);
     }
 
+    static Factory getFactory(){return factory;}
     int getBlockPerHeight(){return blockPerHeight;}
-
     Line rotate(){return new Line(getMinLeft(), getMinTop(), position+1, getColor());}
 }
 
@@ -167,16 +166,15 @@ class Square extends Tetramino{
     private static final byte[][] square = {{1,1,0,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}};
 
     private int blockPerHeight;
-
-    static class Factory implements MinoFactory
+    private static Factory factory = new Factory()
     {
-        public Square next()
+        @Override public Tetramino next()
         {
             int top = -2 * SIZE;
             int left = (int)(Math.random() * (Scene.WIDTH - 2 * SIZE));
             return new Square(left, top, randomColor());
         }
-    }
+    };
 
     Square(int left, int top, int color)
     {
@@ -185,6 +183,7 @@ class Square extends Tetramino{
         setColor(color);
     }
 
+    static Factory getFactory(){return factory;}
     int getBlockPerHeight(){return blockPerHeight;}
     Square rotate(){return null;}
 }
@@ -199,9 +198,9 @@ class LLike extends Tetramino{
     private int position;
     private int blockPerHeight;
 
-    static class Factory implements MinoFactory
+    private static Factory factory = new Factory()
     {
-        public LLike next()
+        @Override public Tetramino next()
         {
             int position = (int) (Math.random() * MAX_POSITIONS + 1);
             int blockPerHeight = (position == 1) || (position == 3) ? 3 : 2;
@@ -210,7 +209,7 @@ class LLike extends Tetramino{
             int left = (int) (Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
             return new LLike(left, top, position, randomColor());
         }
-    }
+    };
 
     LLike(int left, int top, int aPosition, int color)
     {
@@ -239,6 +238,7 @@ class LLike extends Tetramino{
         setColor(color);
     }
 
+    static Factory getFactory(){return factory;}
     int getBlockPerHeight(){return blockPerHeight;}
     LLike rotate(){return new LLike(getMinLeft(), getMinTop(), position+1, getColor());}
 }
@@ -252,10 +252,9 @@ class LRLike extends Tetramino{
 
     private int position;
     private int blockPerHeight;
-
-    static class Factory implements MinoFactory
+    private static Factory factory = new Factory()
     {
-        public LRLike next()
+        @Override public Tetramino next()
         {
             int position = (int) (Math.random() * MAX_POSITIONS + 1);
             int blockPerHeight = (position == 1) || (position == 3) ? 3 : 2;
@@ -264,7 +263,7 @@ class LRLike extends Tetramino{
             int left = (int) (Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
             return new LRLike(left, top, position, randomColor());
         }
-    }
+    };
 
     LRLike(int left, int top, int aPosition, int color)
     {
@@ -293,6 +292,7 @@ class LRLike extends Tetramino{
         setColor(color);
     }
 
+    static Factory getFactory(){return factory;}
     int getBlockPerHeight(){return blockPerHeight;}
     LRLike rotate(){return new LRLike(getMinLeft(), getMinTop(), position+1, getColor());}
 }
@@ -306,11 +306,9 @@ class TLike extends Tetramino{
 
     private int position;
     private int blockPerHeight;
-
-    static class Factory implements MinoFactory
+    private static Factory factory = new Factory()
     {
-
-        public TLike next()
+        @Override public Tetramino next()
         {
             int position = (int) (Math.random() * MAX_POSITIONS + 1);
             int blockPerHeight = (position == 1) || (position == 3) ? 2 : 3;
@@ -319,7 +317,7 @@ class TLike extends Tetramino{
             int left = (int) (Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
             return new TLike(left, top, position, randomColor());
         }
-    }
+    };
 
     TLike(int left, int top, int aPosition, int color)
     {
@@ -348,6 +346,7 @@ class TLike extends Tetramino{
         setColor(color);
     }
 
+    static Factory getFactory(){return factory;}
     int getBlockPerHeight(){return blockPerHeight;}
     TLike rotate(){return new TLike(getMinLeft(), getMinTop(), position+1, getColor());}
 }
@@ -359,10 +358,9 @@ class ZLike extends Tetramino{
 
     private int position;
     private int blockPerHeight;
-
-    static class Factory implements MinoFactory
+    private static Factory factory = new Factory()
     {
-        public ZLike next()
+        @Override public Tetramino next()
         {
             int position = (int) (Math.random() * MAX_POSITIONS + 1);
             int blockPerHeight = position == 1 ? 2: 3;
@@ -371,7 +369,7 @@ class ZLike extends Tetramino{
             int left = (int)(Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
             return new ZLike(left, top, position, randomColor());
         }
-    }
+    };
 
     ZLike(int left, int top, int aPosition, int color)
     {
@@ -391,6 +389,7 @@ class ZLike extends Tetramino{
         setColor(color);
     }
 
+    static Factory getFactory(){return factory;}
     int getBlockPerHeight(){return blockPerHeight;}
     ZLike rotate(){return new ZLike(getMinLeft(), getMinTop(), position+1, getColor());}
 }
@@ -402,10 +401,9 @@ class RZLike extends Tetramino{
 
     private int position;
     private int blockPerHeight;
-
-    static class Factory implements MinoFactory
+    private static Factory factory = new Factory()
     {
-        public RZLike next()
+        @Override public Tetramino next()
         {
             int position = (int) (Math.random() * MAX_POSITIONS + 1);
             int blockPerHeight = position == 1 ? 2: 3;
@@ -414,7 +412,7 @@ class RZLike extends Tetramino{
             int left = (int)(Math.random() * (Scene.WIDTH - blockPerWidth * SIZE));
             return new RZLike(left, top, position, randomColor());
         }
-    }
+    };
 
     RZLike(int left, int top, int aPosition, int color)
     {
@@ -434,6 +432,7 @@ class RZLike extends Tetramino{
         setColor(color);
     }
 
+    static Factory getFactory(){return factory;}
     int getBlockPerHeight(){return blockPerHeight;}
     RZLike rotate(){return new RZLike(getMinLeft(), getMinTop(), position+1, getColor());}
 }
