@@ -3,6 +3,7 @@ package home.tetris;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,10 +22,13 @@ interface Factory{
 
 abstract class Tetramino
 {
-    private Block[] blocks = new Block[4];
+    static final int MAX_TETRAMINOS = 7;
+    static final int BLOCKS_PER_MINO = 4;
+
+    private Block[] blocks = new Block[BLOCKS_PER_MINO];
     private int color;
 
-    private static class MinoGenerator
+    static class Generator
     {
         private static final ArrayList<Factory> factories = new ArrayList<>
         (
@@ -33,7 +37,15 @@ abstract class Tetramino
                Line.getFactory(), Square.getFactory(), LLike.getFactory(),
                     LRLike.getFactory(), TLike.getFactory(), ZLike.getFactory(), RZLike.getFactory()
 
-         )));
+        )));
+
+        private static StatisticInterface statisticInterface = new StatisticInterface()
+        {
+            @Override public int[] getStatistic(){return statistic;}
+
+            @Override public void clearStatistic()
+                {for(int i = 0; i < statistic.length; i++) statistic[i] = 0;}
+        };
 
         static int[] statistic = new int[factories.size()];
 
@@ -43,6 +55,8 @@ abstract class Tetramino
             statistic[type]++;
             return factories.get(type).next();
         }
+
+        static StatisticInterface getNewStatisticInterface(){return statisticInterface;}
     }
 
     int getMinLeft() {
@@ -80,15 +94,7 @@ abstract class Tetramino
 
     int getColor(){return color;}
     void setColor(int aColor){color = aColor;}
-
     Block[] getBlocks(){return blocks;}
-
-    static Tetramino getNext(){return MinoGenerator.next();}
-
-    static void clearStatistic(){
-        for(int i = 0; i < MinoGenerator.statistic.length; i++) MinoGenerator.statistic[i] = 0;
-    }
-    static int[] getStatistic(){return MinoGenerator.statistic;}
 
     static void loadTemplate(Tetramino tetramino, byte[][] template, int left, int top)
     {

@@ -172,7 +172,7 @@ final class Scene extends View
     void moveCurrentDown(int speedInc)
     {
         if(gameOver) return;
-        if(currentMino == null) currentMino = Tetramino.getNext();
+        if(currentMino == null) currentMino = Tetramino.Generator.next();
 
         if(speedInc != 0) sound.play(Sound.MOVE_MINO);
 
@@ -189,7 +189,7 @@ final class Scene extends View
                 sound.play(Sound.IMPACT);
                 putTetramino(currentMino);
                 deleteAnimation.deleteFullLines();
-                currentMino = Tetramino.getNext();
+                currentMino = Tetramino.Generator.next();
             }
 
             currentMino.moveDown();
@@ -220,62 +220,62 @@ final class Scene extends View
         return false;
     }
 
-   private boolean collisionBottom(Tetramino current)
+    private boolean collisionBottom(Tetramino current)
     {
-       for(Block block: current.getBlocks())
-       {
-           int x = block.rect.left / Block.SIZE;
-           int y = block.rect.top / Block.SIZE;
+        for(Block block: current.getBlocks())
+        {
+            int x = block.rect.left / Block.SIZE;
+            int y = block.rect.top / Block.SIZE;
 
-           if(HEIGHT - block.rect.bottom < 1) return true;
-           if(y < 0) continue;
-           while (y < BLOCKS_PER_HEIGHT)
-           {
-               if(field[x][y] != null && field[x][y].visible &&
-                       field[x][y].rect.top == block.rect.bottom) return true;
-               y++;
-           }
-       }
-       return false;
+            if(HEIGHT - block.rect.bottom < 1) return true;
+            if(y < 0) continue;
+            while (y < BLOCKS_PER_HEIGHT)
+            {
+                if(field[x][y] != null && field[x][y].visible &&
+                        field[x][y].rect.top == block.rect.bottom) return true;
+                y++;
+            }
+        }
+        return false;
     }
 
     private boolean collisionLeft(Tetramino current)
     {
-       for(Block block: current.getBlocks())
-       {
-           int x = block.rect.left / Block.SIZE;
-           int y = block.rect.top / Block.SIZE;
+        for(Block block: current.getBlocks())
+        {
+            int x = block.rect.left / Block.SIZE;
+            int y = block.rect.top / Block.SIZE;
 
-           if(x == 0) return true;
-           if((y < 0) || (y == BLOCKS_PER_HEIGHT)) continue;
-           while (x >= 0)
-           {
-               if (field[x][y] != null && field[x][y].visible &&
-                       field[x][y].rect.right == block.rect.left) return true;
-               x--;
-           }
-       }
-       return false;
+            if(x == 0) return true;
+            if((y < 0) || (y == BLOCKS_PER_HEIGHT)) continue;
+            while (x >= 0)
+            {
+                if (field[x][y] != null && field[x][y].visible &&
+                        field[x][y].rect.right == block.rect.left) return true;
+                x--;
+            }
+        }
+        return false;
     }
 
     private boolean collisionRight(Tetramino current)
     {
-       for(Block block: current.getBlocks())
-       {
-           int x = block.rect.left / Block.SIZE;
-           int y = block.rect.top / Block.SIZE;
+        for(Block block: current.getBlocks())
+        {
+            int x = block.rect.left / Block.SIZE;
+            int y = block.rect.top / Block.SIZE;
 
-           if(WIDTH - block.rect.right < 1) return true;
-           if((y < 0) || (y == BLOCKS_PER_HEIGHT)) continue;
-           while (x < BLOCKS_PER_WIDTH)
-           {
-               if (field[x][y] != null && field[x][y].visible &&
-                       field[x][y].rect.left == block.rect.right) return true;
+            if(WIDTH - block.rect.right < 1) return true;
+            if((y < 0) || (y == BLOCKS_PER_HEIGHT)) continue;
+            while (x < BLOCKS_PER_WIDTH)
+            {
+                if (field[x][y] != null && field[x][y].visible &&
+                        field[x][y].rect.left == block.rect.right) return true;
 
-               x++;
-           }
-       }
-       return false;
+                x++;
+            }
+        }
+        return false;
     }
 
     private boolean collisionRotate(Tetramino newTetramino)
@@ -292,12 +292,13 @@ final class Scene extends View
 
             if((block.rect.left >= field[x][y].rect.left &&
                     block.rect.left <= field[x][y].rect.right) ||
-               (block.rect.top >= field[x][y].rect.top &&
-                    block.rect.top <= field[x][y].rect.bottom)) return true;
+                    (block.rect.top >= field[x][y].rect.top &&
+                            block.rect.top <= field[x][y].rect.bottom)) return true;
         }
         return false;
     }
 
+    StatisticInterface getDeleteStatisticInterface(){return deleteAnimation;}
     Block[][] getField(){return field;}
     int getHi_score(){return hi_score;}
     Sound getSound(){return sound;}

@@ -3,6 +3,8 @@ package home.tetris;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import java.util.ArrayList;
+
 /**
  * Created by Дима on 20.02.2017.
  *
@@ -13,21 +15,23 @@ interface BarDeleteListener
     void onDeleteComplete(int total);
 }
 
-class DeleteAnimation
+class DeleteAnimation implements StatisticInterface
 {
     private static final String TAG = "DeleteAnimation";
 
     private Scene scene;
     private BarDeleteListener barDeleteListener;
+    private int[] statistic = new int[Tetramino.MAX_TETRAMINOS];
+    private ArrayList<? super Tetramino> list = new ArrayList<>();
 
     DeleteAnimation(Scene aScene){scene = aScene;}
 
     void setBarDeleteListener(BarDeleteListener listener){barDeleteListener = listener;}
 
-    private class DeleteTask extends AsyncTask<Block[][], Void, Integer>
+    private class DeleteTask extends AsyncTask<Block[][], Void, Block[][]>
     {
         @Override
-        protected Integer doInBackground(Block[][]... params)
+        protected Block[][] doInBackground(Block[][]... params)
         {
             Block[][] bar = params[0];
             while (bar[0][0].rect.bottom != bar[0][0].rect.top)
@@ -52,13 +56,41 @@ class DeleteAnimation
                     }
                 }
             }
-            return bar.length;
+            return bar;
         }
 
         @Override
-        public void onPostExecute(Integer totalDeleted) {
-            falling(totalDeleted);
-            barDeleteListener.onDeleteComplete(totalDeleted);
+        public void onPostExecute(Block[][] bar) {
+            countDeletedTetraminos(bar);
+            falling(bar.length);
+            barDeleteListener.onDeleteComplete(bar.length);
+        }
+    }
+
+    private void countDeletedTetraminos(Block[][] bar)
+    {
+        list.clear();
+
+        for(Block[] column: bar)
+        {
+            for(Block block: column)
+            {
+                int counter = 0;
+                if(list.contains(block.tetramino)) continue;
+                for (Block block1 : block.tetramino.getBlocks()) if (!block1.visible) counter++;
+
+                if (counter == Tetramino.BLOCKS_PER_MINO)
+                {
+                    list.add(block.tetramino);
+                    if (block.tetramino instanceof Line) statistic[0]++;
+                    else if (block.tetramino instanceof Square) statistic[1]++;
+                    else if (block.tetramino instanceof LLike) statistic[2]++;
+                    else if (block.tetramino instanceof LRLike) statistic[3]++;
+                    else if (block.tetramino instanceof TLike) statistic[4]++;
+                    else if (block.tetramino instanceof ZLike) statistic[5]++;
+                    else if (block.tetramino instanceof RZLike) statistic[6]++;
+                }
+            }
         }
     }
 
@@ -136,4 +168,9 @@ class DeleteAnimation
 
         new DeleteTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, bar);
     }
+
+    @Override public int[] getStatistic(){return statistic;}
+
+    @Override public void clearStatistic()
+        {for(int i = 0; i < statistic.length; i++) statistic[i] = 0;}
 }

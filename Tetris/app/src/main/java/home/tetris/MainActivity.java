@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy()
     {
         super.onDestroy();
-        Tetramino.clearStatistic();
+        if(statisticView != null) statisticView.clearStatistic();
         sceneView.free();
     }
 
@@ -214,7 +214,7 @@ public class MainActivity extends AppCompatActivity
     private void hideStatistic()
     {
         if(statisticView == null) return;
-        Tetramino.clearStatistic();
+        statisticView.clearStatistic();
         canvasLayout.removeView(statisticView);
         canvasLayout.addView(sceneView);
         statisticView = null;
@@ -225,6 +225,8 @@ public class MainActivity extends AppCompatActivity
         if(statisticView == null) {
             canvasLayout.removeView(sceneView);
             statisticView = new Statistic(activity);
+            statisticView.registerNewMinoStatistic(Tetramino.Generator.getNewStatisticInterface());
+            statisticView.registerDeletedMinoStatistic(sceneView.getDeleteStatisticInterface());
             canvasLayout.addView(statisticView);
         }
     }

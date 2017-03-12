@@ -7,16 +7,24 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.view.View;
 
+import java.util.ArrayList;
+
 /**
  * Created by Дима on 10.03.2017.
  *
  */
+
+interface StatisticInterface{
+    int[] getStatistic();
+    void clearStatistic();
+}
 
 class Statistic extends View
 {
     private Paint paint;
     private Tetramino[] tetraminos;
     private final Rect textBounds;
+    private ArrayList<StatisticInterface> stat = new ArrayList<>(2);
 
     Statistic(Context context)
     {
@@ -65,15 +73,34 @@ class Statistic extends View
     @Override
     public void onDraw(Canvas canvas)
     {
-        int[] stat = Tetramino.getStatistic();
+        int[] newMinos = stat.get(0).getStatistic();
+        int[] deletedMinos = stat.get(1).getStatistic();
+
         canvas.drawARGB(255, 0, 0, 0);
 
         paint.setTextSize(Block.SIZE);
 
-        for(int i = 0; i < stat.length; i++)
+        for(int i = 0; i < tetraminos.length; i++)
         {
-            for(Block block: tetraminos[i].getBlocks()) block.draw(canvas, paint);
-            drawText(canvas, tetraminos[i], 4, tetraminos[i].getBlockPerHeight(), "- " + stat[i]);
+            tetraminos[i].draw(canvas, paint);
+            String text = "- " + newMinos[i] + ':' + deletedMinos[i];
+            drawText(canvas, tetraminos[i], 4, tetraminos[i].getBlockPerHeight(), text);
         }
+    }
+
+    void registerNewMinoStatistic(StatisticInterface statisticInterface)
+    {
+        stat.add(0, statisticInterface);
+    }
+
+    void registerDeletedMinoStatistic(StatisticInterface statisticInterface)
+    {
+        stat.add(1, statisticInterface);
+    }
+
+    void clearStatistic()
+    {
+        stat.get(0).clearStatistic();
+        stat.get(1).clearStatistic();
     }
 }
