@@ -93,20 +93,14 @@ public class SettingsDialog extends DialogFragment
                     @Override
                     public void onClick(DialogInterface dialog, int which)
                     {
-                        String newLang;
-                        if(english.isChecked()) {
-                            newLang = "en";
-                            Settings.setStringSetting(Settings.APP_LANGUAGE, newLang);
-                        }
-                        else if(russian.isChecked()) {
-                            newLang = "ru";
-                            Settings.setStringSetting(Settings.APP_LANGUAGE, newLang);
-                        }
-                        else newLang = "";
-
                         Settings.setBooleanSetting(Settings.APP_SOUND_ENABLED, sound.isChecked());
 
-                        if(!oldLang.equals(newLang)) listener.onChangeLanguage(newLang);
+                        if(english.isChecked()) {
+                            if(!oldLang.equals("en")) listener.onChangeLanguage("en");
+                        }
+                        else if(russian.isChecked()) {
+                            if(!oldLang.equals("ru")) listener.onChangeLanguage("ru");
+                        }
 
                         listener.onCloseSettingsDialog();
                         dismiss();

@@ -87,6 +87,7 @@ public class MainActivity extends AppCompatActivity
                         canvasLayout.removeView(sceneView);
                         canvasLayout.removeView(statisticView);
                         recreate();
+                        Settings.setStringSetting(Settings.APP_LANGUAGE, newLanguage);
                     }
                 });
                 dialog.show(getSupportFragmentManager(), DIALOG_SETTINGS);
@@ -111,7 +112,7 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy()
     {
         super.onDestroy();
-        if(statisticView != null) statisticView.clearStatistic();
+        Statistic.clearStatistic();
         sceneView.free();
     }
 
@@ -214,7 +215,7 @@ public class MainActivity extends AppCompatActivity
     private void hideStatistic()
     {
         if(statisticView == null) return;
-        statisticView.clearStatistic();
+        Statistic.clearStatistic();
         canvasLayout.removeView(statisticView);
         canvasLayout.addView(sceneView);
         statisticView = null;
@@ -225,8 +226,6 @@ public class MainActivity extends AppCompatActivity
         if(statisticView == null) {
             canvasLayout.removeView(sceneView);
             statisticView = new Statistic(activity);
-            statisticView.registerNewMinoStatistic(Tetramino.Generator.getNewStatisticInterface());
-            statisticView.registerDeletedMinoStatistic(sceneView.getDeleteStatisticInterface());
             canvasLayout.addView(statisticView);
         }
     }

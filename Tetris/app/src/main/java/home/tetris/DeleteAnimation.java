@@ -15,13 +15,12 @@ interface BarDeleteListener
     void onDeleteComplete(int total);
 }
 
-class DeleteAnimation implements StatisticInterface
+class DeleteAnimation
 {
     private static final String TAG = "DeleteAnimation";
 
     private Scene scene;
     private BarDeleteListener barDeleteListener;
-    private int[] statistic = new int[Tetramino.MAX_TETRAMINOS];
     private ArrayList<? super Tetramino> list = new ArrayList<>();
 
     DeleteAnimation(Scene aScene){scene = aScene;}
@@ -82,13 +81,7 @@ class DeleteAnimation implements StatisticInterface
                 if (counter == Tetramino.BLOCKS_PER_MINO)
                 {
                     list.add(block.tetramino);
-                    if (block.tetramino instanceof Line) statistic[0]++;
-                    else if (block.tetramino instanceof Square) statistic[1]++;
-                    else if (block.tetramino instanceof LLike) statistic[2]++;
-                    else if (block.tetramino instanceof LRLike) statistic[3]++;
-                    else if (block.tetramino instanceof TLike) statistic[4]++;
-                    else if (block.tetramino instanceof ZLike) statistic[5]++;
-                    else if (block.tetramino instanceof RZLike) statistic[6]++;
+                    Statistic.minoDeleted(block.tetramino);
                 }
             }
         }
@@ -168,9 +161,4 @@ class DeleteAnimation implements StatisticInterface
 
         new DeleteTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, bar);
     }
-
-    @Override public int[] getStatistic(){return statistic;}
-
-    @Override public void clearStatistic()
-        {for(int i = 0; i < statistic.length; i++) statistic[i] = 0;}
 }

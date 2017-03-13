@@ -298,7 +298,6 @@ final class Scene extends View
         return false;
     }
 
-    StatisticInterface getDeleteStatisticInterface(){return deleteAnimation;}
     Block[][] getField(){return field;}
     int getHi_score(){return hi_score;}
     Sound getSound(){return sound;}
