@@ -7,6 +7,10 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.view.View;
 
+import java.util.EnumMap;
+import java.util.Locale;
+import java.util.Map;
+
 /**
  * Created by Дима on 10.03.2017.
  *
@@ -15,12 +19,15 @@ import android.view.View;
 class Statistic extends View
 {
     private Paint paint;
-    private Tetramino[] tetraminos = new Tetramino[Tetramino.MAX_TETRAMINOS];
     private final Rect textBounds;
 
-    private static int[]
-            created = new int[Tetramino.MAX_TETRAMINOS],
-                deleted = new int[Tetramino.MAX_TETRAMINOS];
+    private Map<Tetramino.Type, Tetramino> tetraminos = new EnumMap<>(Tetramino.Type.class);
+
+    private static Map<Tetramino.Type, Integer>
+            created = new EnumMap<>(Tetramino.Type.class),
+                deleted = new EnumMap<>(Tetramino.Type.class);
+
+    static {clearStatistic();}
 
     Statistic(Context context)
     {
@@ -35,32 +42,46 @@ class Statistic extends View
         top = space;
         left = Scene.WIDTH / 4;
 
-        tetraminos[0] = new Line(left, top, LinePosition.FIRST, Color.RED);
-        top += space + tetraminos[0].getBlockPerHeight() * Block.SIZE;
+        for(Tetramino.Type type: Tetramino.Type.values())
+        {
+            switch (type){
+                case LINE:
+                    tetraminos.put(type, new Line(left, top, LinePosition.FIRST, Color.RED));
+                    break;
 
-        tetraminos[1] = new Square(left, top, Color.BLUE);
-        top += space + tetraminos[1].getBlockPerHeight() * Block.SIZE;
+                case SQUARE:
+                    tetraminos.put(type, new Square(left, top, Color.BLUE));
+                    break;
 
-        tetraminos[2] = new LLike(left, top, LPosition.SECOND, Color.GREEN);
-        top += space + tetraminos[2].getBlockPerHeight() * Block.SIZE;
+                case LLIKE:
+                    tetraminos.put(type, new LLike(left, top, LPosition.SECOND, Color.GREEN));
+                    break;
 
-        tetraminos[3] = new LRLike(left, top, LPosition.SECOND, Color.CYAN);
-        top += space + tetraminos[3].getBlockPerHeight() * Block.SIZE;
+                case LRLIKE:
+                    tetraminos.put(type, new LRLike(left, top, LPosition.SECOND, Color.CYAN));
+                    break;
 
-        tetraminos[4] = new TLike(left, top, TPosition.FIRST, Color.YELLOW);
-        top += space + tetraminos[4].getBlockPerHeight() * Block.SIZE;
+                case TLIKE:
+                    tetraminos.put(type, new TLike(left, top, TPosition.FIRST, Color.YELLOW));
+                    break;
 
-        tetraminos[5] = new ZLike(left, top, ZPosition.FIRST, Color.MAGENTA);
-        top += space + tetraminos[5].getBlockPerHeight() * Block.SIZE;
+                case ZLIKE:
+                    tetraminos.put(type, new ZLike(left, top, ZPosition.FIRST, Color.MAGENTA));
+                    break;
 
-        tetraminos[6] = new RZLike(left, top, ZPosition.FIRST, Color.GRAY);
+                case RZLIKE:
+                    tetraminos.put(type, new RZLike(left, top, ZPosition.FIRST, Color.GRAY));
+            }
+
+            top += space + tetraminos.get(type).getBlockPerHeight() * Block.SIZE;
+        }
     }
 
-    private void drawText(Canvas canvas, Tetramino tetramino, int blockPerWidth, int blockPerHeight, String text)
+    private void drawText(Canvas canvas, Tetramino tetramino, String text)
     {
         paint.setColor(0xFFD2E1DE);
-        float x = tetramino.getMinLeft() + blockPerWidth * Block.SIZE + 10;
-        float y = tetramino.getMinTop() + blockPerHeight * Block.SIZE / 2f;
+        float x = tetramino.getMinLeft() + 4 * Block.SIZE + 10;
+        float y = tetramino.getMinTop() + tetramino.getBlockPerHeight() * Block.SIZE / 2;
         paint.getTextBounds(text, 0, text.length(), textBounds);
         canvas.drawText(text, x, y - textBounds.exactCenterY(), paint);
     }
@@ -72,11 +93,15 @@ class Statistic extends View
 
         paint.setTextSize(Block.SIZE);
 
-        for(int i = 0; i < tetraminos.length; i++)
+        for(Tetramino.Type type: Tetramino.Type.values())
         {
-            tetraminos[i].draw(canvas, paint);
-            String text = "- " + created[i] + ':' + deleted[i];
-            drawText(canvas, tetraminos[i], 4, tetraminos[i].getBlockPerHeight(), text);
+            Tetramino tetramino = tetraminos.get(type);
+            Tetramino.Type minoType = tetramino.getType();
+            String text =
+                    String.format(Locale.getDefault(),
+                            "- %d : %d", created.get(minoType), deleted.get(minoType));
+            tetramino.draw(canvas, paint);
+            drawText(canvas, tetramino, text);
         }
     }
 
@@ -84,30 +109,26 @@ class Statistic extends View
     {
         if(tetramino == null) return;
 
-        if(tetramino instanceof Line) created[0]++;
-        else if (tetramino instanceof Square) created[1]++;
-        else if (tetramino instanceof LLike) created[2]++;
-        else if (tetramino instanceof RZLike) created[3]++;
-        else if (tetramino instanceof TLike) created[4]++;
-        else if (tetramino instanceof ZLike) created[5]++;
-        else created[6]++;
+        Tetramino.Type type = tetramino.getType();
+        int value = created.get(type);
+        created.put(type, ++value);
     }
+
     static void minoDeleted(Tetramino tetramino)
     {
         if(tetramino == null) return;
 
-        if(tetramino instanceof Line) deleted[0]++;
-        else if (tetramino instanceof Square) deleted[1]++;
-        else if (tetramino instanceof LLike) deleted[2]++;
-        else if (tetramino instanceof RZLike) deleted[3]++;
-        else if (tetramino instanceof TLike) deleted[4]++;
-        else if (tetramino instanceof ZLike) deleted[5]++;
-        else deleted[6]++;
+        Tetramino.Type type = tetramino.getType();
+        int value = deleted.get(type);
+        deleted.put(type, ++value);
     }
 
     static void clearStatistic()
     {
-        created = new int[Tetramino.MAX_TETRAMINOS];
-        deleted = new int[Tetramino.MAX_TETRAMINOS];
+        for(Tetramino.Type type: Tetramino.Type.values())
+        {
+            created.put(type, 0);
+            deleted.put(type, 0);
+        }
     }
 }

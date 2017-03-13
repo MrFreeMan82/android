@@ -23,7 +23,10 @@ interface Factory{
 
 abstract class Tetramino
 {
-    static final int MAX_TETRAMINOS = 7;
+    enum Type{
+        LINE, SQUARE, LLIKE, LRLIKE, TLIKE, ZLIKE, RZLIKE
+    }
+
     static final int BLOCKS_PER_MINO = 4;
     static final Random random = new Random();
 
@@ -115,6 +118,7 @@ abstract class Tetramino
 
     abstract Tetramino rotate();
     abstract int getBlockPerHeight();
+    abstract Type getType();
 }
 
 enum LinePosition{
@@ -128,11 +132,12 @@ enum LinePosition{
         blocksPerHeight = aBlocksPerHeight;
     }
 
-    LinePosition next(LinePosition position)
+    static LinePosition next(LinePosition position)
         {return position == LinePosition.FIRST ? LinePosition.SECOND: LinePosition.FIRST;}
 }
 
 class Line extends Tetramino{
+    private final Type type = Type.LINE;
     private static final byte[][] h_line = {{1,1,1,1}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
     private static final byte[][] v_line = {{1,0,0,0}, {1,0,0,0}, {1,0,0,0}, {1,0,0,0}};
 
@@ -158,12 +163,14 @@ class Line extends Tetramino{
         setColor(color);
     }
 
+    Type getType(){return type;}
     static Factory getFactory(){return factory;}
     int getBlockPerHeight(){return position.blocksPerHeight;}
-    Line rotate(){return new Line(getMinLeft(), getMinTop(), position.next(position), getColor());}
+    Line rotate(){return new Line(getMinLeft(), getMinTop(), LinePosition.next(position), getColor());}
 }
 
 class Square extends Tetramino{
+    private final Type type = Type.SQUARE;
     private static final int BLOCK_PER_WIDTH = 2;
     private static final int BLOCK_PER_HEIGHT = 2;
     private static final byte[][] square = {{1,1,0,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}};
@@ -184,6 +191,7 @@ class Square extends Tetramino{
         setColor(color);
     }
 
+    Type getType(){return type;}
     static Factory getFactory(){return factory;}
     int getBlockPerHeight(){return BLOCK_PER_HEIGHT;}
     Square rotate(){return null;}
@@ -200,7 +208,7 @@ enum LPosition{
         blocksPerHeight = aBlocksPerHeight;
     }
 
-    LPosition next(LPosition position)
+    static LPosition next(LPosition position)
     {
         switch (position){
             case FIRST: return LPosition.SECOND;
@@ -212,6 +220,7 @@ enum LPosition{
 }
 
 class LLike extends Tetramino{
+    private final Type type = Type.LLIKE;
     private static final byte[][] l0 = {{1,0,0,0}, {1,0,0,0}, {1,1,0,0}, {0,0,0,0}};
     private static final byte[][] l90 = {{1,1,1,0}, {1,0,0,0}, {0,0,0,0}, {0,0,0,0}};
     private static final byte[][] l180 = {{1,1,0,0}, {0,1,0,0}, {0,1,0,0}, {0,0,0,0}};
@@ -242,12 +251,14 @@ class LLike extends Tetramino{
         setColor(color);
     }
 
+    Type getType(){return type;}
     static Factory getFactory(){return factory;}
     int getBlockPerHeight(){return position.blocksPerHeight;}
-    LLike rotate(){return new LLike(getMinLeft(), getMinTop(), position.next(position), getColor());}
+    LLike rotate(){return new LLike(getMinLeft(), getMinTop(), LPosition.next(position), getColor());}
 }
 
 class LRLike extends Tetramino{
+    private final Type type = Type.LRLIKE;
     private static final byte[][] lr0 = {{0,1,0,0}, {0,1,0,0}, {1,1,0,0}, {0,0,0,0}};
     private static final byte[][] lr90 = {{1,0,0,0}, {1,1,1,0}, {0,0,0,0}, {0,0,0,0}};
     private static final byte[][] lr180 = {{1,1,0,0}, {1,0,0,0}, {1,0,0,0}, {0,0,0,0}};
@@ -277,9 +288,10 @@ class LRLike extends Tetramino{
         setColor(color);
     }
 
+    Type getType(){return type;}
     static Factory getFactory(){return factory;}
     int getBlockPerHeight(){return position.blocksPerHeight;}
-    LRLike rotate(){return new LRLike(getMinLeft(), getMinTop(), position.next(position), getColor());}
+    LRLike rotate(){return new LRLike(getMinLeft(), getMinTop(), LPosition.next(position), getColor());}
 }
 
 enum TPosition{
@@ -293,7 +305,7 @@ enum TPosition{
         blocksPerHeight = aBlocksPerHeight;
     }
 
-    TPosition next(TPosition position)
+    static TPosition next(TPosition position)
     {
         switch (position){
             case FIRST: return TPosition.SECOND;
@@ -305,6 +317,7 @@ enum TPosition{
 }
 
 class TLike extends Tetramino{
+    private final Type type = Type.TLIKE;
     private static final byte[][] t0 = {{0,1,0,0}, {1,1,1,0}, {0,0,0,0}, {0,0,0,0}};
     private static final byte[][] t90 = {{1,0,0,0}, {1,1,0,0}, {1,0,0,0}, {0,0,0,0}};
     private static final byte[][] t180 = {{1,1,1,0}, {0,1,0,0}, {0,0,0,0}, {0,0,0,0}};
@@ -334,9 +347,10 @@ class TLike extends Tetramino{
         setColor(color);
     }
 
+    Type getType(){return type;}
     static Factory getFactory(){return factory;}
     int getBlockPerHeight(){return position.blocksPerHeight;}
-    TLike rotate(){return new TLike(getMinLeft(), getMinTop(), position.next(position), getColor());}
+    TLike rotate(){return new TLike(getMinLeft(), getMinTop(), TPosition.next(position), getColor());}
 }
 
 enum ZPosition{
@@ -350,11 +364,12 @@ enum ZPosition{
         blocksPerHeight = aBlocksPerHeight;
     }
 
-    ZPosition next(ZPosition position)
-    {return position == ZPosition.FIRST ? ZPosition.SECOND: ZPosition.FIRST;}
+    static ZPosition next(ZPosition position)
+         {return position == ZPosition.FIRST ? ZPosition.SECOND: ZPosition.FIRST;}
 }
 
 class ZLike extends Tetramino{
+    private final Type type = Type.ZLIKE;
     private static final byte[][] z0 = {{1,1,0,0}, {0,1,1,0}, {0,0,0,0}, {0,0,0,0}};
     private static final byte[][] z180 = {{0,1,0,0}, {1,1,0,0},{1,0,0,0}, {0,0,0,0}};
 
@@ -380,12 +395,14 @@ class ZLike extends Tetramino{
         setColor(color);
     }
 
+    Type getType(){return type;}
     static Factory getFactory(){return factory;}
     int getBlockPerHeight(){return position.blocksPerHeight;}
-    ZLike rotate(){return new ZLike(getMinLeft(), getMinTop(), position.next(position), getColor());}
+    ZLike rotate(){return new ZLike(getMinLeft(), getMinTop(), ZPosition.next(position), getColor());}
 }
 
 class RZLike extends Tetramino{
+    private final Type type = Type.RZLIKE;
     private static final byte[][] rz0 = {{0,1,1,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}};
     private static final byte[][] rz180 = {{1,0,0,0}, {1,1,0,0}, {0,1,0,0}, {0,0,0,0}};
 
@@ -411,7 +428,8 @@ class RZLike extends Tetramino{
         setColor(color);
     }
 
+    Type getType(){return type;}
     static Factory getFactory(){return factory;}
     int getBlockPerHeight(){return position.blocksPerHeight;}
-    RZLike rotate(){return new RZLike(getMinLeft(), getMinTop(), position.next(position), getColor());}
+    RZLike rotate(){return new RZLike(getMinLeft(), getMinTop(), ZPosition.next(position), getColor());}
 }
