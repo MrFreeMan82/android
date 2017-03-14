@@ -28,7 +28,7 @@ class Sound {
     private static final int MAX_SOUNDS = 10;
 
     private AssetManager assetManager;
-    private SoundPool soundPool;
+    private static SoundPool soundPool;
 
     Sound(Context context){
         assetManager = context.getAssets();
@@ -64,7 +64,7 @@ class Sound {
         }
     }
 
-    void play(int soundId){
+    static void play(int soundId){
         if(Settings.getBooleanSetting(
                 Settings.APP_SOUND_ENABLED, true))
                         soundPool.play(soundId, 1.0f, 1.0f, 1, 0, 1.0f);

@@ -12,8 +12,10 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import java.util.Locale;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class MainActivity extends AppCompatActivity
         implements Updater.Callback, GameListener, View.OnTouchListener
@@ -41,6 +43,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.main);
 
         new Updater(this, false).execute();
+        new Sound(this);
 
         activity = this;
 
@@ -58,7 +61,6 @@ public class MainActivity extends AppCompatActivity
                     sceneView = new Scene(activity);
                     sceneView.setOnTouchListener(activity);
                     sceneView.setGameListener(activity);
-                    sceneView.setSound(new Sound(activity));
                     canvasLayout.addView(sceneView);
                     sceneView.start();
                 }
@@ -97,6 +99,7 @@ public class MainActivity extends AppCompatActivity
             getSupportActionBar().setTitle(R.string.app_name);
     }
 
+    static Future<Integer> submit(Callable<Integer> callable){return EXECUTOR.submit(callable);}
     static void execute(Runnable runnable){EXECUTOR.execute(runnable);}
     static int getSceneWidth(){return sceneWidth;}
     static int getSceneHeight(){return sceneHeight;}
@@ -113,7 +116,6 @@ public class MainActivity extends AppCompatActivity
         super.onDestroy();
         Statistic.clearStatistic();
         sceneView.free();
-        EXECUTOR.shutdown();
     }
 
     private void togglePause()

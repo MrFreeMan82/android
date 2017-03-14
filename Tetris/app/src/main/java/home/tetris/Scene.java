@@ -6,6 +6,9 @@ import android.graphics.Paint;
 import android.os.CountDownTimer;
 import android.view.View;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+
 /**
  * Created by Дима on 23.01.2017.
  * Служит для описания игрового поля (положение всех тетрамино на поле)
@@ -36,7 +39,6 @@ final class Scene extends View
     private Block[][] field;
     private Tetramino currentMino;
     private Paint paint;
-    private Sound sound;
     private Background background;
     private DeleteAnimation deleteAnimation;
     private boolean gameOver = false;
@@ -46,9 +48,9 @@ final class Scene extends View
     private int hi_score = 0;
     private int level = 1;
     private GameListener listener;
+    private Future<Integer> totalDeleted;
 
     void setGameListener(GameListener aListener){listener = aListener;}
-    void setSound(Sound aSound){sound = aSound;}
 
     void start(){
         if(running) return;
@@ -85,31 +87,6 @@ final class Scene extends View
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         field = new Block[BLOCKS_PER_WIDTH][BLOCKS_PER_HEIGHT];
         deleteAnimation = new DeleteAnimation(this);
-        deleteAnimation.setLineDeleteListener(new LineDeleteListener()
-        {
-            @Override public void onDeleteComplete(final int total)
-            {
-                post(new Runnable()
-                {
-                    @Override public void run()
-                    {
-                        score += total;
-                        listener.onScoreChange(score);
-
-                        if(score > hi_score){
-                            hi_score = score;
-                            Settings.setIntSetting(Settings.APP_SETTING_HISCORE, hi_score);
-                        }
-
-                        if (score >= level * SCORE_PER_LEVEL) {
-                            level++;
-                            sound.play(Sound.LEVEL_UP);
-                            listener.onLevelUp(level);
-                        }
-                    }
-                });
-            }
-        });
 
         new CountDownTimer(Long.MAX_VALUE, TIMER_INTERVAL)
         {
@@ -121,6 +98,7 @@ final class Scene extends View
 
                 if(running)
                 {
+                    if(hasDeletedLines()) updateScoreAndLevel(getTotalDeletedLines());
                     moveCurrentDown(0);
                     invalidate();
                 }
@@ -146,6 +124,37 @@ final class Scene extends View
         }
     }
 
+    private int getTotalDeletedLines()
+    {
+        int total = 0;
+        try {
+            total = totalDeleted.get();
+            totalDeleted = null;
+        } catch (InterruptedException | ExecutionException e){
+            e.printStackTrace();
+        }
+        return total;
+    }
+
+    private boolean hasDeletedLines(){return (totalDeleted != null && totalDeleted.isDone());}
+
+    private void updateScoreAndLevel(int totalDeleted)
+    {
+        score += totalDeleted;
+        listener.onScoreChange(score);
+
+        if(score > hi_score){
+            hi_score = score;
+            Settings.setIntSetting(Settings.APP_SETTING_HISCORE, hi_score);
+        }
+
+        if (score >= level * SCORE_PER_LEVEL) {
+            level++;
+            Sound.play(Sound.LEVEL_UP);
+            listener.onLevelUp(level);
+        }
+    }
+
     void rotateCurrent()
     {
         if(gameOver) return;
@@ -155,7 +164,7 @@ final class Scene extends View
 
         if(!collisionRotate(tetramino))
         {
-            sound.play(Sound.ROTATE);
+            Sound.play(Sound.ROTATE);
             currentMino = tetramino;
         }
     }
@@ -176,7 +185,7 @@ final class Scene extends View
         if(gameOver) return;
         if(currentMino == null) currentMino = Tetramino.Generator.next();
 
-        if(speedInc != 0) sound.play(Sound.MOVE_MINO);
+        if(speedInc != 0) Sound.play(Sound.MOVE_MINO);
 
         for (int k = level + 2 + speedInc; k > 0; k--)
         {
@@ -188,9 +197,9 @@ final class Scene extends View
                     listener.onGameOver();
                     return;
                 }
-                sound.play(Sound.IMPACT);
+                Sound.play(Sound.IMPACT);
                 putTetramino(currentMino);
-                deleteAnimation.deleteFullLines();
+                totalDeleted = deleteAnimation.deleteFullLines();
                 currentMino = Tetramino.Generator.next();
             }
 
@@ -202,7 +211,7 @@ final class Scene extends View
     {
         if(gameOver) return;
         if(collisionLeft(currentMino)) return;
-        sound.play(Sound.MOVE_MINO);
+        Sound.play(Sound.MOVE_MINO);
         currentMino.moveLeft();
     }
 
@@ -210,7 +219,7 @@ final class Scene extends View
     {
         if(gameOver) return;
         if(collisionRight(currentMino)) return;
-        sound.play(Sound.MOVE_MINO);
+        Sound.play(Sound.MOVE_MINO);
         currentMino.moveRight();
     }
 
@@ -302,7 +311,6 @@ final class Scene extends View
 
     Block[][] getField(){return field;}
     int getHi_score(){return hi_score;}
-    Sound getSound(){return sound;}
 
     private void clear()
     {

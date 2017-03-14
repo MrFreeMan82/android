@@ -2,6 +2,8 @@ package home.tetris;
 
 import android.util.Log;
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 
 /**
@@ -11,31 +13,22 @@ import java.util.ArrayList;
  *
  */
 
-interface LineDeleteListener
-{
-    void onDeleteComplete(int total);
-}
-
-class DeleteAnimation implements Runnable
+class DeleteAnimation implements Callable<Integer>
 {
     private static final String TAG = "DeleteAnimation";
 
     private Scene scene;
-    private LineDeleteListener listener;
     private Block[][] lines;   // Массив линий которые должны быть удалены
 
     DeleteAnimation(Scene aScene){scene = aScene;}
 
-    @Override
-    public void run()
+    @Override public Integer call()
     {
         decreaseLines(lines);
         falling(lines.length);
         countDeletedTetraminos(lines);
-        listener.onDeleteComplete(lines.length);
+        return lines.length;
     }
-
-    void setLineDeleteListener(LineDeleteListener listener){this.listener = listener;}
 
     /**
      *  Уменьшает высоту блоков снизу вверх
@@ -166,14 +159,16 @@ class DeleteAnimation implements Runnable
      * Осуществляет поиск и удалений полных линий.
      * Если есть полные линии, тогда метод формирует из них массив линий lines.
      * Далее этот массив используется потоком для удаления
-     *
+     *@return  ссылку(ярлык) по которому в будущем можно получить результат.
+     *          Ссылка содержит в себе информацию о колличестве удаленных линий
+     *          Либо null если полных линий нет.
      */
-    void deleteFullLines()
+    Future<Integer> deleteFullLines()
     {
         int line = 0;
         int total = countTotal();
-        if(total == 0) return;
-        scene.getSound().play(Sound.DELETE_LINE);
+        if(total == 0) return null;
+        Sound.play(Sound.DELETE_LINE);
         Block[][] field = scene.getField();
         lines = new Block[total][Scene.BLOCKS_PER_WIDTH];
 
@@ -188,6 +183,6 @@ class DeleteAnimation implements Runnable
             }
         }
 
-        MainActivity.execute(this);
+        return MainActivity.submit(this);
     }
 }
