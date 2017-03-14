@@ -1,92 +1,107 @@
 package home.tetris;
 
-import android.os.AsyncTask;
 import android.util.Log;
-
 import java.util.ArrayList;
+
 
 /**
  * Created by Дима on 20.02.2017.
  *
+ * Осуществляется поиск и удаление полных линий.
+ *
  */
 
-interface BarDeleteListener
+interface LineDeleteListener
 {
     void onDeleteComplete(int total);
 }
 
-class DeleteAnimation
+class DeleteAnimation implements Runnable
 {
     private static final String TAG = "DeleteAnimation";
 
     private Scene scene;
-    private BarDeleteListener barDeleteListener;
-    private ArrayList<? super Tetramino> list = new ArrayList<>();
+    private LineDeleteListener listener;
+    private Block[][] lines;   // Массив линий которые должны быть удалены
 
     DeleteAnimation(Scene aScene){scene = aScene;}
 
-    void setBarDeleteListener(BarDeleteListener listener){barDeleteListener = listener;}
-
-    private class DeleteTask extends AsyncTask<Block[][], Void, Block[][]>
+    @Override
+    public void run()
     {
-        @Override
-        protected Block[][] doInBackground(Block[][]... params)
+        decreaseLines(lines);
+        falling(lines.length);
+        countDeletedTetraminos(lines);
+        listener.onDeleteComplete(lines.length);
+    }
+
+    void setLineDeleteListener(LineDeleteListener listener){this.listener = listener;}
+
+    /**
+     *  Уменьшает высоту блоков снизу вверх
+     *  @param lines массив линий которые должны быть удалены
+     *
+     */
+    private void decreaseLines(Block[][] lines)
+    {
+        while (lines[0][0].rect.bottom != lines[0][0].rect.top)
         {
-            Block[][] bar = params[0];
-            while (bar[0][0].rect.bottom != bar[0][0].rect.top)
+            int k = 1;
+            for (Block[] line : lines)
             {
-                int k = 1;
-                for (Block[] column : bar)
+                for (Block block : line)
                 {
-                    for (Block block : column)
+                    block.decrease();
+                    if (block.rect.bottom == block.rect.top) block.visible = false;
+                    if ((k == Scene.BLOCKS_PER_WIDTH) && (block.rect.bottom % 2 == 0))
                     {
-                        block.decrease();
-                        if (block.rect.bottom == block.rect.top) block.visible = false;
-                        if ((k == Scene.BLOCKS_PER_WIDTH) && (block.rect.bottom % 2 == 0))
-                        {
-                            try {
-                                Thread.sleep(10);
-                            } catch (InterruptedException ie) {
-                                ie.printStackTrace();
-                                Log.e(TAG, "Delete Animation Error");
-                            }
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException ie) {
+                            ie.printStackTrace();
+                            Log.e(TAG, "Delete Animation Error");
                         }
-                        k++;
                     }
+                    k++;
                 }
             }
-            return bar;
-        }
-
-        @Override
-        public void onPostExecute(Block[][] bar) {
-            countDeletedTetraminos(bar);
-            falling(bar.length);
-            barDeleteListener.onDeleteComplete(bar.length);
         }
     }
 
-    private void countDeletedTetraminos(Block[][] bar)
+    /**
+     * Ведет подсчет удаленных тетрамино.
+     * Каждый блок имеет циклическую ссылку на объект Tetramino, благодаря ей мы сможем
+     * узнать какой блок принадлежит какой фигуре.
+     * list используется для того чтоб не считать по два раза блоки одной и той же фигуры.
+     * @param lines массив линий которые должны быть удалены
+     */
+    private void countDeletedTetraminos(Block[][] lines)
     {
-        list.clear();
+        ArrayList<Tetramino> list = new ArrayList<>();
 
-        for(Block[] column: bar)
+        for(Block[] line: lines)
         {
-            for(Block block: column)
+            for(Block block: line)
             {
-                int counter = 0;
-                if(list.contains(block.tetramino)) continue;
-                for (Block block1 : block.tetramino.getBlocks()) if (!block1.visible) counter++;
-
-                if (counter == Tetramino.BLOCKS_PER_MINO)
+                if(!list.contains(block.tetramino))
                 {
                     list.add(block.tetramino);
-                    Statistic.minoDeleted(block.tetramino);
+                    int counter = 0;
+                    for (Block tetraminoBlock : block.tetramino.getBlocks())
+                        if (!tetraminoBlock.visible) counter++;
+
+                    if (counter == Tetramino.BLOCKS_PER_MINO)
+                        Statistic.minoDeleted(block.tetramino);
                 }
             }
         }
     }
 
+    /**
+     * Опускает блоки, которые находятся над удаленными линиями, вниз
+     * на величину, соответствующую количеству удаленных линий * Block.SIZE
+     * @param totalDeleted количество удаленных линий.
+     */
     private void falling(int totalDeleted)
     {
         int movedLines = 0;
@@ -104,16 +119,20 @@ class DeleteAnimation
                         int k = y1 + 1;
                         field[x][k] = field[x][y1];
                         if(field[x][k] != null &&
-                                field[x][k].visible)
-                                    field[x][k].moveDown(Block.SIZE);
+                                field[x][k].visible) field[x][k].moveDown(Block.SIZE);
                     }
                 }
-               movedLines++;
+                movedLines++;
             }
             y--;
         }
     }
 
+    /**
+     * Ведет подсчет видимых блоков на одной линии
+     * @param y координата поля field[][]
+     * @return  колличесво видимых блоков на одной линии y
+     */
     private int countBlock(int y)
     {
        int counter = 0;
@@ -124,6 +143,10 @@ class DeleteAnimation
        return counter;
     }
 
+    /**
+     * Ведет подсчет полных линий которые должны будут удалены.
+     * @return  колличесво полных линий
+     */
     private int countTotal()
     {
         int count;
@@ -139,6 +162,12 @@ class DeleteAnimation
         return result;
     }
 
+    /**
+     * Осуществляет поиск и удалений полных линий.
+     * Если есть полные линии, тогда метод формирует из них массив линий lines.
+     * Далее этот массив используется потоком для удаления
+     *
+     */
     void deleteFullLines()
     {
         int line = 0;
@@ -146,19 +175,19 @@ class DeleteAnimation
         if(total == 0) return;
         scene.getSound().play(Sound.DELETE_LINE);
         Block[][] field = scene.getField();
-        Block[][] bar = new Block[total][Scene.BLOCKS_PER_WIDTH];
+        lines = new Block[total][Scene.BLOCKS_PER_WIDTH];
 
         for(int y = Scene.BLOCKS_PER_HEIGHT - 1; y >= 0; y--)
         {
             int blockCount = countBlock(y);
             if(blockCount == Scene.BLOCKS_PER_WIDTH)
             {
-                for(int x = 0; x < Scene.BLOCKS_PER_WIDTH; x++) bar[line][x] = field[x][y];
+                for(int x = 0; x < Scene.BLOCKS_PER_WIDTH; x++) lines[line][x] = field[x][y];
                 line++;
                 if(line == total) break;
             }
         }
 
-        new DeleteTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, bar);
+        MainActivity.execute(this);
     }
 }

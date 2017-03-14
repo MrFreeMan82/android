@@ -3,7 +3,6 @@ package home.tetris;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
-import android.os.AsyncTask;
 import android.util.Log;
 
 /**
@@ -11,7 +10,7 @@ import android.util.Log;
  *
  */
 
-class Background extends AsyncTask<Void, Void, Void>
+class Background implements Runnable
 {
     private static final int MOON_RADIUS = 50 * (Scene.HEIGHT / Scene.SCREEN_DELTA);
     private static final int STAR_COLOR = 0xFFA9E4F4;
@@ -21,6 +20,7 @@ class Background extends AsyncTask<Void, Void, Void>
     private static final int STARS_COUNT = 50;
 
     private boolean pause;
+    private boolean cancelled;
 
     private Point[] stars;
     private Point moon;
@@ -73,11 +73,12 @@ class Background extends AsyncTask<Void, Void, Void>
     }
 
     void setPause(boolean value){pause = value;}
+    void cancel(){cancelled = true;}
 
     @Override
-    protected Void doInBackground(Void... params)
+    public void run()
     {
-        while (!isCancelled())
+        while (!cancelled)
         {
             if(!pause)
             {
@@ -91,6 +92,7 @@ class Background extends AsyncTask<Void, Void, Void>
                 }
             }
         }
-        return null;
+
+        if(BuildConfig.DEBUG) Log.d(TAG, "Background Task complete");
     }
 }

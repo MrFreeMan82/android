@@ -3,7 +3,6 @@ package home.tetris;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.os.AsyncTask;
 import android.os.CountDownTimer;
 import android.view.View;
 
@@ -29,9 +28,10 @@ final class Scene extends View
     static final int WIDTH = MainActivity.getSceneWidth();          // Доступная ширина
     static final int HEIGHT = MainActivity.getSceneHeight();       // Доступная высота
     static final int BLOCKS_PER_HEIGHT = HEIGHT / (WIDTH / BLOCKS_PER_WIDTH);
+    static final int FALL_INCREMENT = HEIGHT / SCREEN_DELTA * 50;
 
     private static final int SCORE_PER_LEVEL = 25;   // Через сколько очков переходим на уровень выше.
-    private static final int TIMER_INTERVAL = 30;    // Интервал таймер выбран методом подбора.
+    private static final int TIMER_INTERVAL = 20;    // Интервал таймер.
 
     private Block[][] field;
     private Tetramino currentMino;
@@ -75,7 +75,7 @@ final class Scene extends View
         running = false;
         clear();
         cancel = true;
-        background.cancel(true);
+        background.cancel();
     }
 
     Scene(Context context)
@@ -85,34 +85,37 @@ final class Scene extends View
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         field = new Block[BLOCKS_PER_WIDTH][BLOCKS_PER_HEIGHT];
         deleteAnimation = new DeleteAnimation(this);
-        deleteAnimation.setBarDeleteListener(new BarDeleteListener()
+        deleteAnimation.setLineDeleteListener(new LineDeleteListener()
         {
-            @Override
-            public void onDeleteComplete(int total)
+            @Override public void onDeleteComplete(final int total)
             {
-                score += total;
-                listener.onScoreChange(score);
+                post(new Runnable()
+                {
+                    @Override public void run()
+                    {
+                        score += total;
+                        listener.onScoreChange(score);
 
-                if(score > hi_score){
-                    hi_score = score;
-                    Settings.setIntSetting(Settings.APP_SETTING_HISCORE, hi_score);
-                }
+                        if(score > hi_score){
+                            hi_score = score;
+                            Settings.setIntSetting(Settings.APP_SETTING_HISCORE, hi_score);
+                        }
 
-                if (score >= level * SCORE_PER_LEVEL) {
-                    level++;
-                    sound.play(Sound.LEVEL_UP);
-                    listener.onLevelUp(level);
-                }
+                        if (score >= level * SCORE_PER_LEVEL) {
+                            level++;
+                            sound.play(Sound.LEVEL_UP);
+                            listener.onLevelUp(level);
+                        }
+                    }
+                });
             }
         });
 
         new CountDownTimer(Long.MAX_VALUE, TIMER_INTERVAL)
         {
-            @Override
-            public void onFinish() {}
+            @Override public void onFinish() {}
 
-            @Override
-            public void onTick(long millisUntilFinished)
+            @Override public void onTick(long millisUntilFinished)
             {
                 if(cancel) this.cancel();
 
@@ -125,11 +128,10 @@ final class Scene extends View
         }.start();
 
         background = new Background();
-        background.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        MainActivity.execute(background);
     }
 
-    @Override
-    public void onDraw(Canvas canvas)
+    @Override public void onDraw(Canvas canvas)
     {
         canvas.drawARGB(255, 0, 0, 0);
 

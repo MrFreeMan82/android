@@ -12,16 +12,18 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import java.util.Locale;
-
-import static java.lang.Math.round;
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity
         implements Updater.Callback, GameListener, View.OnTouchListener
 {
+    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+
     private static final String DEFAULT_LANG = "en";
     private static final String DIALOG_SETTINGS = "DialogSettings";
     private static int sceneWidth, sceneHeight;
+
     private MainActivity activity;
     private Scene sceneView;
     private Menu mMenu;
@@ -31,10 +33,9 @@ public class MainActivity extends AppCompatActivity
     private boolean moving = false;
     private static long backPressed = 0;
     private int oldX = 0, oldY = 0;
-    private int fallIncrement;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    @Override protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         //  setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.main);
@@ -48,14 +49,12 @@ public class MainActivity extends AppCompatActivity
         ViewTreeObserver observer = canvasLayout.getViewTreeObserver();
         observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
         {
-            @Override
-            public void onGlobalLayout()
+            @Override public void onGlobalLayout()
             {
                 if(sceneView == null)
                 {
                     sceneWidth = canvasLayout.getWidth();
                     sceneHeight = canvasLayout.getHeight();
-                    fallIncrement = 50 * (sceneHeight / Scene.SCREEN_DELTA);
                     sceneView = new Scene(activity);
                     sceneView.setOnTouchListener(activity);
                     sceneView.setGameListener(activity);
@@ -67,22 +66,22 @@ public class MainActivity extends AppCompatActivity
         });
 
         ImageButton settingsButton = (ImageButton) findViewById(R.id.settings);
-        settingsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v)
+        settingsButton.setOnClickListener(new View.OnClickListener()
+        {
+            @Override public void onClick(View v)
             {
                 if(!pause) togglePause();
                 SettingsDialog dialog = new SettingsDialog();
                 dialog.setSettingDialogListener(new SettingsDialog.SettingsDialogListener()
                 {
-                    @Override
-                    public void onCloseSettingsDialog() {
+                    @Override public void onCloseSettingsDialog()
+                    {
                         if(statisticView != null) return;
                         if(pause) togglePause();
                     }
 
-                    @Override
-                    public void onChangeLanguage(String newLanguage) {
+                    @Override public void onChangeLanguage(String newLanguage)
+                    {
                         sceneView.free();
                         canvasLayout.removeView(sceneView);
                         canvasLayout.removeView(statisticView);
@@ -98,22 +97,23 @@ public class MainActivity extends AppCompatActivity
             getSupportActionBar().setTitle(R.string.app_name);
     }
 
+    static void execute(Runnable runnable){EXECUTOR.execute(runnable);}
     static int getSceneWidth(){return sceneWidth;}
     static int getSceneHeight(){return sceneHeight;}
 
-    @Override
-    protected void attachBaseContext(Context newBase) {
+    @Override protected void attachBaseContext(Context newBase)
+    {
         new Settings(newBase);
         super.attachBaseContext(MyContextWrapper.wrap(newBase,
                 Settings.getStringSetting(Settings.APP_LANGUAGE, DEFAULT_LANG)));
     }
 
-    @Override
-    protected void onDestroy()
+    @Override protected void onDestroy()
     {
         super.onDestroy();
         Statistic.clearStatistic();
         sceneView.free();
+        EXECUTOR.shutdown();
     }
 
     private void togglePause()
@@ -122,21 +122,18 @@ public class MainActivity extends AppCompatActivity
         onOptionsItemSelected(itemPause);
     }
 
-    @Override
-    public void onUpdateDialogClose()
+    @Override public void onUpdateDialogClose()
     {
         if(pause) togglePause();
     }
 
-    @Override
-    public void onGotUpdate() {if(!pause) togglePause();}
+    @Override public void onGotUpdate() {if(!pause) togglePause();}
 
-    @Override
-    public boolean onTouch(View v, MotionEvent event)
+    @Override public boolean onTouch(View v, MotionEvent event)
     {
         if(pause) return true;
-        int x = round(event.getX());
-        int y = round(event.getY());
+        int x = (int) event.getX();
+        int y = (int) event.getY();
 
         switch (event.getAction())
         {
@@ -160,7 +157,7 @@ public class MainActivity extends AppCompatActivity
                 else if(y - oldY > Block.SIZE){
                     moving = true;
                     oldX = x; oldY = y;
-                    sceneView.moveCurrentDown(fallIncrement);
+                    sceneView.moveCurrentDown(Scene.FALL_INCREMENT);
                     return true;
                 }
                 break;
@@ -174,21 +171,21 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu)
+    @Override public boolean onCreateOptionsMenu(Menu menu)
     {
         getMenuInflater().inflate(R.menu.tetris_menu, menu);
         mMenu = menu;
         return super.onCreateOptionsMenu(menu);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item)
+    @Override public boolean onOptionsItemSelected(MenuItem item)
     {
-        switch (item.getItemId()){
+        switch (item.getItemId())
+        {
             case R.id.item_pause_game:
                 pause = !pause;
-                if(pause) {
+                if(pause)
+                {
                     item.setTitle(R.string.play_game);
                     item.setIcon(R.drawable.ic_action_play);
                     sceneView.pause();
@@ -223,42 +220,37 @@ public class MainActivity extends AppCompatActivity
 
     private void showStatistic()
     {
-        if(statisticView == null) {
+        if(statisticView == null)
+        {
             canvasLayout.removeView(sceneView);
             statisticView = new Statistic(activity);
             canvasLayout.addView(statisticView);
         }
     }
 
-    private void showHiScore(int hi_score){
+    private void showHiScore(int hi_score)
+    {
         if(getSupportActionBar() != null)
             getSupportActionBar().setSubtitle(
                     getString(R.string.hi_score,
                             String.format(Locale.getDefault(), "%04d", hi_score)));
     }
 
-    @Override
-    public void onLevelUp(int level)
-    {
-        Toast.makeText(this, getString(
-                R.string.level_up, level), Toast.LENGTH_SHORT).show();
-    }
+    @Override public void onLevelUp(int level)
+    {Toast.makeText(this, getString(
+                R.string.level_up, level), Toast.LENGTH_SHORT).show();}
 
-    @Override
-    public void onGameOver()
-    {
-        Toast.makeText(this, getString(R.string.game_over), Toast.LENGTH_SHORT).show();
-    }
+    @Override public void onGameOver()
+    {Toast.makeText(this, getString(R.string.game_over), Toast.LENGTH_SHORT).show();}
 
-    @Override
-    public void onScoreChange(int score)
+    @Override public void onScoreChange(final int score)
     {
         if(getSupportActionBar() != null)
-            getSupportActionBar().setSubtitle(String.format(Locale.getDefault(), "%04d", score));
+            getSupportActionBar().setSubtitle(
+                    String.format(Locale.getDefault(), "%04d", score));
     }
 
-    @Override
-    public void onBackPressed()
+    @Override public void onBackPressed()
     {
         if(backPressed + 2000 > System.currentTimeMillis())
         {

@@ -25,7 +25,7 @@ class Statistic extends View
 
     private static Map<Tetramino.Type, Integer>
             created = new EnumMap<>(Tetramino.Type.class),
-                deleted = new EnumMap<>(Tetramino.Type.class);
+            deleted = new EnumMap<>(Tetramino.Type.class);
 
     static {clearStatistic();}
 
