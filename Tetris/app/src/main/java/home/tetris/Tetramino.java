@@ -38,7 +38,6 @@ abstract class Tetramino
                 case RZLIKE: tetramino = RZLike.getFactory().next(); break;
                 default: throw new IllegalArgumentException("Unknown type");
             }
-            Statistic.minoCreated(tetramino);
             return tetramino;
         }
     }

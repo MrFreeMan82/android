@@ -1,7 +1,6 @@
 package home.tetris;
 
 import android.util.Log;
-import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
@@ -26,7 +25,6 @@ class DeleteAnimation implements Callable<Integer>
     {
         decreaseLines(lines);
         falling(lines.length);
-        countDeletedTetraminos(lines);
         return lines.length;
     }
 
@@ -56,35 +54,6 @@ class DeleteAnimation implements Callable<Integer>
                         }
                     }
                     k++;
-                }
-            }
-        }
-    }
-
-    /**
-     * Ведет подсчет удаленных тетрамино.
-     * Каждый блок имеет циклическую ссылку на объект Tetramino, благодаря ей мы сможем
-     * узнать какой блок принадлежит какой фигуре.
-     * list используется для того чтоб не считать по два раза блоки одной и той же фигуры.
-     * @param lines массив линий которые должны быть удалены
-     */
-    private void countDeletedTetraminos(Block[][] lines)
-    {
-        ArrayList<Tetramino> list = new ArrayList<>();
-
-        for(Block[] line: lines)
-        {
-            for(Block block: line)
-            {
-                if(!list.contains(block.tetramino))
-                {
-                    list.add(block.tetramino);
-                    int counter = 0;
-                    for (Block tetraminoBlock : block.tetramino.getBlocks())
-                        if (!tetraminoBlock.visible) counter++;
-
-                    if (counter == Tetramino.BLOCKS_PER_MINO)
-                        Statistic.minoDeleted(block.tetramino);
                 }
             }
         }
@@ -144,13 +113,13 @@ class DeleteAnimation implements Callable<Integer>
     {
         int count;
         int result = 0;
+        int y = Scene.BLOCKS_PER_HEIGHT - 1;
 
-        for(int y = Scene.BLOCKS_PER_HEIGHT - 1; y >= 0; y--)
-        {
+        do {
             count = countBlock(y);
-            if(count == 0) return result;
-            else if(count == Scene.BLOCKS_PER_WIDTH) result++;
-        }
+            if(count == Scene.BLOCKS_PER_WIDTH) result++;
+            y--;
+        } while (y >= 0 && count > 0);
 
         return result;
     }
@@ -171,18 +140,18 @@ class DeleteAnimation implements Callable<Integer>
         Sound.play(Sound.DELETE_LINE);
         Block[][] field = scene.getField();
         lines = new Block[total][Scene.BLOCKS_PER_WIDTH];
+        int y = Scene.BLOCKS_PER_HEIGHT - 1;
 
-        for(int y = Scene.BLOCKS_PER_HEIGHT - 1; y >= 0; y--)
+        while (y >= 0 && line != total)
         {
             int blockCount = countBlock(y);
             if(blockCount == Scene.BLOCKS_PER_WIDTH)
             {
                 for(int x = 0; x < Scene.BLOCKS_PER_WIDTH; x++) lines[line][x] = field[x][y];
                 line++;
-                if(line == total) break;
             }
+            y--;
         }
-
         return MainActivity.submit(this);
     }
 }
