@@ -183,7 +183,7 @@ final class Scene extends View
     void moveCurrentDown(int speedInc)
     {
         if(gameOver) return;
-        if(currentMino == null) currentMino = Tetramino.Generator.next();
+        if(currentMino == null) currentMino = Tetramino.Type.newInstance();
 
         if(speedInc != 0) Sound.play(Sound.MOVE_MINO);
 
@@ -200,7 +200,7 @@ final class Scene extends View
                 Sound.play(Sound.IMPACT);
                 putTetramino(currentMino);
                 totalDeleted = deleteAnimation.deleteFullLines();
-                currentMino = Tetramino.Generator.next();
+                currentMino = Tetramino.Type.newInstance();
             }
 
             currentMino.moveDown();

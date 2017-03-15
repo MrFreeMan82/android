@@ -4,9 +4,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Random;
 
 import static home.tetris.Block.SIZE;
@@ -24,7 +21,26 @@ interface Factory{
 abstract class Tetramino
 {
     enum Type{
-        LINE, SQUARE, LLIKE, LRLIKE, TLIKE, ZLIKE, RZLIKE
+        LINE, SQUARE, LLIKE, LRLIKE, TLIKE, ZLIKE, RZLIKE;
+
+        static Tetramino newInstance()
+        {
+            Tetramino tetramino;
+            Type type = Type.values()[random.nextInt(Type.values().length)];
+
+            switch (type){
+                case LINE: tetramino = Line.getFactory().next(); break;
+                case SQUARE: tetramino = Square.getFactory().next(); break;
+                case LLIKE: tetramino = LLike.getFactory().next(); break;
+                case LRLIKE: tetramino = LRLike.getFactory().next(); break;
+                case TLIKE: tetramino = TLike.getFactory().next(); break;
+                case ZLIKE:  tetramino = ZLike.getFactory().next(); break;
+                case RZLIKE: tetramino = RZLike.getFactory().next(); break;
+                default: throw new IllegalArgumentException("Unknown type");
+            }
+            Statistic.minoCreated(tetramino);
+            return tetramino;
+        }
     }
 
     static final int BLOCKS_PER_MINO = 4;
@@ -32,26 +48,6 @@ abstract class Tetramino
 
     private Block[] blocks = new Block[BLOCKS_PER_MINO];
     private int color;
-
-    static class Generator
-    {
-        private static final ArrayList<Factory> factories = new ArrayList<>
-        (
-         Collections.unmodifiableList(
-           Arrays.asList(
-               Line.getFactory(), Square.getFactory(), LLike.getFactory(),
-                    LRLike.getFactory(), TLike.getFactory(), ZLike.getFactory(), RZLike.getFactory()
-
-        )));
-
-        static Tetramino next()
-        {
-            int type = random.nextInt(factories.size());
-            Tetramino tetramino = factories.get(type).next();
-            Statistic.minoCreated(tetramino);
-            return tetramino;
-        }
-    }
 
     int getMinLeft() {
         int r = Integer.MAX_VALUE;
