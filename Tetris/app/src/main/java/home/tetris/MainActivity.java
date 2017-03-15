@@ -36,13 +36,19 @@ public class MainActivity extends AppCompatActivity
     private static long backPressed = 0;
     private int oldX = 0, oldY = 0;
 
+    /**
+     * Здесь  ViewTreeObserver используется для определения момента когда станут известны
+     * размеры View элемента canvasLayout. Далее мы сможем определть размеры нашего поля
+     * и начать игру.
+     */
+
     @Override protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         //  setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.main);
 
-        new Updater(this, false).execute();
+        EXECUTOR.execute(new Updater(this, false));
         new Sound(this);
 
         activity = this;

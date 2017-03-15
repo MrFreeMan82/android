@@ -49,6 +49,9 @@ abstract class Tetramino
     private Block[] blocks = new Block[BLOCKS_PER_MINO];
     private int color;
 
+    /**
+     *@return  Возвращает левую координату прямоугольника в который вписана фигура
+     */
     int getMinLeft() {
         int r = Integer.MAX_VALUE;
         for(Block block: blocks)
@@ -57,6 +60,9 @@ abstract class Tetramino
         return r;
     }
 
+    /**
+     *@return  Возвращает верхнюю координату прямоугольника в который вписана фигура
+     */
     int getMinTop(){
         int r = Integer.MAX_VALUE;
         for(Block block: blocks)
@@ -86,6 +92,14 @@ abstract class Tetramino
     void setColor(int aColor){color = aColor;}
     Block[] getBlocks(){return blocks;}
 
+    /**
+     * По шаблону формирует расположение блоков
+     * @param tetramino Фигура в которой настраиваем расположение блоков
+     * @param template  Шаблон
+     * @param left  левая координата
+     * @param top  верхняя координата
+     * left top координаты левой верхней точки начиная с которой будут формироватся блоки.
+     */
     static void makeByTemplate(Tetramino tetramino, byte[][] template, int left, int top)
     {
         left = (left >= SIZE)? (left / SIZE) * SIZE: 0;
@@ -117,6 +131,11 @@ abstract class Tetramino
     abstract Type getType();
 }
 
+/**
+ *Перечисляемый тип возможных позиций фигуры линия
+ * В скобках указаны колличество блоков по ширине и высоте.
+ * Например: FIRST(4,1) имеет 4 блока по ширине и 1 по высоте. Она горизонтальная.
+ */
 enum LinePosition{
     FIRST(4,1), SECOND(1,4);
 
@@ -138,6 +157,10 @@ class Line extends Tetramino{
     private static final byte[][] v_line = {{1,0,0,0}, {1,0,0,0}, {1,0,0,0}, {1,0,0,0}};
 
     private LinePosition position;
+    /**
+     * Анонимный класс фабричного метода для генерации новых вигур линия.
+     * @see Tetramino.Type
+     */
     private static Factory factory = new Factory()
     {
         @Override public Tetramino next()

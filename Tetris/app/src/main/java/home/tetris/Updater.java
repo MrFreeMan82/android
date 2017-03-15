@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
@@ -16,11 +15,16 @@ import java.net.URL;
 
 /**
  * Created by Дима on 23.02.2017.
+ * Модуль обновления игры.
+ * Для того чтоб выложить новую версию игры нужно:
+ * 1. Изменить versionCode и versionName в файле build.gradle(Module app) на нужную версию
+ * 2. Изменить файл version.txt на нужную версию и залить обновления на сервер github
+ * 3. Залить новый релиз.
  *
  */
 
-class Updater extends AsyncTask<Void, Void, Void>{
-
+class Updater implements Runnable
+{
     private static final String TAG = "Updater";
     private static final String RELEASE_NAME = "Tetris";
     private static final String VERSION_URL = "https://raw.githubusercontent.com/MrFreeMan82/android/master/Tetris/version.txt";
@@ -44,11 +48,7 @@ class Updater extends AsyncTask<Void, Void, Void>{
         callback = (Callback) activity;
     }
 
-    protected Void doInBackground(Void... params)
-    {
-        checkUpdates();
-        return null;
-    }
+    @Override public void run(){checkUpdates();}
 
     private String getURLString(String urlString) throws IOException
     {
@@ -59,9 +59,7 @@ class Updater extends AsyncTask<Void, Void, Void>{
             InputStream in = connection.getInputStream();
 
             if(connection.getResponseCode() != HttpURLConnection.HTTP_OK)
-            {
                 throw new IOException(connection.getResponseMessage() + ": with " + urlString);
-            }
 
             int bytesRead;
             byte[] buffer = new byte[1024];

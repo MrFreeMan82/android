@@ -55,7 +55,7 @@ public class SettingsDialog extends DialogFragment
         {
             @Override
             public void onClick(View v) {
-                new Updater(getActivity(), true).execute();
+                MainActivity.execute(new Updater(getActivity(), true));
                 dismiss();
             }
         });

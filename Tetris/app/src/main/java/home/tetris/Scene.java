@@ -26,29 +26,29 @@ interface GameListener{
 
 final class Scene extends View
 {
-    static final int SCREEN_DELTA = 500;
-    static final int BLOCKS_PER_WIDTH = 12;                         // Определяет колл-во блоков по ширине
+    static final int SCREEN_DELTA = 500;                            // Для настройки некоторых мараметров игра ориентируется на размер экрана.
+    static final int BLOCKS_PER_WIDTH = 12;                         // Блоки по ширине
     static final int WIDTH = MainActivity.getSceneWidth();          // Доступная ширина
     static final int HEIGHT = MainActivity.getSceneHeight();       // Доступная высота
-    static final int BLOCKS_PER_HEIGHT = HEIGHT / (WIDTH / BLOCKS_PER_WIDTH);
-    static final int FALL_INCREMENT = HEIGHT / SCREEN_DELTA * 50;
+    static final int BLOCKS_PER_HEIGHT = HEIGHT / (WIDTH / BLOCKS_PER_WIDTH); // Блоки по высоте
+    static final int FALL_INCREMENT = HEIGHT / SCREEN_DELTA * 50;    // Скорость с которой будут падать фигура если ее двигать вниз.
 
     private static final int SCORE_PER_LEVEL = 25;   // Через сколько очков переходим на уровень выше.
     private static final int TIMER_INTERVAL = 20;    // Интервал таймер.
 
-    private Block[][] field;
-    private Tetramino currentMino;
+    private Block[][] field;                // игровое поле
+    private Tetramino currentMino;          // Текущая фигура- фигура которая в данный момент падает вниз.
     private Paint paint;
-    private Background background;
-    private DeleteAnimation deleteAnimation;
+    private Background background;          // Фон звезды и луна
+    private DeleteAnimation deleteAnimation;   // Поток анимации удаления линий
     private boolean gameOver = false;
     private boolean running = false;
     private boolean cancel = false;
     private int score = 0;
     private int hi_score = 0;
     private int level = 1;
-    private GameListener listener;
-    private Future<Integer> totalDeleted;
+    private GameListener listener;          // Интерфейс обратной связи состояния игры
+    private Future<Integer> totalDeleted;   // Возвращаемое значение из потока(колличество удаленных линий)
 
     void setGameListener(GameListener aListener){listener = aListener;}
 
@@ -71,7 +71,10 @@ final class Scene extends View
         clear();
         invalidate();
     }
-
+    /**
+     * При выходе из приложения необходимо остановить все потоки. Включая таймер.
+     * Иначе они будут работать бесконечно.
+     */
     void free()
     {
         running = false;
@@ -155,6 +158,21 @@ final class Scene extends View
         }
     }
 
+    /**
+     * При выходе из приложения необходимо остановить все потоки. Включая таймер.
+     * Иначе они будут работать бесконечно.
+     */
+    private void putTetramino(Tetramino tetramino)
+    {
+        for (Block block: tetramino.getBlocks())
+        {
+            int x = block.rect.left / Block.SIZE;
+            int y = block.rect.top / Block.SIZE;
+
+            if(y >= 0 && block.visible) field[x][y] = block;
+        }
+    }
+
     void rotateCurrent()
     {
         if(gameOver) return;
@@ -166,17 +184,6 @@ final class Scene extends View
         {
             Sound.play(Sound.ROTATE);
             currentMino = tetramino;
-        }
-    }
-
-    void putTetramino(Tetramino tetramino)
-    {
-        for (Block block: tetramino.getBlocks())
-        {
-            int x = block.rect.left / Block.SIZE;
-            int y = block.rect.top / Block.SIZE;
-
-            if(y >= 0 && block.visible) field[x][y] = block;
         }
     }
 
