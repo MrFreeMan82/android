@@ -74,27 +74,18 @@ class Statistic extends View
     {
         for(Tetramino tetramino: tetraminoList)
         {
+            int value;
             int counter = 0;
-            minoCreated(tetramino);
+            Class<? extends Tetramino> classOf = tetramino.getClass();
+            value = created.get(classOf);
+            created.put(classOf, ++value);
             for(Block block: tetramino.getBlocks()) if(!block.visible) counter++;
-            if(counter == Tetramino.BLOCKS_PER_MINO) minoDeleted(tetramino);
+            if(counter == Tetramino.BLOCKS_PER_MINO)
+            {
+                value = deleted.get(classOf);
+                deleted.put(classOf, ++value);
+            }
         }
-    }
-
-    private void minoCreated(Tetramino tetramino)
-    {
-        if(tetramino == null) return;
-        Class<? extends Tetramino> classOf = tetramino.getClass();
-        int value = created.get(classOf);
-        created.put(classOf, ++value);
-    }
-
-    private void minoDeleted(Tetramino tetramino)
-    {
-        if(tetramino == null) return;
-        Class<? extends Tetramino> classOf = tetramino.getClass();
-        int value = deleted.get(classOf);
-        deleted.put(classOf, ++value);
     }
 
     private void drawText(Canvas canvas, Tetramino tetramino, String text)
@@ -116,10 +107,9 @@ class Statistic extends View
         for(Class<? extends Tetramino> classOf: Tetramino.classes)
         {
             Tetramino tetramino = tetraminos.get(classOf);
-            Class<? extends Tetramino> minoClass = tetramino.getClass();
             String text =
                     String.format(Locale.getDefault(),
-                            "- %d : %d", created.get(minoClass), deleted.get(minoClass));
+                            "- %d : %d", created.get(classOf), deleted.get(classOf));
             tetramino.draw(canvas, paint);
             drawText(canvas, tetramino, text);
         }
