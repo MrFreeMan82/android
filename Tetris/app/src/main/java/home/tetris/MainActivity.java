@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity
             getSupportActionBar().setTitle(R.string.app_name);
     }
 
-    static Future<Integer> submit(Callable<Integer> callable){return EXECUTOR.submit(callable);}
+    static <T> Future<T> submit(Callable<T> callable){return EXECUTOR.submit(callable);}
     static void execute(Runnable runnable){EXECUTOR.execute(runnable);}
     static int getSceneWidth(){return sceneWidth;}
     static int getSceneHeight(){return sceneHeight;}

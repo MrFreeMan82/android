@@ -4,6 +4,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 import static home.tetris.Block.SIZE;
@@ -14,33 +17,14 @@ import static home.tetris.Block.SIZE;
  *
  */
 
-interface Factory{
-    Tetramino next();
-}
-
 abstract class Tetramino
 {
-    enum Type{
-        LINE, SQUARE, LLIKE, LRLIKE, TLIKE, ZLIKE, RZLIKE;
-
-        static Tetramino newInstance()
-        {
-            Tetramino tetramino;
-            Type type = Type.values()[random.nextInt(Type.values().length)];
-
-            switch (type){
-                case LINE: tetramino = Line.getFactory().next(); break;
-                case SQUARE: tetramino = Square.getFactory().next(); break;
-                case LLIKE: tetramino = LLike.getFactory().next(); break;
-                case LRLIKE: tetramino = LRLike.getFactory().next(); break;
-                case TLIKE: tetramino = TLike.getFactory().next(); break;
-                case ZLIKE:  tetramino = ZLike.getFactory().next(); break;
-                case RZLIKE: tetramino = RZLike.getFactory().next(); break;
-                default: throw new IllegalArgumentException("Unknown type");
-            }
-            return tetramino;
-        }
-    }
+    static final List<Class<? extends Tetramino>> classes = Collections.unmodifiableList
+    (
+      Arrays.asList(
+           Line.class, Square.class, LLike.class,
+              JLike.class, TLike.class, ZLike.class, SLike.class
+    ));
 
     static final int BLOCKS_PER_MINO = 4;
     static final Random random = new Random();
@@ -92,6 +76,25 @@ abstract class Tetramino
     Block[] getBlocks(){return blocks;}
 
     /**
+     * Генерирует новую случайную фигуру.
+     * @throws ClassCastException если в списке найден класс который не используется в таблице.
+     */
+
+    static Tetramino newRandom() throws  ClassCastException
+    {
+        Class<? extends Tetramino> classOf = classes.get(random.nextInt(classes.size()));
+
+        if(classOf == Line.class) return Line.newRandom();
+        else if(classOf == Square.class) return Square.newRandom();
+        else if(classOf == LLike.class) return LLike.newRandom();
+        else if(classOf == JLike.class) return JLike.newRandom();
+        else if(classOf == TLike.class) return TLike.newRandom();
+        else if(classOf == ZLike.class) return ZLike.newRandom();
+        else if(classOf == SLike.class) return SLike.newRandom();
+        else throw new ClassCastException("Unknown Class.");
+    }
+
+    /**
      * По шаблону формирует расположение блоков
      * @param tetramino Фигура в которой настраиваем расположение блоков
      * @param template  Шаблон
@@ -127,13 +130,12 @@ abstract class Tetramino
 
     abstract Tetramino rotate();
     abstract int getBlockPerHeight();
-    abstract Type getType();
 }
 
 /**
  *Перечисляемый тип возможных позиций фигуры линия
  * В скобках указаны колличество блоков по ширине и высоте.
- * Например: FIRST(4,1) имеет 4 блока по ширине и 1 по высоте. Она горизонтальная.
+ * Например: FIRST(4,1) имеет 4 блока по ширине и 1 по высоте.  Она горизонтальная.
  */
 enum LinePosition{
     FIRST(4,1), SECOND(1,4);
@@ -151,25 +153,10 @@ enum LinePosition{
 }
 
 class Line extends Tetramino{
-    private final Type type = Type.LINE;
     private static final byte[][] h_line = {{1,1,1,1}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}};
     private static final byte[][] v_line = {{1,0,0,0}, {1,0,0,0}, {1,0,0,0}, {1,0,0,0}};
 
     private LinePosition position;
-    /**
-     * Анонимный класс фабричного метода для генерации новых вигур линия.
-     * @see Tetramino.Type
-     */
-    private static Factory factory = new Factory()
-    {
-        @Override public Tetramino next()
-        {
-            LinePosition position = LinePosition.values()[random.nextInt(LinePosition.values().length)];
-            int top = -position.blocksPerHeight * SIZE;
-            int left = random.nextInt(Scene.WIDTH - position.blocksPerWidth * SIZE);
-            return new Line(left, top, position, randomColor());
-        }
-    };
 
     Line(int left, int top, LinePosition aPosition, int color)
     {
@@ -181,27 +168,26 @@ class Line extends Tetramino{
         setColor(color);
     }
 
-    Type getType(){return type;}
-    static Factory getFactory(){return factory;}
+    /**
+     * Фабричный метод для генерации новых вигур линия.
+     * //@see Tetramino.Type
+     */
+    static Line newRandom()
+    {
+        LinePosition position = LinePosition.values()[random.nextInt(LinePosition.values().length)];
+        int top = -position.blocksPerHeight * SIZE;
+        int left = random.nextInt(Scene.WIDTH - position.blocksPerWidth * SIZE);
+        return new Line(left, top, position, randomColor());
+    }
+
     int getBlockPerHeight(){return position.blocksPerHeight;}
     Line rotate(){return new Line(getMinLeft(), getMinTop(), LinePosition.next(position), getColor());}
 }
 
 class Square extends Tetramino{
-    private final Type type = Type.SQUARE;
     private static final int BLOCK_PER_WIDTH = 2;
     private static final int BLOCK_PER_HEIGHT = 2;
     private static final byte[][] square = {{1,1,0,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}};
-
-    private static Factory factory = new Factory()
-    {
-        @Override public Tetramino next()
-        {
-            int top = -BLOCK_PER_HEIGHT * SIZE;
-            int left = random.nextInt(Scene.WIDTH - BLOCK_PER_WIDTH * SIZE);
-            return new Square(left, top, randomColor());
-        }
-    };
 
     Square(int left, int top, int color)
     {
@@ -209,8 +195,12 @@ class Square extends Tetramino{
         setColor(color);
     }
 
-    Type getType(){return type;}
-    static Factory getFactory(){return factory;}
+    static Square newRandom()
+    {
+        int top = -BLOCK_PER_HEIGHT * SIZE;
+        int left = random.nextInt(Scene.WIDTH - BLOCK_PER_WIDTH * SIZE);
+        return new Square(left, top, randomColor());
+    }
     int getBlockPerHeight(){return BLOCK_PER_HEIGHT;}
     Square rotate(){return null;}
 }
@@ -238,24 +228,12 @@ enum LPosition{
 }
 
 class LLike extends Tetramino{
-    private final Type type = Type.LLIKE;
     private static final byte[][] l0 = {{1,0,0,0}, {1,0,0,0}, {1,1,0,0}, {0,0,0,0}};
     private static final byte[][] l90 = {{1,1,1,0}, {1,0,0,0}, {0,0,0,0}, {0,0,0,0}};
     private static final byte[][] l180 = {{1,1,0,0}, {0,1,0,0}, {0,1,0,0}, {0,0,0,0}};
     private static final byte[][] l270 = {{0,0,1,0},{1,1,1,0}, {0,0,0,0}, {0,0,0,0}};
 
     private LPosition position;
-
-    private static Factory factory = new Factory()
-    {
-        @Override public Tetramino next()
-        {
-            LPosition position = LPosition.values()[random.nextInt(LPosition.values().length)];
-            int top = -position.blocksPerHeight * SIZE;
-            int left = random.nextInt(Scene.WIDTH - position.blocksPerWidth * SIZE);
-            return new LLike(left, top, position, randomColor());
-        }
-    };
 
     LLike(int left, int top, LPosition aPosition, int color)
     {
@@ -269,47 +247,48 @@ class LLike extends Tetramino{
         setColor(color);
     }
 
-    Type getType(){return type;}
-    static Factory getFactory(){return factory;}
+    static LLike newRandom()
+    {
+        LPosition position = LPosition.values()[random.nextInt(LPosition.values().length)];
+        int top = -position.blocksPerHeight * SIZE;
+        int left = random.nextInt(Scene.WIDTH - position.blocksPerWidth * SIZE);
+        return new LLike(left, top, position, randomColor());
+    }
+
     int getBlockPerHeight(){return position.blocksPerHeight;}
     LLike rotate(){return new LLike(getMinLeft(), getMinTop(), LPosition.next(position), getColor());}
 }
 
-class LRLike extends Tetramino{
-    private final Type type = Type.LRLIKE;
-    private static final byte[][] lr0 = {{0,1,0,0}, {0,1,0,0}, {1,1,0,0}, {0,0,0,0}};
-    private static final byte[][] lr90 = {{1,0,0,0}, {1,1,1,0}, {0,0,0,0}, {0,0,0,0}};
-    private static final byte[][] lr180 = {{1,1,0,0}, {1,0,0,0}, {1,0,0,0}, {0,0,0,0}};
-    private static final byte[][] lr270 = {{1,1,1,0}, {0,0,1,0}, {0,0,0,0}, {0,0,0,0}};
+class JLike extends Tetramino{
+    private static final byte[][] j0 = {{0,1,0,0}, {0,1,0,0}, {1,1,0,0}, {0,0,0,0}};
+    private static final byte[][] j90 = {{1,0,0,0}, {1,1,1,0}, {0,0,0,0}, {0,0,0,0}};
+    private static final byte[][] j180 = {{1,1,0,0}, {1,0,0,0}, {1,0,0,0}, {0,0,0,0}};
+    private static final byte[][] j270 = {{1,1,1,0}, {0,0,1,0}, {0,0,0,0}, {0,0,0,0}};
 
     private LPosition position;
-    private static Factory factory = new Factory()
-    {
-        @Override public Tetramino next()
-        {
-            LPosition position = LPosition.values()[random.nextInt(LPosition.values().length)];
-            int top = -position.blocksPerHeight * SIZE;
-            int left = random.nextInt(Scene.WIDTH - position.blocksPerWidth * SIZE);
-            return new LRLike(left, top, position, randomColor());
-        }
-    };
 
-    LRLike(int left, int top, LPosition aPosition, int color)
+    JLike(int left, int top, LPosition aPosition, int color)
     {
         position = aPosition;
         switch (position){
-            case FIRST: Tetramino.makeByTemplate(this, lr0, left, top); break;
-            case SECOND: Tetramino.makeByTemplate(this, lr90, left, top); break;
-            case THIRD: Tetramino.makeByTemplate(this, lr180, left, top); break;
-            case FORTH: Tetramino.makeByTemplate(this, lr270, left, top);
+            case FIRST: Tetramino.makeByTemplate(this, j0, left, top); break;
+            case SECOND: Tetramino.makeByTemplate(this, j90, left, top); break;
+            case THIRD: Tetramino.makeByTemplate(this, j180, left, top); break;
+            case FORTH: Tetramino.makeByTemplate(this, j270, left, top);
         }
         setColor(color);
     }
 
-    Type getType(){return type;}
-    static Factory getFactory(){return factory;}
+    static JLike newRandom()
+    {
+        LPosition position = LPosition.values()[random.nextInt(LPosition.values().length)];
+        int top = -position.blocksPerHeight * SIZE;
+        int left = random.nextInt(Scene.WIDTH - position.blocksPerWidth * SIZE);
+        return new JLike(left, top, position, randomColor());
+    }
+
     int getBlockPerHeight(){return position.blocksPerHeight;}
-    LRLike rotate(){return new LRLike(getMinLeft(), getMinTop(), LPosition.next(position), getColor());}
+    JLike rotate(){return new JLike(getMinLeft(), getMinTop(), LPosition.next(position), getColor());}
 }
 
 enum TPosition{
@@ -335,23 +314,12 @@ enum TPosition{
 }
 
 class TLike extends Tetramino{
-    private final Type type = Type.TLIKE;
     private static final byte[][] t0 = {{0,1,0,0}, {1,1,1,0}, {0,0,0,0}, {0,0,0,0}};
     private static final byte[][] t90 = {{1,0,0,0}, {1,1,0,0}, {1,0,0,0}, {0,0,0,0}};
     private static final byte[][] t180 = {{1,1,1,0}, {0,1,0,0}, {0,0,0,0}, {0,0,0,0}};
     private static final byte[][] t270 = {{0,1,0,0}, {1,1,0,0}, {0,1,0,0}, {0,0,0,0}};
 
     private TPosition position;
-    private static Factory factory = new Factory()
-    {
-        @Override public Tetramino next()
-        {
-            TPosition position = TPosition.values()[random.nextInt(TPosition.values().length)];
-            int top = -position.blocksPerHeight * SIZE;
-            int left = random.nextInt(Scene.WIDTH - position.blocksPerWidth * SIZE);
-            return new TLike(left, top, position, randomColor());
-        }
-    };
 
     TLike(int left, int top, TPosition aPosition, int color)
     {
@@ -365,8 +333,14 @@ class TLike extends Tetramino{
         setColor(color);
     }
 
-    Type getType(){return type;}
-    static Factory getFactory(){return factory;}
+    static TLike newRandom()
+    {
+        TPosition position = TPosition.values()[random.nextInt(TPosition.values().length)];
+        int top = -position.blocksPerHeight * SIZE;
+        int left = random.nextInt(Scene.WIDTH - position.blocksPerWidth * SIZE);
+        return new TLike(left, top, position, randomColor());
+    }
+
     int getBlockPerHeight(){return position.blocksPerHeight;}
     TLike rotate(){return new TLike(getMinLeft(), getMinTop(), TPosition.next(position), getColor());}
 }
@@ -387,21 +361,10 @@ enum ZPosition{
 }
 
 class ZLike extends Tetramino{
-    private final Type type = Type.ZLIKE;
     private static final byte[][] z0 = {{1,1,0,0}, {0,1,1,0}, {0,0,0,0}, {0,0,0,0}};
     private static final byte[][] z180 = {{0,1,0,0}, {1,1,0,0},{1,0,0,0}, {0,0,0,0}};
 
     private ZPosition position;
-    private static Factory factory = new Factory()
-    {
-        @Override public Tetramino next()
-        {
-            ZPosition position = ZPosition.values()[random.nextInt(ZPosition.values().length)];
-            int top = -position.blocksPerHeight * SIZE;
-            int left = random.nextInt(Scene.WIDTH - position.blocksPerWidth * SIZE);
-            return new ZLike(left, top, position, randomColor());
-        }
-    };
 
     ZLike(int left, int top, ZPosition aPosition, int color)
     {
@@ -413,41 +376,42 @@ class ZLike extends Tetramino{
         setColor(color);
     }
 
-    Type getType(){return type;}
-    static Factory getFactory(){return factory;}
+    static ZLike newRandom()
+    {
+        ZPosition position = ZPosition.values()[random.nextInt(ZPosition.values().length)];
+        int top = -position.blocksPerHeight * SIZE;
+        int left = random.nextInt(Scene.WIDTH - position.blocksPerWidth * SIZE);
+        return new ZLike(left, top, position, randomColor());
+    }
+
     int getBlockPerHeight(){return position.blocksPerHeight;}
     ZLike rotate(){return new ZLike(getMinLeft(), getMinTop(), ZPosition.next(position), getColor());}
 }
 
-class RZLike extends Tetramino{
-    private final Type type = Type.RZLIKE;
-    private static final byte[][] rz0 = {{0,1,1,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}};
-    private static final byte[][] rz180 = {{1,0,0,0}, {1,1,0,0}, {0,1,0,0}, {0,0,0,0}};
+class SLike extends Tetramino{
+    private static final byte[][] s0 = {{0,1,1,0}, {1,1,0,0}, {0,0,0,0}, {0,0,0,0}};
+    private static final byte[][] s180 = {{1,0,0,0}, {1,1,0,0}, {0,1,0,0}, {0,0,0,0}};
 
     private ZPosition position;
-    private static Factory factory = new Factory()
-    {
-        @Override public Tetramino next()
-        {
-            ZPosition position = ZPosition.values()[random.nextInt(ZPosition.values().length)];
-            int top = -position.blocksPerHeight * SIZE;
-            int left = random.nextInt(Scene.WIDTH - position.blocksPerWidth * SIZE);
-            return new RZLike(left, top, position, randomColor());
-        }
-    };
 
-    RZLike(int left, int top, ZPosition aPosition, int color)
+    SLike(int left, int top, ZPosition aPosition, int color)
     {
         position = aPosition;
         switch (aPosition){
-            case FIRST: Tetramino.makeByTemplate(this, rz0, left, top); break;
-            case SECOND: Tetramino.makeByTemplate(this, rz180, left, top);
+            case FIRST: Tetramino.makeByTemplate(this, s0, left, top); break;
+            case SECOND: Tetramino.makeByTemplate(this, s180, left, top);
         }
         setColor(color);
     }
 
-    Type getType(){return type;}
-    static Factory getFactory(){return factory;}
+    static SLike newRandom()
+    {
+        ZPosition position = ZPosition.values()[random.nextInt(ZPosition.values().length)];
+        int top = -position.blocksPerHeight * SIZE;
+        int left = random.nextInt(Scene.WIDTH - position.blocksPerWidth * SIZE);
+        return new SLike(left, top, position, randomColor());
+    }
+
     int getBlockPerHeight(){return position.blocksPerHeight;}
-    RZLike rotate(){return new RZLike(getMinLeft(), getMinTop(), ZPosition.next(position), getColor());}
+    SLike rotate(){return new SLike(getMinLeft(), getMinTop(), ZPosition.next(position), getColor());}
 }

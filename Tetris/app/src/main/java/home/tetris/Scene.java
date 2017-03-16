@@ -189,9 +189,17 @@ final class Scene extends View
 
     private void newMino()
     {
-        currentMino = Tetramino.Type.newInstance();
+        currentMino = Tetramino.newRandom();
         Statistic.newMino(currentMino);
     }
+
+    /**
+     * Двигаем фигуру вниз
+     * Эта процедура вызывается из таймера
+     * @see CountDownTimer
+     * @param speedInc определяет дополнительный коэфициент для скорости падения.
+     *                 speedInc > 0 когда мы двигаем фигуру вниз, в остальных случаях равен 0.
+     */
 
     void moveCurrentDown(int speedInc)
     {
