@@ -155,5 +155,11 @@ public class MainActivity extends AppCompatActivity implements Game.Callback{
         saveInstanceState.putInt(VIEW_STATE, state);
     }
 
+    @Override public void onError(String msg)
+    {
+        gameHistory.add(msg);
+        refreshHistory();
+    }
+
     //To-Do: Сделать сохранение при повороте телефона.
 }

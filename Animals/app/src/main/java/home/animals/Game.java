@@ -1,39 +1,40 @@
 package home.animals;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
-import android.database.CursorWrapper;
-import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
-import home.animals.database.DBShema.NodeTable;
-import home.animals.database.DBHelper;
-
-
-import java.util.ArrayList;
-import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by Дима on 05.02.2017.
+ *
  */
 
-class Game {
-    private enum Status {WAIT_REPLY_QUESTION, WAIT_REPLY_ANSWEAR,
-                        WAIT_TRUE_ANSWEAR, WAIT_DIFFERENCE, WAIT_CONTINUE}
+final class Node
+{
+    int id;
+    String question, answear;
+    int yesId, noId;
+}
 
-    private static String TAG = "Game";
+class Game implements FetchNode.Callback, NewNode.Callback
+{
+    static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+    private enum Status {WAIT_REPLY_QUESTION, WAIT_REPLY_ANSWEAR,
+                        WAIT_TRUE_ANSWEAR, WAIT_DIFFERENCE, WAIT_CONTINUE, WAIT_FETCH}
+
+    private static final String TAG = "Game";
 
     private static final int FIRST_QUESTION = 1;
-    private boolean firstStart = true;
-    private boolean additionalQuestion = false;
-    private boolean needDescribe = false;
+    private boolean additionalQuestion;
+    private boolean needDescribe;
+    private boolean yesPointer;
     private String[] words = {"меньше", "больше"};
-    private Status status;
+    private Status oldStatus, status;
     private Node Next, Prev, Current;
-    private String question;
+    private String lastQuestion;
     private Callback callback;
-    private SQLiteDatabase db;
     private static Game game;
 
     interface Callback {
@@ -41,81 +42,26 @@ class Game {
         void onConcede();
         void onContinue();
         void onEndGame();
+        void onError(String msg);
     }
 
-    private class Node {
-        int id;
-        String question, answear;
-        int yesId, noId;
-    }
-
-    private class NodeCursorWrapper extends CursorWrapper{
-        NodeCursorWrapper(Cursor cursor) {super(cursor);}
-
-        Node getNode(){
-            Node node = new Node();
-            node.id = getInt(getColumnIndex(NodeTable.Cols.NODE_ID));
-            node.question = getString(getColumnIndex(NodeTable.Cols.QUESTION));
-            node.answear = getString(getColumnIndex(NodeTable.Cols.ANSWEAR));
-            node.yesId = getInt(getColumnIndex(NodeTable.Cols.YES_NODE_ID));
-            node.noId = getInt(getColumnIndex(NodeTable.Cols.NO_NODE_ID));
-
-            return node;
-        }
-    }
-
-    private Node getNextFromDB(int nextId) {
-        String qry = String.format(Locale.US,
-                "SELECT * FROM %s WHERE %s= %d",
-                NodeTable.NAME, NodeTable.Cols.NODE_ID, nextId);
-
-        Node node = null;
-        Cursor cursor = db.rawQuery(qry, null);
-        NodeCursorWrapper cw = new NodeCursorWrapper(cursor);
-        try {
-            cw.moveToFirst();
-            node = cw.getNode();
-        }
-        finally {
-            cursor.close();
-        }
-        return node;
-    }
-
-    private ContentValues getContentValues(Node node)
+    static Game get(Context context)
     {
-        ContentValues values = new ContentValues();
-        values.put(NodeTable.Cols.NODE_ID, node.id);
-        values.put(NodeTable.Cols.QUESTION, node.question);
-        values.put(NodeTable.Cols.ANSWEAR, node.answear);
-        values.put(NodeTable.Cols.YES_NODE_ID, node.yesId);
-        values.put(NodeTable.Cols.NO_NODE_ID, node.noId);
-        return values;
-    }
-
-    static Game get(Context context) {
-        if(game == null) {
-            game = new Game();
-            //game.buf = new ArrayList<>();
-            game.db = DBHelper.get(context.getApplicationContext()).getWritableDatabase();
-        }
+        if(game == null) game = new Game();
         game.callback = (Callback) context;
         return game;
     }
 
-    void start(){
-        if(firstStart) {
-            Current = getNextFromDB(FIRST_QUESTION);
-            myQuestion(Current);
-            firstStart = false;
-            additionalQuestion = false;
-            needDescribe = false;
-        } else {
-            callback.onQuestionChange();
-        }
+    void start()
+    {
+        additionalQuestion = false;
+        needDescribe = false;
+        yesPointer = false;
+        getNext(FIRST_QUESTION, false);
     }
 
-    private String placeAfterWords(String placeText, String text){
+    private String placeAfterWords(String placeText, String text)
+    {
         for(String word: words){
             if(text.toLowerCase().contains(word))
                 return text.substring(0, text.indexOf(word)) + word + " " + placeText;
@@ -127,9 +73,9 @@ class Game {
         Log.d(TAG, s);
     }
 
-    private void write(String s){
-        //buf.add(s);
-        question = s;
+    private void write(String s)
+    {
+        lastQuestion = s;
         logging(s);
     }
 
@@ -147,20 +93,34 @@ class Game {
         callback.onQuestionChange();
     }
 
+    @Override public void onErrorCreating(String msg) {callback.onError(msg);}
+
+    @Override public void onFetchNode(Node node)
+    {
+        status = oldStatus;
+        Current = node;
+        myQuestion(Current);
+    }
+
+    private void fetchNext(int nextId)
+    {
+        oldStatus = status;
+        status = Status.WAIT_FETCH;
+        FetchNode.fetch(this, nextId);
+    }
+
     private boolean getNext(int nextId, boolean ifYesOption)
     {
         if(nextId == 0)
         {
-            Next = new Node();
-            Next.id = DBHelper.getNextId(NodeTable.NAME);
-            if(ifYesOption) Current.yesId = Next.id; else Current.noId = Next.id;
             status = Status.WAIT_TRUE_ANSWEAR;
+            yesPointer = ifYesOption;
             write("Хорошо, я здаюсь. Кто это?");
             callback.onQuestionChange();
             callback.onConcede();
             return false;
         } else {
-            Current = getNextFromDB(nextId);
+            fetchNext(nextId);
             return true;
         }
     }
@@ -170,7 +130,6 @@ class Game {
         logging("Yes");
         switch (status){
             case WAIT_CONTINUE:
-                firstStart = true;
                 start();
                 return;
             case WAIT_REPLY_QUESTION:
@@ -197,7 +156,6 @@ class Game {
        logging("No");
        switch (status) {
            case WAIT_CONTINUE:
-               firstStart = true;
                callback.onEndGame();
                return;
            case WAIT_REPLY_QUESTION:
@@ -231,6 +189,7 @@ class Game {
         logging(elseText);
         switch (status) {
             case WAIT_TRUE_ANSWEAR:
+                Next = new Node();
                 Next.answear = elseText.toLowerCase();
                 status = Status.WAIT_DIFFERENCE;
                 if(needDescribe){
@@ -244,12 +203,7 @@ class Game {
             case WAIT_DIFFERENCE:
                 elseText = elseText.substring(0, 1).toUpperCase() + elseText.substring(1).toLowerCase();
                 Next.question = placeAfterWords("чем " + Current.answear, elseText);
-                ContentValues values = getContentValues(Next);
-                db.insert(NodeTable.NAME, null, values);
-                values = getContentValues(Current);
-                db.update(NodeTable.NAME, values,
-                        NodeTable.Cols.NODE_ID + "=?",
-                        new String[]{Integer.toString(Current.id)});
+                NewNode.newNode(this, Current.id, yesPointer, Next);
                 status = Status.WAIT_CONTINUE;
                 write("Продолжим?");
                 callback.onQuestionChange();
@@ -257,5 +211,5 @@ class Game {
         }
     }
 
-    String getQuestion() {return question;}
+    String getQuestion() {return lastQuestion;}
 }
