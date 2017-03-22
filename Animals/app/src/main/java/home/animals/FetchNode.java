@@ -25,7 +25,7 @@ import java.util.concurrent.Future;
 class FetchNode implements Callable<String>
 {
     private int id;
-    private static final String NODE_GET = "http://10.0.2.2/animals/?next=%d";
+    private static final String NODE_GET = "https://dimazdy82.000webhostapp.com/animals/?next=%d"; //"http://10.0.2.2/animals/?next=%d";
     private Callback callback;
     private static FetchNode fetchNode;
     private Future<String> future;
@@ -61,6 +61,7 @@ class FetchNode implements Callable<String>
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         try{
+            connection.setConnectTimeout(3000);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             InputStream in = connection.getInputStream();
 
@@ -93,14 +94,14 @@ class FetchNode implements Callable<String>
                 {
                     try{
                         response = fetchNode.future.get();
-                        if(!response.contains("Empty"))
-                        {
-                            fetchNode.future = null;
-                            JSONObject json = new JSONObject(response);
-                            Node node = fetchNode.getFrom(json);
-                            fetchNode.callback.onFetchNode(node);
-                        }
-                    } catch (InterruptedException | ExecutionException | JSONException e)
+                        if(response.contains("Error")) throw new IOException(response);
+
+                        fetchNode.future = null;
+                        JSONObject json = new JSONObject(response);
+                        Node node = fetchNode.getFrom(json);
+                        fetchNode.callback.onFetchNode(node);
+
+                    } catch (InterruptedException | ExecutionException | JSONException | IOException e)
                     {
                         Log.d("FetchNode","Response:"+ response);
                         Log.d("NewNode", "Cause:" + e.getCause());

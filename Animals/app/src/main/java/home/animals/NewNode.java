@@ -23,7 +23,7 @@ import java.util.concurrent.Future;
 
 class NewNode implements Callable<String>
 {
-    private static final String NODE_POST = "http://10.0.2.2/animals/";
+    private static final String NODE_POST = "https://dimazdy82.000webhostapp.com/animals/"; // "http://10.0.2.2/animals/";
     private static NewNode newNode;
     private Future<String> future;
     private JSONObject json;
