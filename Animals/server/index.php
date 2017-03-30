@@ -22,7 +22,7 @@
 		exit;
 	}
 	die("Unknown or empty key value.");
-	
+		
 	function newOne($json)
 	{
 		$mysqli = new mysqli(HOST, USER, PASSWORD, DB);

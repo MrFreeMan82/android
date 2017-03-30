@@ -1,6 +1,8 @@
 package home.tetris;
 
 import android.util.Log;
+
+import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
@@ -24,6 +26,7 @@ class DeleteAnimation implements Callable<Integer>
     @Override public Integer call()
     {
         decreaseLines(lines);
+        hasDeletedMino(lines);
         falling(lines.length);
         return lines.length;
     }
@@ -54,6 +57,31 @@ class DeleteAnimation implements Callable<Integer>
                         }
                     }
                     k++;
+                }
+            }
+        }
+    }
+
+
+    /**
+     *  Ищет удаленные тетрамино и ведет их статистику
+     *  @param lines массив линий которые должны быть удалены
+     *
+     */
+    private void hasDeletedMino(Block[][] lines)
+    {
+        ArrayList<Tetramino> list = new ArrayList<>();
+        for (Block[] line : lines)
+        {
+            for (Block block : line)
+            {
+                if(list.contains(block.tetramino)) continue;
+                int counter = 0;
+                for(Block minoBlock: block.tetramino.getBlocks()) if(!minoBlock.visible) counter++;
+                if(counter == Tetramino.BLOCKS_PER_MINO)
+                {
+                    Statistic.deleteMino(block.tetramino);
+                    list.add(block.tetramino);
                 }
             }
         }

@@ -7,7 +7,6 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.view.View;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -22,18 +21,16 @@ class Statistic extends View
     private Paint paint;
     private final Rect textBounds;
 
-    private Map<Class<? extends Tetramino>, Tetramino> tetraminos = new HashMap<>();
+    private static Map<Class<? extends Tetramino>, Tetramino> tetraminos = new HashMap<>();
 
-    private Map<Class<? extends Tetramino>, Integer>
+    private static Map<Class<? extends Tetramino>, Integer>
             created = new HashMap<>(), deleted = new HashMap<>();
 
-    private static ArrayList<Tetramino> tetraminoList = new ArrayList<>();
+    static {init();}
 
-    Statistic(Context context)
+    private static void init()
     {
-        super(context);
-        paint = new Paint();
-        textBounds = new Rect();
+        tetraminos.clear();  created.clear();  deleted.clear();
 
         int left, top;
         int space = Block.SIZE / 2;
@@ -67,25 +64,13 @@ class Statistic extends View
             created.put(classOf, 0); deleted.put(classOf, 0);
             top += space + tetraminos.get(classOf).getBlockPerHeight() * Block.SIZE;
         }
-        calcStatistic();
     }
 
-    private void calcStatistic()
+    Statistic(Context context)
     {
-        for(Tetramino tetramino: tetraminoList)
-        {
-            int value;
-            int counter = 0;
-            Class<? extends Tetramino> classOf = tetramino.getClass();
-            value = created.get(classOf);
-            created.put(classOf, ++value);
-            for(Block block: tetramino.getBlocks()) if(!block.visible) counter++;
-            if(counter == Tetramino.BLOCKS_PER_MINO)
-            {
-                value = deleted.get(classOf);
-                deleted.put(classOf, ++value);
-            }
-        }
+        super(context);
+        paint = new Paint();
+        textBounds = new Rect();
     }
 
     private void drawText(Canvas canvas, Tetramino tetramino, String text)
@@ -114,6 +99,19 @@ class Statistic extends View
             drawText(canvas, tetramino, text);
         }
     }
-    static void newMino(Tetramino tetramino) {tetraminoList.add(tetramino);}
-    static void clearStatistic() {tetraminoList.clear();}
+    static void newMino(Tetramino tetramino)
+    {
+        Class<? extends Tetramino> classOf = tetramino.getClass();
+        int value = created.get(classOf);
+        created.put(classOf, ++value);
+    }
+
+    static void deleteMino(Tetramino tetramino)
+    {
+        Class<? extends Tetramino> classOf = tetramino.getClass();
+        int value = deleted.get(classOf);
+        deleted.put(classOf, ++value);
+    }
+
+    static void clearStatistic(){init();}
 }

@@ -82,7 +82,7 @@ abstract class Tetramino
 
     static Tetramino newRandom() throws  ClassCastException
     {
-        Class<? extends Tetramino> classOf = classes.get(random.nextInt(classes.size()));
+        Class<? extends Tetramino> classOf =  classes.get(random.nextInt(classes.size()));
 
         if(classOf == Line.class) return Line.newRandom();
         else if(classOf == Square.class) return Square.newRandom();
