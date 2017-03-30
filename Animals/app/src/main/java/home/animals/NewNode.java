@@ -92,16 +92,20 @@ class NewNode implements Callable<String>
 
                 @Override public void onTick(long millisUntilFinished)
                 {
-                    try {
-                        response = newNode.future.get();
-                        if(!response.equals("OK")) throw new IOException(response);
-                    } catch (InterruptedException | ExecutionException | IOException e) {
-                        String error;
-                        error = "Response:" + response;
-                        Log.d("NewNode", error);
-                        newNode.callback.onErrorCreating(error);
+                    if(newNode.future != null && newNode.future.isDone())
+                    {
+                        try {
+                            response = newNode.future.get();
+                            newNode.future = null;
+                            if (!response.equals("OK")) throw new IOException(response);
+                        } catch (InterruptedException | ExecutionException | IOException e) {
+                            String error;
+                            error = "Response:" + response;
+                            Log.d("NewNode", error);
+                            newNode.callback.onErrorCreating(error);
+                        }
+                        this.cancel();
                     }
-                    this.cancel();
                 }
             }.start();
 
